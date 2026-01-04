@@ -315,54 +315,61 @@ process.on('SIGINT', () => {
   process.exit(0);
 });
 
-app.listen(PORT, () => {
-  logger.info(`Apply Bureau Backend started successfully`, {
-    port: PORT,
-    environment: process.env.NODE_ENV,
-    frontendUrl: process.env.FRONTEND_URL,
-    nodeVersion: process.version,
-    pid: process.pid
-  });
-  
-  // Initialize real-time WebSocket server
-  const realtimeManager = require('./utils/realtime');
-  const http = require('http');
-  const server = http.createServer(app);
-  realtimeManager.initialize(server);
-  
-  // Start server with WebSocket support
-  server.listen(PORT + 1, () => {
-    logger.info('Real-time WebSocket server started', { port: PORT + 1 });
-  });
-  
-  // Start monitoring in production
-  if (process.env.NODE_ENV === 'production') {
-    logger.info('Starting production monitoring and security features');
-    performanceMonitor.startMonitoring();
-    dbMonitor.startHealthCheck();
-    
-    // Log system info
-    const systemInfo = SystemMonitor.getSystemInfo();
-    logger.info('System information', {
-      platform: systemInfo.platform,
-      arch: systemInfo.arch,
-      memory: `${Math.round(systemInfo.memory.process.rss / 1024 / 1024)}MB`,
-      cpuCores: systemInfo.cpu.cores
+// Only start the server if not in Vercel environment
+if (process.env.NODE_ENV !== 'production' || !process.env.VERCEL) {
+  app.listen(PORT, () => {
+    logger.info(`Apply Bureau Backend started successfully`, {
+      port: PORT,
+      environment: process.env.NODE_ENV,
+      frontendUrl: process.env.FRONTEND_URL,
+      nodeVersion: process.version,
+      pid: process.pid
     });
-  }
-  
-  // Periodic cache cleanup and stats logging
-  setInterval(() => {
-    cache.cleanup();
-    if (process.env.NODE_ENV === 'production') {
-      logger.info('Periodic system check', {
-        cacheStats: cache.getStats(),
-        securityStats: securityManager.getStats(),
-        memory: `${Math.round(process.memoryUsage().rss / 1024 / 1024)}MB`,
-        uptime: `${Math.round(process.uptime() / 3600 * 100) / 100}h`
+    
+    // Initialize real-time WebSocket server (only in non-serverless environment)
+    if (!process.env.VERCEL) {
+      const realtimeManager = require('./utils/realtime');
+      const http = require('http');
+      const server = http.createServer(app);
+      realtimeManager.initialize(server);
+      
+      // Start server with WebSocket support
+      server.listen(PORT + 1, () => {
+        logger.info('Real-time WebSocket server started', { port: PORT + 1 });
       });
     }
-  }, 10 * 60 * 1000); // Every 10 minutes
-});
+    
+    // Start monitoring in production
+    if (process.env.NODE_ENV === 'production') {
+      logger.info('Starting production monitoring and security features');
+      performanceMonitor.startMonitoring();
+      dbMonitor.startHealthCheck();
+      
+      // Log system info
+      const systemInfo = SystemMonitor.getSystemInfo();
+      logger.info('System information', {
+        platform: systemInfo.platform,
+        arch: systemInfo.arch,
+        memory: `${Math.round(systemInfo.memory.process.rss / 1024 / 1024)}MB`,
+        cpuCores: systemInfo.cpu.cores
+      });
+    }
+    
+    // Periodic cache cleanup and stats logging (only in non-serverless)
+    if (!process.env.VERCEL) {
+      setInterval(() => {
+        cache.cleanup();
+        if (process.env.NODE_ENV === 'production') {
+          logger.info('Periodic system check', {
+            cacheStats: cache.getStats(),
+            securityStats: securityManager.getStats(),
+            memory: `${Math.round(process.memoryUsage().rss / 1024 / 1024)}MB`,
+            uptime: `${Math.round(process.uptime() / 3600 * 100) / 100}h`
+          });
+        }
+      }, 10 * 60 * 1000); // Every 10 minutes
+    }
+  });
+}
 
 module.exports = app;
