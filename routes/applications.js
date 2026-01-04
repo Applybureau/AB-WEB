@@ -45,7 +45,8 @@ router.get('/', authenticateToken, async (req, res) => {
 // POST /api/applications - Admin adds application
 router.post('/', authenticateToken, requireAdmin, validate(schemas.application), async (req, res) => {
   try {
-    const { client_id, job_title, company, job_link, status = 'applied' } = req.body;
+    const { client_id, job_title, company, job_link, job_url, status = 'applied' } = req.body;
+    const finalJobUrl = job_url || job_link; // Support both field names
 
     // Verify client exists
     const { data: client, error: clientError } = await supabaseAdmin
@@ -65,9 +66,9 @@ router.post('/', authenticateToken, requireAdmin, validate(schemas.application),
         client_id,
         job_title,
         company,
-        job_link,
+        job_url: finalJobUrl,
         status,
-        date_applied: new Date().toISOString()
+        date_applied: new Date().toISOString().split('T')[0] // DATE format
       })
       .select()
       .single();
@@ -81,11 +82,12 @@ router.post('/', authenticateToken, requireAdmin, validate(schemas.application),
     await supabaseAdmin
       .from('notifications')
       .insert({
-        client_id,
+        user_id: client_id,
+        user_type: 'client',
         type: 'application_added',
         title: 'New Application Added',
         message: `Application for ${job_title} at ${company} has been added to your profile`,
-        read: false
+        is_read: false
       });
 
     res.status(201).json({

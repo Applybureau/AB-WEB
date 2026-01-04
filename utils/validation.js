@@ -126,7 +126,8 @@ const schemas = {
   consultation: Joi.object({
     client_id: Joi.string().uuid().required(),
     scheduled_at: Joi.date().iso().required(),
-    notes: Joi.string().max(1000).optional()
+    notes: Joi.string().max(1000).optional(),
+    admin_notes: Joi.string().max(1000).optional()
   }),
 
   application: Joi.object({
@@ -134,6 +135,7 @@ const schemas = {
     job_title: Joi.string().min(2).max(200).required(),
     company: Joi.string().min(2).max(200).required(),
     job_link: Joi.string().uri().optional(),
+    job_url: Joi.string().uri().optional(),
     status: Joi.string().valid('applied', 'interview', 'offer', 'rejected', 'withdrawn').default('applied')
   }),
 

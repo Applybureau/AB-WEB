@@ -29,7 +29,6 @@ const sendEmail = async (to, templateName, variables = {}) => {
     
     // Default variables
     const defaultVariables = {
-      logo_url: `http://localhost:3001/emails/assets/logo.png`, // Backend serves the assets
       dashboard_link: `${process.env.FRONTEND_URL || 'http://localhost:5173'}/dashboard`,
       contact_email: 'support@applybureau.com',
       company_name: 'Apply Bureau',

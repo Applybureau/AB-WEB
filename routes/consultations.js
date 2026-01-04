@@ -45,7 +45,8 @@ router.get('/', authenticateToken, async (req, res) => {
 // POST /api/consultations - Admin creates consultation
 router.post('/', authenticateToken, requireAdmin, validate(schemas.consultation), async (req, res) => {
   try {
-    const { client_id, scheduled_at, notes } = req.body;
+    const { client_id, scheduled_at, notes, admin_notes } = req.body;
+    const finalNotes = admin_notes || notes; // Support both field names
 
     // Verify client exists
     const { data: client, error: clientError } = await supabaseAdmin
@@ -64,7 +65,7 @@ router.post('/', authenticateToken, requireAdmin, validate(schemas.consultation)
       .insert({
         client_id,
         scheduled_at,
-        notes,
+        admin_notes: finalNotes,
         status: 'scheduled'
       })
       .select()
@@ -79,11 +80,12 @@ router.post('/', authenticateToken, requireAdmin, validate(schemas.consultation)
     await supabaseAdmin
       .from('notifications')
       .insert({
-        client_id,
+        user_id: client_id,
+        user_type: 'client',
         type: 'consultation_scheduled',
         title: 'Consultation Scheduled',
         message: `Your consultation has been scheduled for ${new Date(scheduled_at).toLocaleString()}`,
-        read: false
+        is_read: false
       });
 
     // Send email notification
@@ -93,7 +95,7 @@ router.post('/', authenticateToken, requireAdmin, validate(schemas.consultation)
       consultation_date: scheduledDate.toLocaleDateString(),
       consultation_time: scheduledDate.toLocaleTimeString(),
       consultation_type: 'Career Advisory Session',
-      consultation_notes: notes
+      consultation_notes: finalNotes
     });
 
     res.status(201).json({
@@ -143,7 +145,7 @@ router.patch('/:id', authenticateToken, requireAdmin, async (req, res) => {
 
     const updateData = {};
     if (scheduled_at) updateData.scheduled_at = scheduled_at;
-    if (notes !== undefined) updateData.notes = notes;
+    if (notes !== undefined) updateData.admin_notes = notes;
     if (status) updateData.status = status;
 
     const { data: consultation, error } = await supabaseAdmin
@@ -162,11 +164,12 @@ router.patch('/:id', authenticateToken, requireAdmin, async (req, res) => {
       await supabaseAdmin
         .from('notifications')
         .insert({
-          client_id: consultation.client_id,
+          user_id: consultation.client_id,
+          user_type: 'client',
           type: 'consultation_rescheduled',
           title: 'Consultation Rescheduled',
           message: `Your consultation has been rescheduled to ${new Date(scheduled_at).toLocaleString()}`,
-          read: false
+          is_read: false
         });
 
       // Send email notification
@@ -176,7 +179,7 @@ router.patch('/:id', authenticateToken, requireAdmin, async (req, res) => {
         consultation_date: scheduledDate.toLocaleDateString(),
         consultation_time: scheduledDate.toLocaleTimeString(),
         consultation_type: 'Career Advisory Session (Rescheduled)',
-        consultation_notes: consultation.notes
+        consultation_notes: consultation.admin_notes
       });
     }
 
@@ -221,11 +224,12 @@ router.delete('/:id', authenticateToken, requireAdmin, async (req, res) => {
     await supabaseAdmin
       .from('notifications')
       .insert({
-        client_id: consultation.client_id,
+        user_id: consultation.client_id,
+        user_type: 'client',
         type: 'consultation_cancelled',
         title: 'Consultation Cancelled',
         message: `Your consultation scheduled for ${new Date(consultation.scheduled_at).toLocaleString()} has been cancelled`,
-        read: false
+        is_read: false
       });
 
     res.json({ message: 'Consultation cancelled successfully' });
