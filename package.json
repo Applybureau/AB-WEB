@@ -18,7 +18,7 @@
     "test-real-world": "node scripts/real-world-test.js",
     "test-final": "node scripts/final-comprehensive-test.js",
     "deploy-check": "node scripts/deploy-check.js",
-    "postinstall": "node scripts/setup.js",
+    "health-check": "node scripts/health-check.js",
     "lint": "echo 'Linting...' && echo 'No linter configured'",
     "audit": "npm audit --audit-level=moderate",
     "security-check": "npm audit && npm run deploy-check",
@@ -56,8 +56,11 @@
     "nodemon": "^3.0.2",
     "supertest": "^6.3.3"
   },
+  "engines": {
+    "node": ">=20.0.0",
+    "npm": ">=9.0.0"
+  },
   "keywords": [
-    "nodejs",
     "express",
     "supabase",
     "backend",

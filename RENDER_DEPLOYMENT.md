@@ -6,6 +6,16 @@
 - Supabase database (already configured)
 - Resend API key (already have)
 
+## ⚠️ Important: Node.js Version Requirement
+
+**Apply Bureau Backend requires Node.js 20 or higher** due to Supabase dependencies.
+
+Make sure to set:
+- **Node Version:** `20` (not 18 or lower)
+- This is critical for Supabase compatibility
+
+---
+
 ## 📋 Step-by-Step Deployment
 
 ### 1. Create New Web Service on Render
@@ -29,7 +39,7 @@
 - **Start Command:** `npm start`
 
 **Advanced Settings:**
-- **Node Version:** `18` (or latest LTS)
+- **Node Version:** `20` (required for Supabase)
 - **Auto-Deploy:** `Yes`
 
 ### 3. Add Environment Variables
