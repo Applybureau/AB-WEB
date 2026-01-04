@@ -1,0 +1,59 @@
+{
+  "passed": 6,
+  "failed": 4,
+  "tests": [
+    {
+      "name": "Admin login",
+      "passed": true,
+      "details": "Successfully logged in as admin"
+    },
+    {
+      "name": "Use existing client",
+      "passed": true,
+      "details": "Using existing client for israelloko65@gmail.com"
+    },
+    {
+      "name": "Create consultation",
+      "passed": false,
+      "details": "Failed to create consultation"
+    },
+    {
+      "name": "Create application",
+      "passed": false,
+      "details": "Failed to create application"
+    },
+    {
+      "name": "Dashboard data retrieval",
+      "passed": false,
+      "details": "Failed to fetch client data"
+    },
+    {
+      "name": "Notifications retrieval",
+      "passed": false,
+      "details": "Failed to fetch notifications"
+    },
+    {
+      "name": "Invalid token rejection",
+      "passed": true,
+      "details": "Invalid tokens properly rejected"
+    },
+    {
+      "name": "SQL injection protection",
+      "passed": true,
+      "details": "SQL injection attempts blocked"
+    },
+    {
+      "name": "Health endpoint response time",
+      "passed": true,
+      "details": "Response time: 10ms"
+    },
+    {
+      "name": "Concurrent requests handling",
+      "passed": true,
+      "details": "5 concurrent requests in 57ms"
+    }
+  ],
+  "timestamp": "2026-01-04T15:55:51.365Z",
+  "testEmail": "israelloko65@gmail.com",
+  "baseUrl": "http://localhost:3000"
+}

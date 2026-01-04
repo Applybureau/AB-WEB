@@ -1,0 +1,70 @@
+<!-- SUBJECT: Meeting Link Created for {{client_name}} -->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Meeting Link Created</title>
+    <style>
+        body { font-family: Arial, sans-serif; line-height: 1.6; color: #333; margin: 0; padding: 0; background-color: #f4f4f4; }
+        .container { max-width: 600px; margin: 0 auto; background-color: #ffffff; padding: 20px; border-radius: 10px; box-shadow: 0 0 10px rgba(0,0,0,0.1); }
+        .header { text-align: center; margin-bottom: 30px; }
+        .logo { max-width: 200px; height: auto; }
+        .content { margin: 20px 0; }
+        .meeting-link { background-color: #28a745; color: white; padding: 15px 30px; text-decoration: none; border-radius: 5px; display: inline-block; margin: 20px 0; font-weight: bold; }
+        .client-details { background-color: #e9ecef; padding: 20px; border-radius: 5px; margin: 20px 0; }
+        .meeting-details { background-color: #f8f9fa; padding: 20px; border-radius: 5px; margin: 20px 0; }
+        .footer { margin-top: 30px; padding-top: 20px; border-top: 1px solid #eee; font-size: 12px; color: #666; text-align: center; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <img src="{{logo_url}}" alt="Apply Bureau Logo" class="logo">
+        </div>
+        
+        <div class="content">
+            <h2>Meeting Link Created 📅</h2>
+            
+            <p>Hello {{admin_name}},</p>
+            
+            <p>A meeting link has been automatically created for your upcoming consultation.</p>
+            
+            <div class="client-details">
+                <h3>Client Information</h3>
+                <p><strong>Name:</strong> {{client_name}}</p>
+                <p><strong>Consultation ID:</strong> {{consultation_id}}</p>
+            </div>
+            
+            <div class="meeting-details">
+                <h3>Meeting Details</h3>
+                <p><strong>Date & Time:</strong> {{consultation_date}} at {{consultation_time}}</p>
+                <p><strong>Meeting Link:</strong> <a href="{{meeting_link}}">{{meeting_link}}</a></p>
+            </div>
+            
+            <div style="text-align: center;">
+                <a href="{{meeting_link}}" class="meeting-link">Join Meeting</a>
+            </div>
+            
+            <p>The client has been automatically notified and provided with the same meeting link.</p>
+            
+            <p><strong>Next Steps:</strong></p>
+            <ul>
+                <li>Review the client's information in the admin dashboard</li>
+                <li>Prepare consultation materials</li>
+                <li>Join the meeting 5 minutes early</li>
+            </ul>
+            
+            <div style="text-align: center;">
+                <a href="{{dashboard_link}}" style="color: #007bff; text-decoration: none;">View Admin Dashboard</a>
+            </div>
+        </div>
+        
+        <div class="footer">
+            <p>Apply Bureau Admin System</p>
+            <p>Contact support: <a href="mailto:{{contact_email}}">{{contact_email}}</a></p>
+            <p>&copy; {{current_year}} {{company_name}}. All rights reserved.</p>
+        </div>
+    </div>
+</body>
+</html>

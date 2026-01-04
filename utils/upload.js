@@ -1,0 +1,80 @@
+const multer = require('multer');
+const path = require('path');
+const { supabaseAdmin } = require('./supabase');
+
+// Configure multer for file uploads
+const storage = multer.memoryStorage();
+
+const fileFilter = (req, file, cb) => {
+  // Allow only PDF files for resumes
+  if (file.fieldname === 'resume') {
+    if (file.mimetype === 'application/pdf') {
+      cb(null, true);
+    } else {
+      cb(new Error('Only PDF files are allowed for resumes'), false);
+    }
+  } else {
+    cb(null, true);
+  }
+};
+
+const upload = multer({
+  storage: storage,
+  fileFilter: fileFilter,
+  limits: {
+    fileSize: 5 * 1024 * 1024 // 5MB limit
+  }
+});
+
+const uploadToSupabase = async (file, bucket, filePath) => {
+  try {
+    const { data, error } = await supabaseAdmin.storage
+      .from(bucket)
+      .upload(filePath, file.buffer, {
+        contentType: file.mimetype,
+        upsert: true
+      });
+
+    if (error) {
+      console.error('Supabase upload error:', error);
+      throw error;
+    }
+
+    // Get public URL
+    const { data: urlData } = supabaseAdmin.storage
+      .from(bucket)
+      .getPublicUrl(filePath);
+
+    return {
+      path: data.path,
+      url: urlData.publicUrl
+    };
+  } catch (error) {
+    console.error('Upload to Supabase failed:', error);
+    throw error;
+  }
+};
+
+const deleteFromSupabase = async (bucket, filePath) => {
+  try {
+    const { error } = await supabaseAdmin.storage
+      .from(bucket)
+      .remove([filePath]);
+
+    if (error) {
+      console.error('Supabase delete error:', error);
+      throw error;
+    }
+
+    return true;
+  } catch (error) {
+    console.error('Delete from Supabase failed:', error);
+    throw error;
+  }
+};
+
+module.exports = {
+  upload,
+  uploadToSupabase,
+  deleteFromSupabase
+};

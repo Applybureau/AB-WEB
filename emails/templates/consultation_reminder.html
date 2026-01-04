@@ -1,0 +1,126 @@
+<!-- SUBJECT: Consultation Reminder - Tomorrow at {{consultation_time}} -->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Consultation Reminder</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            line-height: 1.6;
+            color: #333;
+            max-width: 600px;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: #f8f9fa;
+        }
+        .container {
+            background-color: white;
+            border-radius: 10px;
+            padding: 40px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }
+        .header {
+            text-align: center;
+            margin-bottom: 30px;
+        }
+        .logo {
+            max-width: 200px;
+            height: auto;
+        }
+        .content {
+            margin-bottom: 30px;
+        }
+        .consultation-details {
+            background-color: #e8f4fd;
+            border-left: 4px solid #007bff;
+            padding: 20px;
+            margin: 20px 0;
+            border-radius: 5px;
+        }
+        .cta-button {
+            display: inline-block;
+            background-color: #007bff;
+            color: white;
+            padding: 15px 30px;
+            text-decoration: none;
+            border-radius: 5px;
+            font-weight: bold;
+            margin: 20px 0;
+        }
+        .cta-button:hover {
+            background-color: #0056b3;
+        }
+        .preparation-tips {
+            background-color: #f8f9fa;
+            padding: 20px;
+            border-radius: 5px;
+            margin: 20px 0;
+        }
+        .footer {
+            text-align: center;
+            margin-top: 40px;
+            padding-top: 20px;
+            border-top: 1px solid #eee;
+            color: #666;
+            font-size: 14px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <img src="{{logo_url}}" alt="Apply Bureau" class="logo">
+        </div>
+        
+        <div class="content">
+            <h2>Consultation Reminder</h2>
+            
+            <p>Hello {{client_name}},</p>
+            
+            <p>This is a friendly reminder that you have a consultation scheduled with your career advisor tomorrow.</p>
+            
+            <div class="consultation-details">
+                <h3>📅 Consultation Details</h3>
+                <p><strong>Date:</strong> {{consultation_date}}</p>
+                <p><strong>Time:</strong> {{consultation_time}}</p>
+                <p><strong>Advisor:</strong> {{advisor_name}}</p>
+                {{#if meeting_url}}
+                <p><strong>Meeting Link:</strong> <a href="{{meeting_url}}">Join Meeting</a></p>
+                {{/if}}
+            </div>
+            
+            <div class="preparation-tips">
+                <h3>💡 How to Prepare</h3>
+                <ul>
+                    <li>Review your current job search goals and challenges</li>
+                    <li>Prepare any questions about your application strategy</li>
+                    <li>Have your resume ready for discussion</li>
+                    <li>Think about specific roles or companies you're interested in</li>
+                    <li>Be ready to discuss your career timeline and preferences</li>
+                </ul>
+            </div>
+            
+            {{#if meeting_url}}
+            <div style="text-align: center;">
+                <a href="{{meeting_url}}" class="cta-button">Join Meeting</a>
+            </div>
+            {{/if}}
+            
+            <p>If you need to reschedule or have any questions, please contact us as soon as possible.</p>
+            
+            <p>We look forward to speaking with you!</p>
+            
+            <p>Best regards,<br>
+            {{advisor_name}}<br>
+            Apply Bureau Team</p>
+        </div>
+        
+        <div class="footer">
+            <p>&copy; {{current_year}} {{company_name}}. All rights reserved.</p>
+            <p>Need to reschedule? Contact us at <a href="mailto:{{contact_email}}">{{contact_email}}</a></p>
+        </div>
+    </div>
+</body>
+</html>

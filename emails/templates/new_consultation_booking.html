@@ -1,0 +1,125 @@
+<!-- SUBJECT: New Consultation Booking - {{prospect_name}} -->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>New Consultation Booking</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            line-height: 1.6;
+            color: #333;
+            max-width: 600px;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: #f8f9fa;
+        }
+        .container {
+            background-color: white;
+            border-radius: 10px;
+            padding: 40px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }
+        .header {
+            text-align: center;
+            margin-bottom: 30px;
+        }
+        .logo {
+            max-width: 200px;
+            height: auto;
+        }
+        .content {
+            margin-bottom: 30px;
+        }
+        .booking-details {
+            background-color: #e8f4fd;
+            border-left: 4px solid #007bff;
+            padding: 20px;
+            margin: 20px 0;
+            border-radius: 5px;
+        }
+        .prospect-info {
+            background-color: #f8f9fa;
+            padding: 20px;
+            border-radius: 5px;
+            margin: 20px 0;
+        }
+        .cta-button {
+            display: inline-block;
+            background-color: #28a745;
+            color: white;
+            padding: 15px 30px;
+            text-decoration: none;
+            border-radius: 5px;
+            font-weight: bold;
+            margin: 20px 0;
+        }
+        .cta-button:hover {
+            background-color: #218838;
+        }
+        .footer {
+            text-align: center;
+            margin-top: 40px;
+            padding-top: 20px;
+            border-top: 1px solid #eee;
+            color: #666;
+            font-size: 14px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <img src="{{logo_url}}" alt="Apply Bureau" class="logo">
+        </div>
+        
+        <div class="content">
+            <h2>🎯 New Consultation Booking</h2>
+            
+            <p>Hello {{admin_name}},</p>
+            
+            <p>You have a new consultation booking from your website!</p>
+            
+            <div class="prospect-info">
+                <h3>👤 Prospect Information</h3>
+                <p><strong>Name:</strong> {{prospect_name}}</p>
+                <p><strong>Email:</strong> {{prospect_email}}</p>
+                <p><strong>Package Interest:</strong> {{package_interest}}</p>
+                <p><strong>Reason:</strong> {{reason}}</p>
+                <p><strong>Timeline:</strong> {{timeline}}</p>
+            </div>
+            
+            <div class="booking-details">
+                <h3>📅 Consultation Details</h3>
+                <p><strong>Date:</strong> {{consultation_date}}</p>
+                <p><strong>Time:</strong> {{consultation_time}}</p>
+                <p><strong>Type:</strong> Free Initial Consultation</p>
+            </div>
+            
+            <p><strong>Next Steps:</strong></p>
+            <ul>
+                <li>Review the prospect's information and package interest</li>
+                <li>Confirm the consultation time or suggest alternatives</li>
+                <li>Prepare consultation materials based on their needs</li>
+                <li>After consultation, decide on onboarding and package selection</li>
+                <li>Handle payment via Interac e-Transfer if proceeding</li>
+            </ul>
+            
+            <div style="text-align: center;">
+                <a href="{{dashboard_link}}" class="cta-button">View in Admin Dashboard</a>
+            </div>
+            
+            <p><em>Remember: The consultation comes first and is free. This is where you discuss goals, timing, and confirm which package makes sense before anything starts.</em></p>
+            
+            <p>Best regards,<br>
+            Apply Bureau System</p>
+        </div>
+        
+        <div class="footer">
+            <p>&copy; {{current_year}} {{company_name}}. All rights reserved.</p>
+            <p>Admin Dashboard: <a href="{{dashboard_link}}">{{dashboard_link}}</a></p>
+        </div>
+    </div>
+</body>
+</html>

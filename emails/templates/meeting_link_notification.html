@@ -1,0 +1,71 @@
+<!-- SUBJECT: Your Meeting Link is Ready -->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Meeting Link Ready</title>
+    <style>
+        body { font-family: Arial, sans-serif; line-height: 1.6; color: #333; margin: 0; padding: 0; background-color: #f4f4f4; }
+        .container { max-width: 600px; margin: 0 auto; background-color: #ffffff; padding: 20px; border-radius: 10px; box-shadow: 0 0 10px rgba(0,0,0,0.1); }
+        .header { text-align: center; margin-bottom: 30px; }
+        .logo { max-width: 200px; height: auto; }
+        .content { margin: 20px 0; }
+        .meeting-link { background-color: #007bff; color: white; padding: 15px 30px; text-decoration: none; border-radius: 5px; display: inline-block; margin: 20px 0; font-weight: bold; }
+        .meeting-details { background-color: #f8f9fa; padding: 20px; border-radius: 5px; margin: 20px 0; }
+        .reminder-box { background-color: #fff3cd; border: 1px solid #ffeaa7; padding: 15px; border-radius: 5px; margin: 20px 0; }
+        .footer { margin-top: 30px; padding-top: 20px; border-top: 1px solid #eee; font-size: 12px; color: #666; text-align: center; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <img src="{{logo_url}}" alt="Apply Bureau Logo" class="logo">
+        </div>
+        
+        <div class="content">
+            <h2>Your Meeting Link is Ready! 🎯</h2>
+            
+            <p>Hello {{client_name}},</p>
+            
+            <p>Great news! Your consultation meeting link has been created and is ready to use.</p>
+            
+            <div class="meeting-details">
+                <h3>Meeting Details</h3>
+                <p><strong>Date & Time:</strong> {{consultation_date}} at {{consultation_time}}</p>
+                <p><strong>Type:</strong> {{consultation_type}}</p>
+                <p><strong>Duration:</strong> 60 minutes</p>
+            </div>
+            
+            <div style="text-align: center;">
+                <a href="{{meeting_link}}" class="meeting-link">Join Meeting</a>
+            </div>
+            
+            <div class="reminder-box">
+                <h4>📋 Before the Meeting:</h4>
+                <ul>
+                    <li>Test your camera and microphone</li>
+                    <li>Have your resume ready for review</li>
+                    <li>Prepare specific questions about your job search</li>
+                    <li>Find a quiet, well-lit space</li>
+                    <li>Join 5 minutes early</li>
+                </ul>
+            </div>
+            
+            <p><strong>Meeting Link:</strong> <a href="{{meeting_link}}">{{meeting_link}}</a></p>
+            
+            <p>You can also access this meeting link anytime from your dashboard.</p>
+            
+            <div style="text-align: center;">
+                <a href="{{dashboard_link}}" style="color: #007bff; text-decoration: none;">Visit Your Dashboard</a>
+            </div>
+        </div>
+        
+        <div class="footer">
+            <p>Best regards,<br>The Apply Bureau Team</p>
+            <p>Contact us: <a href="mailto:{{contact_email}}">{{contact_email}}</a></p>
+            <p>&copy; {{current_year}} {{company_name}}. All rights reserved.</p>
+        </div>
+    </div>
+</body>
+</html>

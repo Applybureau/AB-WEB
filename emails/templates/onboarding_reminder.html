@@ -1,0 +1,145 @@
+<!-- SUBJECT: Complete Your Apply Bureau Registration -->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Complete Your Registration</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            line-height: 1.6;
+            color: #333;
+            max-width: 600px;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: #f8f9fa;
+        }
+        .container {
+            background-color: white;
+            border-radius: 10px;
+            padding: 40px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }
+        .header {
+            text-align: center;
+            margin-bottom: 30px;
+        }
+        .logo {
+            max-width: 200px;
+            height: auto;
+        }
+        .content {
+            margin-bottom: 30px;
+        }
+        .progress-bar {
+            background-color: #e9ecef;
+            border-radius: 10px;
+            height: 20px;
+            margin: 20px 0;
+            overflow: hidden;
+        }
+        .progress-fill {
+            background-color: #28a745;
+            height: 100%;
+            width: 60%;
+            border-radius: 10px;
+        }
+        .checklist {
+            background-color: #f8f9fa;
+            padding: 20px;
+            border-radius: 5px;
+            margin: 20px 0;
+        }
+        .checklist ul {
+            list-style: none;
+            padding: 0;
+        }
+        .checklist li {
+            padding: 8px 0;
+            border-bottom: 1px solid #dee2e6;
+        }
+        .checklist li:last-child {
+            border-bottom: none;
+        }
+        .cta-button {
+            display: inline-block;
+            background-color: #007bff;
+            color: white;
+            padding: 15px 30px;
+            text-decoration: none;
+            border-radius: 5px;
+            font-weight: bold;
+            margin: 20px 0;
+        }
+        .cta-button:hover {
+            background-color: #0056b3;
+        }
+        .footer {
+            text-align: center;
+            margin-top: 40px;
+            padding-top: 20px;
+            border-top: 1px solid #eee;
+            color: #666;
+            font-size: 14px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <img src="{{logo_url}}" alt="Apply Bureau" class="logo">
+        </div>
+        
+        <div class="content">
+            <h2>Complete Your Apply Bureau Registration</h2>
+            
+            <p>Hello {{client_name}},</p>
+            
+            <p>We noticed you haven't completed your registration with Apply Bureau yet. We're excited to help you with your job search, but we need a bit more information to get started!</p>
+            
+            <div class="progress-bar">
+                <div class="progress-fill"></div>
+            </div>
+            <p style="text-align: center; color: #666; font-size: 14px;">Registration Progress: 60% Complete</p>
+            
+            <div class="checklist">
+                <h3>📋 Complete Your Profile</h3>
+                <ul>
+                    <li>✅ Account created</li>
+                    <li>✅ Email verified</li>
+                    <li>❌ Upload your resume</li>
+                    <li>❌ Set your career goals</li>
+                    <li>❌ Define your target role</li>
+                    <li>❌ Change your temporary password</li>
+                </ul>
+            </div>
+            
+            <p><strong>Why complete your registration?</strong></p>
+            <ul>
+                <li>🎯 Get personalized job applications</li>
+                <li>📊 Track your application progress</li>
+                <li>💬 Communicate directly with your advisor</li>
+                <li>📅 Schedule follow-up consultations</li>
+                <li>📈 Access detailed analytics and insights</li>
+            </ul>
+            
+            <div style="text-align: center;">
+                <a href="{{dashboard_link}}" class="cta-button">Complete Registration</a>
+            </div>
+            
+            <p>It only takes 5 minutes to complete, and once done, your dedicated advisor can start working on your applications immediately.</p>
+            
+            <p>If you have any questions or need assistance, please don't hesitate to reach out to us.</p>
+            
+            <p>Best regards,<br>
+            The Apply Bureau Team</p>
+        </div>
+        
+        <div class="footer">
+            <p>&copy; {{current_year}} {{company_name}}. All rights reserved.</p>
+            <p>Need help? Contact us at <a href="mailto:{{contact_email}}">{{contact_email}}</a></p>
+        </div>
+    </div>
+</body>
+</html>
