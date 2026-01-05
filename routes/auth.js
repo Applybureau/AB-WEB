@@ -197,10 +197,11 @@ router.get('/me', authenticateToken, async (req, res) => {
     const { data: client, error } = await supabaseAdmin
       .from('clients')
       .select('id, email, full_name, role, onboarding_complete, resume_url')
-      .eq('id', req.user.id)
+      .eq('id', req.user.userId || req.user.id)
       .single();
 
     if (error || !client) {
+      console.error('Get user error:', error);
       return res.status(404).json({ error: 'User not found' });
     }
 

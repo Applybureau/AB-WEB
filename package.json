@@ -19,6 +19,7 @@
     "test-final": "node scripts/final-comprehensive-test.js",
     "deploy-check": "node scripts/deploy-check.js",
     "health-check": "node scripts/health-check.js",
+    "test-live": "node scripts/test-live-backend.js",
     "lint": "echo 'Linting...' && echo 'No linter configured'",
     "audit": "npm audit --audit-level=moderate",
     "security-check": "npm audit && npm run deploy-check",

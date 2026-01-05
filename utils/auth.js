@@ -1,5 +1,5 @@
 const jwt = require('jsonwebtoken');
-const { supabase } = require('./supabase');
+const { supabaseAdmin } = require('./supabase');
 
 const generateToken = (payload) => {
   return jwt.sign(payload, process.env.JWT_SECRET, { expiresIn: '24h' });
@@ -21,7 +21,7 @@ const authenticateToken = async (req, res, next) => {
     const decoded = verifyToken(token);
     
     // Verify user exists in database
-    const { data: user, error } = await supabase
+    const { data: user, error } = await supabaseAdmin
       .from('clients')
       .select('id, email, role')
       .eq('id', decoded.userId)
@@ -31,7 +31,7 @@ const authenticateToken = async (req, res, next) => {
       return res.status(401).json({ error: 'Invalid token' });
     }
 
-    req.user = user;
+    req.user = { ...user, userId: user.id };
     next();
   } catch (error) {
     return res.status(403).json({ error: 'Invalid or expired token' });

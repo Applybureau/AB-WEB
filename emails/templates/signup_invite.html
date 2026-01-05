@@ -5,178 +5,77 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Welcome to Apply Bureau</title>
-    <style>
-        * { margin: 0; padding: 0; box-sizing: border-box; }
-        body { 
-            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif; 
-            line-height: 1.6; 
-            color: #333333; 
-            background-color: #f8fafc; 
-            margin: 0; 
-            padding: 0; 
-        }
-        .email-container { 
-            max-width: 600px; 
-            margin: 0 auto; 
-            background-color: #ffffff; 
-            border-radius: 12px; 
-            overflow: hidden;
-            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1); 
-        }
-        .header { 
-            background: linear-gradient(135deg, #10b981 0%, #06b6d4 100%);
-            padding: 40px 30px; 
-            text-align: center; 
-        }
-        .logo { 
-            width: 120px; 
-            height: auto; 
-            margin-bottom: 20px;
-            border-radius: 8px;
-        }
-        .header h1 {
-            color: #ffffff;
-            font-size: 28px;
-            font-weight: 600;
-            margin: 0;
-        }
-        .content { 
-            padding: 40px 30px; 
-        }
-        .content h2 {
-            color: #1a202c;
-            font-size: 24px;
-            font-weight: 600;
-            margin-bottom: 20px;
-        }
-        .content p {
-            color: #4a5568;
-            font-size: 16px;
-            margin-bottom: 16px;
-            line-height: 1.6;
-        }
-        .cta-button { 
-            display: inline-block; 
-            background: linear-gradient(135deg, #10b981 0%, #06b6d4 100%);
-            color: #ffffff !important; 
-            padding: 16px 32px; 
-            text-decoration: none; 
-            border-radius: 8px; 
-            font-weight: 600;
-            font-size: 16px;
-            margin: 24px 0; 
-            transition: transform 0.2s ease;
-        }
-        .cta-button:hover {
-            transform: translateY(-2px);
-        }
-        .features {
-            background-color: #f7fafc;
-            border-radius: 8px;
-            padding: 24px;
-            margin: 24px 0;
-        }
-        .features h3 {
-            color: #2d3748;
-            font-size: 18px;
-            font-weight: 600;
-            margin-bottom: 16px;
-        }
-        .features ul {
-            list-style: none;
-            padding: 0;
-        }
-        .features li {
-            color: #4a5568;
-            padding: 8px 0;
-            position: relative;
-            padding-left: 24px;
-        }
-        .features li:before {
-            content: "✓";
-            position: absolute;
-            left: 0;
-            color: #48bb78;
-            font-weight: bold;
-        }
-        .footer { 
-            background-color: #edf2f7;
-            padding: 30px; 
-            text-align: center; 
-            border-top: 1px solid #e2e8f0;
-        }
-        .footer p {
-            color: #718096;
-            font-size: 14px;
-            margin-bottom: 8px;
-        }
-        .footer a {
-            color: #10b981;
-            text-decoration: none;
-        }
-        .social-links {
-            margin: 20px 0;
-        }
-        .social-links a {
-            display: inline-block;
-            margin: 0 8px;
-            color: #718096;
-            text-decoration: none;
-        }
-        @media only screen and (max-width: 600px) {
-            .email-container { margin: 0 10px; }
-            .header, .content, .footer { padding: 20px; }
-            .logo { width: 100px; }
-            .header h1 { font-size: 24px; }
-            .content h2 { font-size: 20px; }
-        }
-    </style>
 </head>
-<body>
-    <div class="email-container">
-        <div class="header">
-            <img src="https://raw.githubusercontent.com/jesusboy-ops/Apply_Bureau_backend/main/emails/assets/logo.png" alt="Apply Bureau Logo" class="logo" onerror="this.style.display='none'">
-            <h1>Welcome to Apply Bureau</h1>
-        </div>
-        
-        <div class="content">
-            <h2>Hello {{client_name}}!</h2>
-            
-            <p>We're thrilled to welcome you to Apply Bureau, your professional application and interview advisory system. Your journey to career success starts here!</p>
-            
-            <div style="text-align: center;">
-                <a href="{{registration_link}}" class="cta-button">Complete Your Registration</a>
-            </div>
-            
-            <div class="features">
-                <h3>What you'll get with Apply Bureau:</h3>
-                <ul>
-                    <li>Personalized job application tracking and management</li>
-                    <li>One-on-one consultations with experienced career advisors</li>
-                    <li>Professional resume review and optimization</li>
-                    <li>Interview preparation and coaching sessions</li>
-                    <li>Real-time updates on your application progress</li>
-                    <li>Industry insights and career guidance</li>
-                </ul>
-            </div>
-            
-            <p>Complete your registration to unlock all these powerful features and take control of your career journey.</p>
-            
-            <p>If you have any questions, our support team is here to help you every step of the way.</p>
-        </div>
-        
-        <div class="footer">
-            <p><strong>Apply Bureau Team</strong></p>
-            <p>Your Partner in Career Success</p>
-            <div class="social-links">
-                <a href="mailto:{{contact_email}}">Contact Support</a> |
-                <a href="{{dashboard_link}}">Visit Dashboard</a>
-            </div>
-            <p style="margin-top: 20px; font-size: 12px; color: #a0aec0;">
-                &copy; {{current_year}} {{company_name}}. All rights reserved.<br>
-                This email was sent to you because you were invited to join Apply Bureau.
-            </p>
-        </div>
-    </div>
+<body style="margin: 0; padding: 0; font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif; background-color: #f4f7f9; color: #2d3748;">
+    <table border="0" cellpadding="0" cellspacing="0" width="100%" style="table-layout: fixed;">
+        <tr>
+            <td align="center" style="padding: 40px 0;">
+                <table border="0" cellpadding="0" cellspacing="0" width="600" style="background-color: #ffffff; border-radius: 8px; overflow: hidden; border: 1px solid #e2e8f0; box-shadow: 0 4px 12px rgba(0,0,0,0.05);">
+                    <!-- Header with Logo -->
+                    <tr>
+                        <td align="center" style="padding: 40px 40px 20px 40px; background: linear-gradient(135deg, #10b981 0%, #06b6d4 100%);">
+                            <img src="https://raw.githubusercontent.com/jesusboy-ops/Apply_Bureau_backend/main/logo.png" alt="Apply Bureau" width="160" style="display: block; border: 0;">
+                            <h1 style="color: #ffffff; font-size: 28px; font-weight: 600; margin: 20px 0 0 0;">Welcome to Apply Bureau</h1>
+                        </td>
+                    </tr>
+                    
+                    <!-- Main Content -->
+                    <tr>
+                        <td style="padding: 40px;">
+                            <h2 style="font-size: 24px; color: #1a202c; margin-bottom: 20px;">Hello {{client_name}}!</h2>
+                            
+                            <p style="font-size: 16px; line-height: 1.6; color: #4a5568; margin-bottom: 20px;">We're thrilled to welcome you to Apply Bureau, your professional application and interview advisory system. Your journey to career success starts here!</p>
+                            
+                            <!-- CTA Button -->
+                            <table border="0" cellpadding="0" cellspacing="0" width="100%" style="margin: 30px 0;">
+                                <tr>
+                                    <td align="center">
+                                        <a href="{{registration_link}}" style="background: linear-gradient(135deg, #10b981 0%, #06b6d4 100%); color: #ffffff; padding: 16px 32px; text-decoration: none; border-radius: 8px; font-weight: 600; font-size: 16px; display: inline-block;">Complete Your Registration</a>
+                                    </td>
+                                </tr>
+                            </table>
+                            
+                            <!-- Features Box -->
+                            <table border="0" cellpadding="0" cellspacing="0" width="100%" style="background-color: #f8fafc; border-radius: 8px; margin: 30px 0;">
+                                <tr>
+                                    <td style="padding: 30px; border-left: 4px solid #10b981;">
+                                        <h3 style="margin: 0 0 20px 0; font-size: 18px; color: #2d3748;">What you'll get with Apply Bureau:</h3>
+                                        <table border="0" cellpadding="0" cellspacing="0" width="100%">
+                                            <tr><td style="padding: 4px 0; font-size: 15px; color: #4a5568;">✓ Personalized job application tracking and management</td></tr>
+                                            <tr><td style="padding: 4px 0; font-size: 15px; color: #4a5568;">✓ One-on-one consultations with experienced career advisors</td></tr>
+                                            <tr><td style="padding: 4px 0; font-size: 15px; color: #4a5568;">✓ Professional resume review and optimization</td></tr>
+                                            <tr><td style="padding: 4px 0; font-size: 15px; color: #4a5568;">✓ Interview preparation and coaching sessions</td></tr>
+                                            <tr><td style="padding: 4px 0; font-size: 15px; color: #4a5568;">✓ Real-time updates on your application progress</td></tr>
+                                            <tr><td style="padding: 4px 0; font-size: 15px; color: #4a5568;">✓ Industry insights and career guidance</td></tr>
+                                        </table>
+                                    </td>
+                                </tr>
+                            </table>
+                            
+                            <p style="font-size: 16px; line-height: 1.6; color: #4a5568; margin-bottom: 16px;">Complete your registration to unlock all these powerful features and take control of your career journey.</p>
+                            
+                            <p style="font-size: 16px; line-height: 1.6; color: #4a5568;">If you have any questions, our support team is here to help you every step of the way.</p>
+                        </td>
+                    </tr>
+                    
+                    <!-- Footer -->
+                    <tr>
+                        <td style="padding: 40px; background-color: #1a202c; color: #ffffff; text-align: center; font-size: 12px;">
+                            <p style="margin: 0 0 10px 0; font-weight: 600;">Apply Bureau Team</p>
+                            <p style="margin: 0 0 20px 0;">Your Partner in Career Success</p>
+                            <p style="margin: 0;">
+                                <a href="mailto:{{contact_email}}" style="color: #10b981; text-decoration: none;">Contact Support</a> | 
+                                <a href="{{dashboard_link}}" style="color: #10b981; text-decoration: none;">Visit Dashboard</a>
+                            </p>
+                            <p style="margin: 20px 0 0 0; color: #a0aec0;">
+                                &copy; {{current_year}} {{company_name}}. All rights reserved.<br>
+                                This email was sent to you because you were invited to join Apply Bureau.
+                            </p>
+                        </td>
+                    </tr>
+                </table>
+            </td>
+        </tr>
+    </table>
 </body>
 </html>

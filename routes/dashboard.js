@@ -1,5 +1,5 @@
 const express = require('express');
-const { supabase } = require('../utils/supabase');
+const { supabaseAdmin } = require('../utils/supabase');
 const { authenticateToken } = require('../utils/auth');
 
 const router = express.Router();
@@ -10,7 +10,7 @@ router.get('/', authenticateToken, async (req, res) => {
     const clientId = req.user.id;
 
     // Get client info
-    const { data: client, error: clientError } = await supabase
+    const { data: client, error: clientError } = await supabaseAdmin
       .from('clients')
       .select('id, full_name, email, onboarding_complete, resume_url')
       .eq('id', clientId)
@@ -22,7 +22,7 @@ router.get('/', authenticateToken, async (req, res) => {
     }
 
     // Get recent applications
-    const { data: applications, error: appsError } = await supabase
+    const { data: applications, error: appsError } = await supabaseAdmin
       .from('applications')
       .select('*')
       .eq('client_id', clientId)
@@ -34,7 +34,7 @@ router.get('/', authenticateToken, async (req, res) => {
     }
 
     // Get upcoming consultations
-    const { data: consultations, error: consultError } = await supabase
+    const { data: consultations, error: consultError } = await supabaseAdmin
       .from('consultations')
       .select('*')
       .eq('client_id', clientId)
@@ -47,11 +47,11 @@ router.get('/', authenticateToken, async (req, res) => {
     }
 
     // Get unread notifications
-    const { data: notifications, error: notifError } = await supabase
+    const { data: notifications, error: notifError } = await supabaseAdmin
       .from('notifications')
       .select('*')
-      .eq('client_id', clientId)
-      .eq('read', false)
+      .eq('user_id', clientId)
+      .eq('is_read', false)
       .order('created_at', { ascending: false })
       .limit(10);
 
@@ -94,7 +94,7 @@ router.get('/stats', authenticateToken, async (req, res) => {
     const clientId = req.user.id;
 
     // Get all applications for detailed stats
-    const { data: applications, error } = await supabase
+    const { data: applications, error } = await supabaseAdmin
       .from('applications')
       .select('status, created_at, date_applied')
       .eq('client_id', clientId);

@@ -5,228 +5,106 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Consultation Scheduled</title>
-    <style>
-        * { margin: 0; padding: 0; box-sizing: border-box; }
-        body { 
-            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif; 
-            line-height: 1.6; 
-            color: #333333; 
-            background-color: #f8fafc; 
-            margin: 0; 
-            padding: 0; 
-        }
-        .email-container { 
-            max-width: 600px; 
-            margin: 0 auto; 
-            background-color: #ffffff; 
-            border-radius: 12px; 
-            overflow: hidden;
-            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1); 
-        }
-        .header { 
-            background: linear-gradient(135deg, #10b981 0%, #06b6d4 100%);
-            padding: 40px 30px; 
-            text-align: center; 
-        }
-        .logo { 
-            width: 120px; 
-            height: auto; 
-            margin-bottom: 20px;
-            border-radius: 8px;
-        }
-        .header h1 {
-            color: #ffffff;
-            font-size: 28px;
-            font-weight: 600;
-            margin: 0;
-        }
-        .content { 
-            padding: 40px 30px; 
-        }
-        .content h2 {
-            color: #1a202c;
-            font-size: 24px;
-            font-weight: 600;
-            margin-bottom: 20px;
-        }
-        .content p {
-            color: #4a5568;
-            font-size: 16px;
-            margin-bottom: 16px;
-            line-height: 1.6;
-        }
-        .cta-button { 
-            display: inline-block; 
-            background: linear-gradient(135deg, #10b981 0%, #06b6d4 100%);
-            color: #ffffff !important; 
-            padding: 16px 32px; 
-            text-decoration: none; 
-            border-radius: 8px; 
-            font-weight: 600;
-            font-size: 16px;
-            margin: 24px 0; 
-            transition: transform 0.2s ease;
-        }
-        .cta-button:hover {
-            transform: translateY(-2px);
-        }
-        .consultation-details { 
-            background: linear-gradient(135deg, #edf2f7 0%, #e2e8f0 100%);
-            border-radius: 12px; 
-            padding: 30px; 
-            margin: 30px 0; 
-            border-left: 4px solid #10b981;
-        }
-        .consultation-details h3 {
-            color: #2d3748;
-            font-size: 20px;
-            font-weight: 600;
-            margin-bottom: 20px;
-            display: flex;
-            align-items: center;
-        }
-        .consultation-details h3:before {
-            content: "📅";
-            margin-right: 10px;
-            font-size: 24px;
-        }
-        .detail-item {
-            display: flex;
-            margin-bottom: 12px;
-            align-items: center;
-        }
-        .detail-label {
-            font-weight: 600;
-            color: #2d3748;
-            min-width: 100px;
-            margin-right: 16px;
-        }
-        .detail-value {
-            color: #4a5568;
-            flex: 1;
-        }
-        .preparation-tips {
-            background-color: #f0fff4;
-            border-radius: 8px;
-            padding: 24px;
-            margin: 24px 0;
-            border-left: 4px solid #10b981;
-        }
-        .preparation-tips h3 {
-            color: #22543d;
-            font-size: 18px;
-            font-weight: 600;
-            margin-bottom: 16px;
-        }
-        .preparation-tips ul {
-            list-style: none;
-            padding: 0;
-        }
-        .preparation-tips li {
-            color: #2f855a;
-            padding: 6px 0;
-            position: relative;
-            padding-left: 24px;
-        }
-        .preparation-tips li:before {
-            content: "💡";
-            position: absolute;
-            left: 0;
-        }
-        .footer { 
-            background-color: #edf2f7;
-            padding: 30px; 
-            text-align: center; 
-            border-top: 1px solid #e2e8f0;
-        }
-        .footer p {
-            color: #718096;
-            font-size: 14px;
-            margin-bottom: 8px;
-        }
-        .footer a {
-            color: #10b981;
-            text-decoration: none;
-        }
-        @media only screen and (max-width: 600px) {
-            .email-container { margin: 0 10px; }
-            .header, .content, .footer { padding: 20px; }
-            .consultation-details { padding: 20px; }
-            .logo { width: 100px; }
-            .header h1 { font-size: 24px; }
-            .content h2 { font-size: 20px; }
-            .detail-item { flex-direction: column; align-items: flex-start; }
-            .detail-label { min-width: auto; margin-bottom: 4px; }
-        }
-    </style>
 </head>
-<body>
-    <div class="email-container">
-        <div class="header">
-            <img src="https://raw.githubusercontent.com/jesusboy-ops/Apply_Bureau_backend/main/emails/assets/logo.png" alt="Apply Bureau Logo" class="logo" onerror="this.style.display='none'">
-            <h1>Consultation Scheduled!</h1>
-        </div>
-        
-        <div class="content">
-            <h2>Great news, {{client_name}}!</h2>
-            
-            <p>Your consultation with our expert career advisor has been successfully scheduled. We're excited to help you advance your career journey!</p>
-            
-            <div class="consultation-details">
-                <h3>Consultation Details</h3>
-                <div class="detail-item">
-                    <span class="detail-label">📅 Date:</span>
-                    <span class="detail-value">{{consultation_date}}</span>
-                </div>
-                <div class="detail-item">
-                    <span class="detail-label">🕐 Time:</span>
-                    <span class="detail-value">{{consultation_time}}</span>
-                </div>
-                <div class="detail-item">
-                    <span class="detail-label">⏱️ Duration:</span>
-                    <span class="detail-value">60 minutes</span>
-                </div>
-                <div class="detail-item">
-                    <span class="detail-label">💼 Type:</span>
-                    <span class="detail-value">{{consultation_type}}</span>
-                </div>
-                {{#consultation_notes}}
-                <div class="detail-item">
-                    <span class="detail-label">📝 Notes:</span>
-                    <span class="detail-value">{{consultation_notes}}</span>
-                </div>
-                {{/consultation_notes}}
-            </div>
-            
-            <div class="preparation-tips">
-                <h3>How to Prepare for Your Session</h3>
-                <ul>
-                    <li>Have your current resume ready for review and feedback</li>
-                    <li>Prepare specific questions about your job search strategy</li>
-                    <li>Think about your career goals and challenges you're facing</li>
-                    <li>Join the meeting 5 minutes early to ensure smooth connection</li>
-                    <li>Find a quiet space with good internet connection</li>
-                </ul>
-            </div>
-            
-            <div style="text-align: center;">
-                <a href="{{dashboard_link}}" class="cta-button">View in Dashboard</a>
-            </div>
-            
-            <p>You can find all consultation details, meeting links, and preparation materials in your dashboard. We look forward to helping you achieve your career goals!</p>
-        </div>
-        
-        <div class="footer">
-            <p><strong>Apply Bureau Team</strong></p>
-            <p>Your Partner in Career Success</p>
-            <p style="margin-top: 16px;">
-                <a href="mailto:{{contact_email}}">Contact Support</a> |
-                <a href="{{dashboard_link}}">Dashboard</a>
-            </p>
-            <p style="margin-top: 20px; font-size: 12px; color: #a0aec0;">
-                &copy; {{current_year}} {{company_name}}. All rights reserved.
-            </p>
-        </div>
-    </div>
+<body style="margin: 0; padding: 0; font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif; background-color: #f4f7f9; color: #2d3748;">
+    <table border="0" cellpadding="0" cellspacing="0" width="100%" style="table-layout: fixed;">
+        <tr>
+            <td align="center" style="padding: 40px 0;">
+                <table border="0" cellpadding="0" cellspacing="0" width="600" style="background-color: #ffffff; border-radius: 8px; overflow: hidden; border: 1px solid #e2e8f0; box-shadow: 0 4px 12px rgba(0,0,0,0.05);">
+                    <!-- Header with Logo -->
+                    <tr>
+                        <td align="center" style="padding: 40px 40px 20px 40px; background: linear-gradient(135deg, #10b981 0%, #06b6d4 100%);">
+                            <img src="https://raw.githubusercontent.com/jesusboy-ops/Apply_Bureau_backend/main/logo.png" alt="Apply Bureau" width="160" style="display: block; border: 0;">
+                            <h1 style="color: #ffffff; font-size: 28px; font-weight: 600; margin: 20px 0 0 0;">Consultation Scheduled!</h1>
+                        </td>
+                    </tr>
+                    
+                    <!-- Main Content -->
+                    <tr>
+                        <td style="padding: 40px;">
+                            <h2 style="font-size: 24px; color: #1a202c; margin-bottom: 20px;">Great news, {{client_name}}!</h2>
+                            
+                            <p style="font-size: 16px; line-height: 1.6; color: #4a5568; margin-bottom: 20px;">Your consultation with our expert career advisor has been successfully scheduled. We're excited to help you advance your career journey!</p>
+                            
+                            <!-- Consultation Details -->
+                            <table border="0" cellpadding="0" cellspacing="0" width="100%" style="background-color: #f8fafc; border-radius: 8px; margin: 30px 0;">
+                                <tr>
+                                    <td style="padding: 30px; border-left: 4px solid #10b981;">
+                                        <h3 style="margin: 0 0 20px 0; font-size: 18px; color: #2d3748;">📅 Consultation Details</h3>
+                                        <table border="0" cellpadding="0" cellspacing="0" width="100%">
+                                            <tr>
+                                                <td style="padding: 8px 0; font-size: 15px; color: #2d3748; font-weight: 600; width: 120px;">📅 Date:</td>
+                                                <td style="padding: 8px 0; font-size: 15px; color: #4a5568;">{{consultation_date}}</td>
+                                            </tr>
+                                            <tr>
+                                                <td style="padding: 8px 0; font-size: 15px; color: #2d3748; font-weight: 600;">🕐 Time:</td>
+                                                <td style="padding: 8px 0; font-size: 15px; color: #4a5568;">{{consultation_time}}</td>
+                                            </tr>
+                                            <tr>
+                                                <td style="padding: 8px 0; font-size: 15px; color: #2d3748; font-weight: 600;">⏱️ Duration:</td>
+                                                <td style="padding: 8px 0; font-size: 15px; color: #4a5568;">60 minutes</td>
+                                            </tr>
+                                            <tr>
+                                                <td style="padding: 8px 0; font-size: 15px; color: #2d3748; font-weight: 600;">💼 Type:</td>
+                                                <td style="padding: 8px 0; font-size: 15px; color: #4a5568;">{{consultation_type}}</td>
+                                            </tr>
+                                            {{#consultation_notes}}
+                                            <tr>
+                                                <td style="padding: 8px 0; font-size: 15px; color: #2d3748; font-weight: 600;">📝 Notes:</td>
+                                                <td style="padding: 8px 0; font-size: 15px; color: #4a5568;">{{consultation_notes}}</td>
+                                            </tr>
+                                            {{/consultation_notes}}
+                                        </table>
+                                    </td>
+                                </tr>
+                            </table>
+                            
+                            <!-- Preparation Tips -->
+                            <table border="0" cellpadding="0" cellspacing="0" width="100%" style="background-color: #f0fff4; border-radius: 8px; margin: 30px 0;">
+                                <tr>
+                                    <td style="padding: 30px; border-left: 4px solid #10b981;">
+                                        <h3 style="margin: 0 0 20px 0; font-size: 18px; color: #2d3748;">How to Prepare for Your Session</h3>
+                                        <table border="0" cellpadding="0" cellspacing="0" width="100%">
+                                            <tr><td style="padding: 4px 0; font-size: 15px; color: #4a5568;">💡 Have your current resume ready for review and feedback</td></tr>
+                                            <tr><td style="padding: 4px 0; font-size: 15px; color: #4a5568;">💡 Prepare specific questions about your job search strategy</td></tr>
+                                            <tr><td style="padding: 4px 0; font-size: 15px; color: #4a5568;">💡 Think about your career goals and challenges you're facing</td></tr>
+                                            <tr><td style="padding: 4px 0; font-size: 15px; color: #4a5568;">💡 Join the meeting 5 minutes early to ensure smooth connection</td></tr>
+                                            <tr><td style="padding: 4px 0; font-size: 15px; color: #4a5568;">💡 Find a quiet space with good internet connection</td></tr>
+                                        </table>
+                                    </td>
+                                </tr>
+                            </table>
+                            
+                            <!-- CTA Button -->
+                            <table border="0" cellpadding="0" cellspacing="0" width="100%" style="margin: 30px 0;">
+                                <tr>
+                                    <td align="center">
+                                        <a href="{{dashboard_link}}" style="background: linear-gradient(135deg, #10b981 0%, #06b6d4 100%); color: #ffffff; padding: 16px 32px; text-decoration: none; border-radius: 8px; font-weight: 600; font-size: 16px; display: inline-block;">View in Dashboard</a>
+                                    </td>
+                                </tr>
+                            </table>
+                            
+                            <p style="font-size: 16px; line-height: 1.6; color: #4a5568;">You can find all consultation details, meeting links, and preparation materials in your dashboard. We look forward to helping you achieve your career goals!</p>
+                        </td>
+                    </tr>
+                    
+                    <!-- Footer -->
+                    <tr>
+                        <td style="padding: 40px; background-color: #1a202c; color: #ffffff; text-align: center; font-size: 12px;">
+                            <p style="margin: 0 0 10px 0; font-weight: 600;">Apply Bureau Team</p>
+                            <p style="margin: 0 0 20px 0;">Your Partner in Career Success</p>
+                            <p style="margin: 0;">
+                                <a href="mailto:{{contact_email}}" style="color: #10b981; text-decoration: none;">Contact Support</a> | 
+                                <a href="{{dashboard_link}}" style="color: #10b981; text-decoration: none;">Dashboard</a>
+                            </p>
+                            <p style="margin: 20px 0 0 0; color: #a0aec0;">
+                                &copy; {{current_year}} {{company_name}}. All rights reserved.
+                            </p>
+                        </td>
+                    </tr>
+                </table>
+            </td>
+        </tr>
+    </table>
 </body>
 </html>

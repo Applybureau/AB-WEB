@@ -149,8 +149,9 @@ if (process.env.NODE_ENV === 'production') {
 
 app.use(enhancedLogger);
 
-// Static files for email assets
+// Static files for email assets and templates
 app.use('/emails/assets', express.static('emails/assets'));
+app.use('/emails/templates', express.static('emails/templates'));
 
 // Health check endpoint
 app.get('/health', (req, res) => {
