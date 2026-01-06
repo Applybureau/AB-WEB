@@ -1,8 +1,8 @@
 -- =====================================================
--- Apply Bureau Storage Setup
+-- APPLY BUREAU - STORAGE BUCKETS SETUP
+-- File storage for resumes, documents, and email assets
 -- =====================================================
--- Run this AFTER the main database setup
--- This sets up Supabase Storage buckets and policies
+
 -- =====================================================
 
 -- STEP 1: Clean up existing storage (if any)
