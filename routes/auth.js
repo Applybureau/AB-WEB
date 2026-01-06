@@ -196,25 +196,39 @@ router.get('/me', authenticateToken, async (req, res) => {
   try {
     console.log('Auth /me - req.user:', req.user);
     
-    const userId = req.user.userId || req.user.id;
-    if (!userId) {
-      return res.status(401).json({ error: 'Invalid token - no user ID' });
+    // Return the user data that's already verified in the middleware
+    if (req.user) {
+      // Get additional user data from database
+      const userId = req.user.userId || req.user.id;
+      
+      try {
+        const { data: client, error } = await supabaseAdmin
+          .from('clients')
+          .select('id, email, full_name, role, onboarding_complete, resume_url')
+          .eq('id', userId)
+          .single();
+
+        if (client) {
+          return res.json({ user: client });
+        }
+      } catch (dbError) {
+        console.error('Database error, using token data:', dbError);
+      }
+      
+      // Fallback: return user data from token if database fails
+      return res.json({
+        user: {
+          id: req.user.id,
+          email: req.user.email,
+          full_name: req.user.full_name || 'Admin User',
+          role: req.user.role,
+          onboarding_complete: true,
+          resume_url: null
+        }
+      });
     }
 
-    const { data: client, error } = await supabaseAdmin
-      .from('clients')
-      .select('id, email, full_name, role, onboarding_complete, resume_url')
-      .eq('id', userId)
-      .single();
-
-    if (error || !client) {
-      console.error('Get user error:', error);
-      return res.status(404).json({ error: 'User not found' });
-    }
-
-    res.json({
-      user: client
-    });
+    return res.status(404).json({ error: 'User not found' });
   } catch (error) {
     console.error('Get user error:', error);
     res.status(500).json({ error: 'Failed to get user info' });

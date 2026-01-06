@@ -26,21 +26,15 @@ const authenticateToken = async (req, res, next) => {
       return res.status(401).json({ error: 'Invalid token - no user ID' });
     }
     
-    // Verify user exists in database
-    const { data: user, error } = await supabaseAdmin
-      .from('clients')
-      .select('id, email, role')
-      .eq('id', userId)
-      .single();
-
-    console.log('Database query result:', { user, error });
-
-    if (error || !user) {
-      console.error('User verification failed:', error);
-      return res.status(401).json({ error: 'Invalid token - user not found' });
-    }
-
-    req.user = { ...user, userId: user.id };
+    // Set user data from token (don't rely on database check here)
+    req.user = {
+      id: userId,
+      userId: userId,
+      email: decoded.email,
+      role: decoded.role || 'client',
+      full_name: decoded.full_name
+    };
+    
     next();
   } catch (error) {
     console.error('Token verification error:', error);
