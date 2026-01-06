@@ -19,21 +19,31 @@ const authenticateToken = async (req, res, next) => {
 
   try {
     const decoded = verifyToken(token);
+    console.log('Token decoded:', decoded);
+    
+    const userId = decoded.userId || decoded.id;
+    if (!userId) {
+      return res.status(401).json({ error: 'Invalid token - no user ID' });
+    }
     
     // Verify user exists in database
     const { data: user, error } = await supabaseAdmin
       .from('clients')
       .select('id, email, role')
-      .eq('id', decoded.userId)
+      .eq('id', userId)
       .single();
 
+    console.log('Database query result:', { user, error });
+
     if (error || !user) {
-      return res.status(401).json({ error: 'Invalid token' });
+      console.error('User verification failed:', error);
+      return res.status(401).json({ error: 'Invalid token - user not found' });
     }
 
     req.user = { ...user, userId: user.id };
     next();
   } catch (error) {
+    console.error('Token verification error:', error);
     return res.status(403).json({ error: 'Invalid or expired token' });
   }
 };
