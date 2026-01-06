@@ -194,10 +194,17 @@ router.post('/login', validate(schemas.login), async (req, res) => {
 // GET /api/auth/me - Get current user info
 router.get('/me', authenticateToken, async (req, res) => {
   try {
+    console.log('Auth /me - req.user:', req.user);
+    
+    const userId = req.user.userId || req.user.id;
+    if (!userId) {
+      return res.status(401).json({ error: 'Invalid token - no user ID' });
+    }
+
     const { data: client, error } = await supabaseAdmin
       .from('clients')
       .select('id, email, full_name, role, onboarding_complete, resume_url')
-      .eq('id', req.user.userId || req.user.id)
+      .eq('id', userId)
       .single();
 
     if (error || !client) {

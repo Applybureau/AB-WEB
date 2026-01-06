@@ -1,5 +1,5 @@
 const express = require('express');
-const { supabase, supabaseAdmin } = require('../utils/supabase');
+const { supabaseAdmin } = require('../utils/supabase');
 const { authenticateToken } = require('../utils/auth');
 
 const router = express.Router();
@@ -7,18 +7,22 @@ const router = express.Router();
 // GET /api/notifications - Get client notifications
 router.get('/', authenticateToken, async (req, res) => {
   try {
-    const clientId = req.user.id;
+    const clientId = req.user.userId || req.user.id;
+    if (!clientId) {
+      return res.status(401).json({ error: 'Invalid token - no user ID' });
+    }
+    
     const { read, limit = 20, offset = 0 } = req.query;
 
-    let query = supabase
+    let query = supabaseAdmin
       .from('notifications')
       .select('*')
-      .eq('client_id', clientId)
+      .eq('user_id', clientId)
       .order('created_at', { ascending: false })
       .range(offset, offset + limit - 1);
 
     if (read !== undefined) {
-      query = query.eq('read', read === 'true');
+      query = query.eq('is_read', read === 'true');
     }
 
     const { data: notifications, error } = await query;
@@ -29,20 +33,20 @@ router.get('/', authenticateToken, async (req, res) => {
     }
 
     // Get unread count
-    const { count: unreadCount, error: countError } = await supabase
+    const { count: unreadCount, error: countError } = await supabaseAdmin
       .from('notifications')
       .select('*', { count: 'exact', head: true })
-      .eq('client_id', clientId)
-      .eq('read', false);
+      .eq('user_id', clientId)
+      .eq('is_read', false);
 
     if (countError) {
       console.error('Error counting unread notifications:', countError);
     }
 
     res.json({
-      notifications,
+      notifications: notifications || [],
       unread_count: unreadCount || 0,
-      total: notifications.length,
+      total: notifications?.length || 0,
       offset: parseInt(offset),
       limit: parseInt(limit)
     });
@@ -56,13 +60,13 @@ router.get('/', authenticateToken, async (req, res) => {
 router.patch('/:id/read', authenticateToken, async (req, res) => {
   try {
     const { id } = req.params;
-    const clientId = req.user.id;
+    const clientId = req.user.userId || req.user.id;
 
-    const { data: notification, error } = await supabase
+    const { data: notification, error } = await supabaseAdmin
       .from('notifications')
-      .update({ read: true })
+      .update({ is_read: true })
       .eq('id', id)
-      .eq('client_id', clientId)
+      .eq('user_id', clientId)
       .select()
       .single();
 
@@ -83,13 +87,13 @@ router.patch('/:id/read', authenticateToken, async (req, res) => {
 // PATCH /api/notifications/read-all - Mark all notifications as read
 router.patch('/read-all', authenticateToken, async (req, res) => {
   try {
-    const clientId = req.user.id;
+    const clientId = req.user.userId || req.user.id;
 
-    const { error } = await supabase
+    const { error } = await supabaseAdmin
       .from('notifications')
-      .update({ read: true })
-      .eq('client_id', clientId)
-      .eq('read', false);
+      .update({ is_read: true })
+      .eq('user_id', clientId)
+      .eq('is_read', false);
 
     if (error) {
       console.error('Error marking all notifications as read:', error);
@@ -107,13 +111,13 @@ router.patch('/read-all', authenticateToken, async (req, res) => {
 router.delete('/:id', authenticateToken, async (req, res) => {
   try {
     const { id } = req.params;
-    const clientId = req.user.id;
+    const clientId = req.user.userId || req.user.id;
 
-    const { error } = await supabase
+    const { error } = await supabaseAdmin
       .from('notifications')
       .delete()
       .eq('id', id)
-      .eq('client_id', clientId);
+      .eq('user_id', clientId);
 
     if (error) {
       console.error('Error deleting notification:', error);
@@ -130,13 +134,13 @@ router.delete('/:id', authenticateToken, async (req, res) => {
 // GET /api/notifications/unread-count - Get unread notification count
 router.get('/unread-count', authenticateToken, async (req, res) => {
   try {
-    const clientId = req.user.id;
+    const clientId = req.user.userId || req.user.id;
 
-    const { count, error } = await supabase
+    const { count, error } = await supabaseAdmin
       .from('notifications')
       .select('*', { count: 'exact', head: true })
-      .eq('client_id', clientId)
-      .eq('read', false);
+      .eq('user_id', clientId)
+      .eq('is_read', false);
 
     if (error) {
       console.error('Error counting unread notifications:', error);

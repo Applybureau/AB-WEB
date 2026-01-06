@@ -7,7 +7,12 @@ const router = express.Router();
 // GET /api/dashboard - Returns client's dashboard info
 router.get('/', authenticateToken, async (req, res) => {
   try {
-    const clientId = req.user.id;
+    console.log('Dashboard - req.user:', req.user);
+    
+    const clientId = req.user.userId || req.user.id;
+    if (!clientId) {
+      return res.status(401).json({ error: 'Invalid token - no user ID' });
+    }
 
     // Get client info
     const { data: client, error: clientError } = await supabaseAdmin
@@ -91,7 +96,10 @@ router.get('/', authenticateToken, async (req, res) => {
 // GET /api/dashboard/stats - Get detailed statistics
 router.get('/stats', authenticateToken, async (req, res) => {
   try {
-    const clientId = req.user.id;
+    const clientId = req.user.userId || req.user.id;
+    if (!clientId) {
+      return res.status(401).json({ error: 'Invalid token - no user ID' });
+    }
 
     // Get all applications for detailed stats
     const { data: applications, error } = await supabaseAdmin
