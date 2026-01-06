@@ -1,5 +1,5 @@
 const express = require('express');
-const { supabase, supabaseAdmin } = require('../utils/supabase');
+const { supabaseAdmin } = require('../utils/supabase');
 const { authenticateToken, requireAdmin } = require('../utils/auth');
 const { validate, schemas } = require('../utils/validation');
 const { sendEmail } = require('../utils/email');
@@ -9,10 +9,14 @@ const router = express.Router();
 // GET /api/consultations - List consultations for client
 router.get('/', authenticateToken, async (req, res) => {
   try {
-    const clientId = req.user.id;
+    const clientId = req.user.userId || req.user.id;
+    if (!clientId) {
+      return res.status(401).json({ error: 'Invalid token - no user ID' });
+    }
+    
     const { status, limit = 20, offset = 0 } = req.query;
 
-    let query = supabase
+    let query = supabaseAdmin
       .from('consultations')
       .select('*')
       .eq('client_id', clientId)
@@ -31,8 +35,8 @@ router.get('/', authenticateToken, async (req, res) => {
     }
 
     res.json({
-      consultations,
-      total: consultations.length,
+      consultations: consultations || [],
+      total: consultations?.length || 0,
       offset: parseInt(offset),
       limit: parseInt(limit)
     });
@@ -89,14 +93,20 @@ router.post('/', authenticateToken, requireAdmin, validate(schemas.consultation)
       });
 
     // Send email notification
-    const scheduledDate = new Date(scheduled_at);
-    await sendEmail(client.email, 'consultation_scheduled', {
-      client_name: client.full_name,
-      consultation_date: scheduledDate.toLocaleDateString(),
-      consultation_time: scheduledDate.toLocaleTimeString(),
-      consultation_type: 'Career Advisory Session',
-      consultation_notes: finalNotes
-    });
+    try {
+      const scheduledDate = new Date(scheduled_at);
+      await sendEmail(client.email, 'consultation_scheduled', {
+        client_name: client.full_name,
+        consultation_date: scheduledDate.toLocaleDateString(),
+        consultation_time: scheduledDate.toLocaleTimeString(),
+        consultation_type: 'Career Advisory Session',
+        consultation_notes: finalNotes
+      });
+      console.log('✅ Consultation email sent to:', client.email);
+    } catch (emailError) {
+      console.error('❌ Email sending failed:', emailError);
+      // Don't fail the consultation creation if email fails
+    }
 
     res.status(201).json({
       message: 'Consultation created successfully',
@@ -114,13 +124,14 @@ router.get('/:id', authenticateToken, async (req, res) => {
     const { id } = req.params;
     const clientId = req.user.id;
 
-    let query = supabase
+    let query = supabaseAdmin
       .from('consultations')
       .select('*')
       .eq('id', id);
 
     // Non-admin users can only see their own consultations
     if (req.user.role !== 'admin') {
+      const clientId = req.user.userId || req.user.id;
       query = query.eq('client_id', clientId);
     }
 
