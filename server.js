@@ -18,6 +18,7 @@ const authRoutes = require('./routes/auth');
 const dashboardRoutes = require('./routes/dashboard');
 const enhancedDashboardRoutes = require('./routes/enhancedDashboard');
 const consultationRoutes = require('./routes/consultations');
+const consultationRequestRoutes = require('./routes/consultationRequests');
 const applicationRoutes = require('./routes/applications');
 const notificationRoutes = require('./routes/notifications');
 const uploadRoutes = require('./routes/upload');
@@ -193,6 +194,7 @@ app.use('/api/auth', authRoutes);
 app.use('/api/dashboard', cacheMiddleware(300), dashboardRoutes); // Cache dashboard for 5 minutes
 app.use('/api/enhanced-dashboard', enhancedDashboardRoutes); // Real-time dashboard (no caching)
 app.use('/api/consultations', consultationRoutes);
+app.use('/api/consultation-requests', consultationRequestRoutes);
 app.use('/api/applications', applicationRoutes);
 app.use('/api/notifications', notificationRoutes);
 app.use('/api/upload', uploadRoutes);

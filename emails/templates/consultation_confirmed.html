@@ -1,0 +1,139 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Consultation Confirmed - Apply Bureau</title>
+</head>
+<body style="margin: 0; padding: 0; font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif; background-color: #f4f7f9; color: #2d3748;">
+    <table border="0" cellpadding="0" cellspacing="0" width="100%" style="table-layout: fixed;">
+        <tr>
+            <td align="center" style="padding: 40px 0;">
+                <table border="0" cellpadding="0" cellspacing="0" width="600" style="background-color: #ffffff; border-radius: 8px; overflow: hidden; border: 1px solid #e2e8f0; box-shadow: 0 4px 12px rgba(0,0,0,0.05);">
+                    <!-- Header -->
+                    <tr>
+                        <td align="center" style="padding: 40px 40px 20px 40px; background: linear-gradient(135deg, #10b981 0%, #06b6d4 100%);">
+                            <img src="https://raw.githubusercontent.com/jesusboy-ops/Apply_Bureau_backend/main/logo.png" alt="Apply Bureau" width="160" style="display: block; border: 0;">
+                            <h1 style="color: #ffffff; font-size: 28px; font-weight: 600; margin: 20px 0 0 0;">✅ Consultation Confirmed!</h1>
+                        </td>
+                    </tr>
+                    
+                    <!-- Content -->
+                    <tr>
+                        <td style="padding: 40px;">
+                            <h2 style="font-size: 24px; color: #1a202c; margin-bottom: 20px;">Hello {{client_name}}!</h2>
+                            
+                            <p style="font-size: 16px; line-height: 1.6; color: #4a5568;">
+                                Great news! Your consultation request has been confirmed. We're excited to help you advance your career and look forward to our upcoming session.
+                            </p>
+                            
+                            <!-- Meeting Details -->
+                            <table border="0" cellpadding="0" cellspacing="0" width="100%" style="background-color: #f0fff4; border-radius: 8px; margin: 30px 0;">
+                                <tr>
+                                    <td style="padding: 30px; border-left: 4px solid #10b981;">
+                                        <h3 style="margin: 0 0 20px 0; font-size: 18px; color: #2d3748;">📅 Meeting Details</h3>
+                                        <table border="0" cellpadding="0" cellspacing="0" width="100%">
+                                            <tr>
+                                                <td style="padding: 8px 0; font-size: 15px; color: #2d3748; font-weight: 600; width: 150px;">Service Type:</td>
+                                                <td style="padding: 8px 0; font-size: 15px; color: #4a5568;">{{consultation_type}}</td>
+                                            </tr>
+                                            <tr>
+                                                <td style="padding: 8px 0; font-size: 15px; color: #2d3748; font-weight: 600;">Date:</td>
+                                                <td style="padding: 8px 0; font-size: 15px; color: #4a5568; font-weight: 600;">{{scheduled_date}}</td>
+                                            </tr>
+                                            <tr>
+                                                <td style="padding: 8px 0; font-size: 15px; color: #2d3748; font-weight: 600;">Time:</td>
+                                                <td style="padding: 8px 0; font-size: 15px; color: #4a5568; font-weight: 600;">{{scheduled_time}}</td>
+                                            </tr>
+                                            <tr>
+                                                <td style="padding: 8px 0; font-size: 15px; color: #2d3748; font-weight: 600;">Duration:</td>
+                                                <td style="padding: 8px 0; font-size: 15px; color: #4a5568;">{{meeting_duration}} minutes</td>
+                                            </tr>
+                                            {{#if consultation_id}}
+                                            <tr>
+                                                <td style="padding: 8px 0; font-size: 15px; color: #2d3748; font-weight: 600;">Meeting ID:</td>
+                                                <td style="padding: 8px 0; font-size: 15px; color: #4a5568; font-family: monospace; background-color: #f7fafc; padding: 4px 8px; border-radius: 4px;">#{{consultation_id}}</td>
+                                            </tr>
+                                            {{/if}}
+                                        </table>
+                                    </td>
+                                </tr>
+                            </table>
+                            
+                            {{#if meeting_url}}
+                            <!-- Meeting Link -->
+                            <table border="0" cellpadding="0" cellspacing="0" width="100%" style="margin: 35px 0;">
+                                <tr>
+                                    <td align="center">
+                                        <a href="{{meeting_url}}" style="background: linear-gradient(135deg, #10b981 0%, #06b6d4 100%); color: #ffffff; padding: 16px 32px; text-decoration: none; border-radius: 8px; font-weight: 600; font-size: 16px; display: inline-block;">🎥 Join Video Meeting</a>
+                                    </td>
+                                </tr>
+                            </table>
+                            
+                            <p style="font-size: 14px; color: #a0aec0; text-align: center; margin-top: 10px;">
+                                Meeting Link: <a href="{{meeting_url}}" style="color: #10b981; text-decoration: none;">{{meeting_url}}</a>
+                            </p>
+                            {{/if}}
+                            
+                            {{#if admin_notes}}
+                            <!-- Admin Notes -->
+                            <table border="0" cellpadding="0" cellspacing="0" width="100%" style="background-color: #e0f7fa; border-radius: 8px; margin: 30px 0;">
+                                <tr>
+                                    <td style="padding: 30px; border-left: 4px solid #06b6d4;">
+                                        <h3 style="margin: 0 0 15px 0; font-size: 18px; color: #2d3748;">📝 Preparation Notes</h3>
+                                        <p style="margin: 0; font-size: 15px; color: #4a5568; line-height: 1.6;">{{admin_notes}}</p>
+                                    </td>
+                                </tr>
+                            </table>
+                            {{/if}}
+                            
+                            <!-- Preparation Checklist -->
+                            <table border="0" cellpadding="0" cellspacing="0" width="100%" style="background-color: #fef3c7; border-radius: 8px; margin: 30px 0;">
+                                <tr>
+                                    <td style="padding: 30px; border-left: 4px solid #f59e0b;">
+                                        <h3 style="margin: 0 0 20px 0; font-size: 18px; color: #2d3748;">🚀 How to Prepare</h3>
+                                        <table border="0" cellpadding="0" cellspacing="0" width="100%">
+                                            <tr><td style="padding: 4px 0; font-size: 15px; color: #4a5568;">✓ Have your current resume ready (digital copy)</td></tr>
+                                            <tr><td style="padding: 4px 0; font-size: 15px; color: #4a5568;">✓ Prepare a list of your career goals and challenges</td></tr>
+                                            <tr><td style="padding: 4px 0; font-size: 15px; color: #4a5568;">✓ Think about 2-3 companies you're interested in</td></tr>
+                                            <tr><td style="padding: 4px 0; font-size: 15px; color: #4a5568;">✓ Prepare any specific questions you'd like to discuss</td></tr>
+                                            <tr><td style="padding: 4px 0; font-size: 15px; color: #4a5568;">✓ Test your internet connection and camera beforehand</td></tr>
+                                        </table>
+                                    </td>
+                                </tr>
+                            </table>
+                            
+                            <p style="font-size: 16px; line-height: 1.6; color: #4a5568;">
+                                <strong>Need to reschedule?</strong> Please contact us at least 24 hours in advance by replying to this email or calling our office.
+                            </p>
+                            
+                            <p style="font-size: 16px; line-height: 1.6; color: #4a5568;">
+                                We're looking forward to helping you achieve your career goals!
+                            </p>
+                            
+                            <p style="font-size: 14px; color: #a0aec0; text-align: center; margin-top: 30px;">
+                                Questions? Reply to this email or contact us at admin@applybureau.com
+                            </p>
+                        </td>
+                    </tr>
+                    
+                    <!-- Footer -->
+                    <tr>
+                        <td style="padding: 40px; background-color: #1a202c; color: #ffffff; text-align: center; font-size: 12px;">
+                            <p style="margin: 0 0 10px 0; font-weight: 600;">Apply Bureau</p>
+                            <p style="margin: 0 0 20px 0;">Professional Career Advisory Services</p>
+                            <p style="margin: 0;">
+                                <a href="mailto:admin@applybureau.com" style="color: #10b981; text-decoration: none;">Contact Us</a> | 
+                                <a href="#" style="color: #10b981; text-decoration: none;">Visit Website</a>
+                            </p>
+                            <p style="margin: 20px 0 0 0; color: #a0aec0;">
+                                &copy; 2026 Apply Bureau. All rights reserved.
+                            </p>
+                        </td>
+                    </tr>
+                </table>
+            </td>
+        </tr>
+    </table>
+</body>
+</html>
