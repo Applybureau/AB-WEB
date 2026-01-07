@@ -25,6 +25,9 @@ const adminRoutes = require('./routes/admin');
 const clientRoutes = require('./routes/client');
 const webhookRoutes = require('./routes/webhooks');
 const publicRoutes = require('./routes/public');
+const adminManagementRoutes = require('./routes/adminManagement');
+const fileManagementRoutes = require('./routes/fileManagement');
+const adminDashboardRoutes = require('./routes/adminDashboard');
 
 const app = express();
 const PORT = process.env.PORT || 3000;
@@ -166,6 +169,15 @@ app.get('/health', (req, res) => {
   });
 });
 
+// API Health check endpoint
+app.get('/api/health', (req, res) => {
+  const healthStatus = SystemMonitor.getHealthStatus();
+  res.status(200).json({ 
+    ...healthStatus,
+    service: 'Apply Bureau Backend'
+  });
+});
+
 // Detailed system info endpoint (admin only in production)
 app.get('/system-info', (req, res) => {
   if (process.env.NODE_ENV === 'production') {
@@ -188,6 +200,9 @@ app.use('/api/admin', adminRoutes);
 app.use('/api/client', clientRoutes);
 app.use('/api/webhooks', webhookRoutes);
 app.use('/api/public', publicRoutes); // Public routes for website integration
+app.use('/api/admin-management', adminManagementRoutes); // Enhanced admin management
+app.use('/api/files', fileManagementRoutes); // File upload and management
+app.use('/api/admin-dashboard', adminDashboardRoutes); // Admin-specific dashboard
 
 // Admin routes with enhanced security
 app.get('/api/admin/stats', require('./utils/auth').authenticateToken, require('./utils/auth').requireAdmin, (req, res) => {

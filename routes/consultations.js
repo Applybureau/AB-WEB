@@ -46,10 +46,21 @@ router.get('/', authenticateToken, async (req, res) => {
   }
 });
 
-// POST /api/consultations - Admin creates consultation
+// POST /api/consultations - Admin creates consultation with Google Meet
 router.post('/', authenticateToken, requireAdmin, validate(schemas.consultation), async (req, res) => {
   try {
-    const { client_id, scheduled_at, notes, admin_notes } = req.body;
+    const { 
+      client_id, 
+      scheduled_at, 
+      notes, 
+      admin_notes, 
+      google_meet_link,
+      meeting_title,
+      meeting_description,
+      preparation_notes
+    } = req.body;
+    
+    const adminId = req.user.userId || req.user.id;
     const finalNotes = admin_notes || notes; // Support both field names
 
     // Verify client exists
@@ -63,13 +74,18 @@ router.post('/', authenticateToken, requireAdmin, validate(schemas.consultation)
       return res.status(404).json({ error: 'Client not found' });
     }
 
-    // Create consultation
+    // Create consultation with enhanced fields
     const { data: consultation, error } = await supabaseAdmin
       .from('consultations')
       .insert({
         client_id,
+        admin_id: adminId,
         scheduled_at,
         admin_notes: finalNotes,
+        google_meet_link,
+        meeting_title: meeting_title || `Career Consultation with ${client.full_name}`,
+        meeting_description: meeting_description || 'Professional career advisory session',
+        preparation_notes,
         status: 'scheduled'
       })
       .select()
@@ -92,7 +108,22 @@ router.post('/', authenticateToken, requireAdmin, validate(schemas.consultation)
         is_read: false
       });
 
-    // Send email notification
+    // Log admin activity
+    await supabaseAdmin
+      .from('admin_activity_log')
+      .insert({
+        admin_id: adminId,
+        action: 'create_consultation',
+        resource_type: 'consultation',
+        resource_id: consultation.id,
+        details: { 
+          client_email: client.email, 
+          scheduled_at,
+          has_google_meet: !!google_meet_link
+        }
+      });
+
+    // Send email notification with Google Meet link
     try {
       const scheduledDate = new Date(scheduled_at);
       await sendEmail(client.email, 'consultation_scheduled', {
@@ -100,7 +131,11 @@ router.post('/', authenticateToken, requireAdmin, validate(schemas.consultation)
         consultation_date: scheduledDate.toLocaleDateString(),
         consultation_time: scheduledDate.toLocaleTimeString(),
         consultation_type: 'Career Advisory Session',
-        consultation_notes: finalNotes
+        consultation_notes: finalNotes,
+        meeting_title: consultation.meeting_title,
+        meeting_description: consultation.meeting_description,
+        google_meet_link: google_meet_link,
+        preparation_notes: preparation_notes
       });
       console.log('✅ Consultation email sent to:', client.email);
     } catch (emailError) {

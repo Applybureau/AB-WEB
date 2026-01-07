@@ -1,0 +1,80 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Account Suspended - Apply Bureau</title>
+</head>
+<body style="margin: 0; padding: 0; font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif; background-color: #f4f7f9; color: #2d3748;">
+    <table border="0" cellpadding="0" cellspacing="0" width="100%" style="table-layout: fixed;">
+        <tr>
+            <td align="center" style="padding: 40px 0;">
+                <table border="0" cellpadding="0" cellspacing="0" width="600" style="background-color: #ffffff; border-radius: 8px; overflow: hidden; border: 1px solid #e2e8f0; box-shadow: 0 4px 12px rgba(0,0,0,0.05);">
+                    <!-- Header -->
+                    <tr>
+                        <td align="center" style="padding: 40px 40px 20px 40px;">
+                            <img src="https://raw.githubusercontent.com/jesusboy-ops/Apply_Bureau_backend/main/logo.png" alt="Apply Bureau" width="160" style="display: block; border: 0;">
+                        </td>
+                    </tr>
+                    
+                    <!-- Content -->
+                    <tr>
+                        <td style="padding: 0 40px;">
+                            <h2 style="font-size: 24px; color: #e53e3e; margin-bottom: 20px; text-align: center;">Account Suspended</h2>
+                            
+                            <p style="font-size: 16px; line-height: 1.6; color: #4a5568;">Hello {{admin_name}},</p>
+                            
+                            <p style="font-size: 16px; line-height: 1.6; color: #4a5568;">
+                                Your Apply Bureau admin account has been suspended by {{suspended_by}}.
+                            </p>
+                            
+                            <!-- Suspension Details -->
+                            <table border="0" cellpadding="0" cellspacing="0" width="100%" style="background-color: #fed7d7; border-radius: 6px; margin: 30px 0;">
+                                <tr>
+                                    <td style="padding: 25px; border-left: 4px solid #e53e3e;">
+                                        <h3 style="margin: 0 0 15px 0; font-size: 18px; color: #2d3748;">Suspension Details</h3>
+                                        <p style="margin: 5px 0; font-size: 15px;"><strong>Suspended By:</strong> {{suspended_by}}</p>
+                                        <p style="margin: 5px 0; font-size: 15px;"><strong>Date:</strong> {{current_date}}</p>
+                                        <p style="margin: 5px 0; font-size: 15px;"><strong>Reason:</strong> {{reason}}</p>
+                                    </td>
+                                </tr>
+                            </table>
+                            
+                            <p style="font-size: 16px; line-height: 1.6; color: #4a5568;">
+                                <strong>What this means:</strong>
+                            </p>
+                            
+                            <ul style="padding-left: 20px; font-size: 14px; color: #718096; line-height: 2;">
+                                <li>You can no longer access your admin dashboard</li>
+                                <li>All active sessions have been terminated</li>
+                                <li>Your account privileges have been revoked</li>
+                                <li>You will not receive admin notifications</li>
+                            </ul>
+                            
+                            <p style="font-size: 16px; line-height: 1.6; color: #4a5568;">
+                                If you believe this suspension was made in error or would like to appeal this decision, 
+                                please contact the super administrator immediately.
+                            </p>
+                            
+                            <p style="font-size: 14px; color: #a0aec0; text-align: center; margin-top: 30px;">
+                                For assistance, contact: <a href="mailto:{{contact_email}}" style="color: #10b981; text-decoration: none;">{{contact_email}}</a>
+                            </p>
+                        </td>
+                    </tr>
+                    
+                    <!-- Footer -->
+                    <tr>
+                        <td style="padding: 40px; background-color: #1a202c; color: #ffffff; text-align: center; font-size: 12px;">
+                            <p style="margin: 0 0 10px 0;">&copy; 2026 Apply Bureau. All rights reserved.</p>
+                            <p style="margin: 0;">
+                                <a href="mailto:{{contact_email}}" style="color: #10b981; text-decoration: none;">Contact Support</a> | 
+                                <a href="#" style="color: #10b981; text-decoration: none;">Privacy Policy</a>
+                            </p>
+                        </td>
+                    </tr>
+                </table>
+            </td>
+        </tr>
+    </table>
+</body>
+</html>

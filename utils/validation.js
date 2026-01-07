@@ -122,12 +122,45 @@ const schemas = {
     timeline: Joi.string().valid('immediate', '1-3 months', '3-6 months', 'flexible').required()
   }),
 
-  // Legacy schemas (keeping for backward compatibility)
+  // Enhanced consultation schema with Google Meet
   consultation: Joi.object({
     client_id: Joi.string().uuid().required(),
     scheduled_at: Joi.date().iso().required(),
     notes: Joi.string().max(1000).optional(),
-    admin_notes: Joi.string().max(1000).optional()
+    admin_notes: Joi.string().max(1000).optional(),
+    google_meet_link: Joi.string().uri().optional().allow(''),
+    meeting_title: Joi.string().max(200).optional(),
+    meeting_description: Joi.string().max(1000).optional(),
+    preparation_notes: Joi.string().max(2000).optional()
+  }),
+
+  // Admin management schemas
+  createAdmin: Joi.object({
+    full_name: Joi.string().min(2).max(100).required(),
+    email: Joi.string().email().required(),
+    password: Joi.string().min(8).pattern(new RegExp('^(?=.*[a-z])(?=.*[A-Z])(?=.*\\d)(?=.*[@$!%*?&])[A-Za-z\\d@$!%*?&]')).required()
+      .messages({
+        'string.pattern.base': 'Password must contain at least one uppercase letter, one lowercase letter, one number, and one special character'
+      }),
+    phone: Joi.string().max(20).optional().allow(''),
+    role: Joi.string().valid('admin', 'advisor', 'super_admin').default('admin')
+  }),
+
+  updateAdmin: Joi.object({
+    full_name: Joi.string().min(2).max(100).optional(),
+    phone: Joi.string().max(20).optional().allow(''),
+    role: Joi.string().valid('admin', 'advisor', 'super_admin').optional(),
+    is_active: Joi.boolean().optional()
+  }),
+
+  // File upload schemas
+  fileUpload: Joi.object({
+    upload_purpose: Joi.string().valid('resume', 'profile_picture', 'document', 'other').default('document')
+  }),
+
+  attachFileToConsultation: Joi.object({
+    file_upload_id: Joi.string().uuid().required(),
+    document_type: Joi.string().valid('resume', 'cover_letter', 'portfolio', 'other').default('resume')
   }),
 
   application: Joi.object({

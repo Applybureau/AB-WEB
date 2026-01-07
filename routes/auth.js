@@ -132,33 +132,55 @@ router.post('/complete-registration', validate(schemas.completeRegistration), as
   }
 });
 
-// POST /api/auth/login - Client login
+// POST /api/auth/login - Client and Admin login
 router.post('/login', validate(schemas.login), async (req, res) => {
   try {
     const { email, password } = req.body;
     console.log('Login attempt for:', email);
 
-    // Get client from database
-    const { data: client, error } = await supabaseAdmin
-      .from('clients')
-      .select('id, email, full_name, password, role')
+    let user = null;
+    let userType = 'client';
+
+    // First check admins table
+    const { data: admin, error: adminError } = await supabaseAdmin
+      .from('admins')
+      .select('id, email, full_name, password, role, is_active')
       .eq('email', email)
       .single();
 
+    if (admin && admin.is_active) {
+      user = admin;
+      userType = 'admin';
+      console.log('Found admin user');
+    } else {
+      // Check clients table (including legacy admin accounts)
+      const { data: client, error: clientError } = await supabaseAdmin
+        .from('clients')
+        .select('id, email, full_name, password, role')
+        .eq('email', email)
+        .single();
+
+      if (client) {
+        user = client;
+        userType = client.role === 'admin' ? 'admin' : 'client';
+        console.log('Found client/legacy admin user');
+      }
+    }
+
     console.log('Database query result:', { 
-      found: !!client, 
-      error: error?.message,
-      hasPassword: !!client?.password 
+      found: !!user, 
+      userType,
+      hasPassword: !!user?.password 
     });
 
-    if (error || !client) {
-      console.log('Client not found or database error');
+    if (!user) {
+      console.log('User not found');
       return res.status(401).json({ error: 'Invalid credentials' });
     }
 
     // Verify password
     console.log('Comparing passwords...');
-    const validPassword = await bcrypt.compare(password, client.password);
+    const validPassword = await bcrypt.compare(password, user.password);
     console.log('Password valid:', validPassword);
     
     if (!validPassword) {
@@ -166,23 +188,38 @@ router.post('/login', validate(schemas.login), async (req, res) => {
       return res.status(401).json({ error: 'Invalid credentials' });
     }
 
-    // Generate auth token
+    // Update last login time
+    if (userType === 'admin' && admin) {
+      await supabaseAdmin
+        .from('admins')
+        .update({ last_login_at: new Date().toISOString() })
+        .eq('id', user.id);
+    } else {
+      await supabaseAdmin
+        .from('clients')
+        .update({ last_login_at: new Date().toISOString() })
+        .eq('id', user.id);
+    }
+
+    // Generate auth token with proper role
     const token = generateToken({
-      userId: client.id,
-      email: client.email,
-      role: client.role || 'client'
+      userId: user.id,
+      email: user.email,
+      full_name: user.full_name,
+      role: user.role || (userType === 'admin' ? 'admin' : 'client')
     });
 
-    console.log('Login successful for:', email);
+    console.log('Login successful for:', email, 'as', user.role || userType);
 
     res.json({
       message: 'Login successful',
       token,
       user: {
-        id: client.id,
-        email: client.email,
-        full_name: client.full_name,
-        role: client.role || 'client'
+        id: user.id,
+        email: user.email,
+        full_name: user.full_name,
+        role: user.role || (userType === 'admin' ? 'admin' : 'client'),
+        dashboard_type: user.role === 'admin' || userType === 'admin' ? 'admin' : 'client'
       }
     });
   } catch (error) {
@@ -198,18 +235,68 @@ router.get('/me', authenticateToken, async (req, res) => {
     
     // Return the user data that's already verified in the middleware
     if (req.user) {
-      // Get additional user data from database
       const userId = req.user.userId || req.user.id;
+      let userData = null;
+      let dashboardType = 'client';
       
       try {
-        const { data: client, error } = await supabaseAdmin
-          .from('clients')
-          .select('id, email, full_name, role, onboarding_complete, resume_url')
-          .eq('id', userId)
-          .single();
+        // First check if user is admin
+        if (req.user.role === 'admin') {
+          // Check admins table first
+          const { data: admin, error: adminError } = await supabaseAdmin
+            .from('admins')
+            .select('id, email, full_name, role, profile_picture_url, phone, permissions, is_active, last_login_at')
+            .eq('id', userId)
+            .single();
 
-        if (client) {
-          return res.json({ user: client });
+          if (admin && admin.is_active) {
+            userData = admin;
+            dashboardType = 'admin';
+          } else {
+            // Fallback to clients table for legacy admin accounts
+            const { data: client, error: clientError } = await supabaseAdmin
+              .from('clients')
+              .select('id, email, full_name, role, onboarding_complete, resume_url, profile_picture_url')
+              .eq('id', userId)
+              .eq('role', 'admin')
+              .single();
+
+            if (client) {
+              userData = {
+                ...client,
+                permissions: {
+                  can_create_admins: true,
+                  can_delete_admins: true,
+                  can_manage_clients: true,
+                  can_schedule_consultations: true,
+                  can_view_reports: true,
+                  can_manage_system: true
+                }
+              };
+              dashboardType = 'admin';
+            }
+          }
+        } else {
+          // Regular client
+          const { data: client, error: clientError } = await supabaseAdmin
+            .from('clients')
+            .select('id, email, full_name, role, onboarding_complete, resume_url, profile_picture_url, phone, current_job_title, current_company')
+            .eq('id', userId)
+            .single();
+
+          if (client) {
+            userData = client;
+            dashboardType = 'client';
+          }
+        }
+
+        if (userData) {
+          return res.json({ 
+            user: {
+              ...userData,
+              dashboard_type: dashboardType
+            }
+          });
         }
       } catch (dbError) {
         console.error('Database error, using token data:', dbError);
@@ -220,9 +307,10 @@ router.get('/me', authenticateToken, async (req, res) => {
         user: {
           id: req.user.id,
           email: req.user.email,
-          full_name: req.user.full_name || 'Admin User',
+          full_name: req.user.full_name || 'User',
           role: req.user.role,
-          onboarding_complete: true,
+          dashboard_type: req.user.role === 'admin' ? 'admin' : 'client',
+          onboarding_complete: req.user.role === 'admin' ? true : false,
           resume_url: null
         }
       });
