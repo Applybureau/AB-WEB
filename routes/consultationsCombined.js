@@ -101,7 +101,7 @@ router.post('/', async (req, res) => {
       console.error('DATABASE ERROR:', JSON.stringify(error, null, 2));
       return res.status(500).json({ 
         error: 'Database error',
-        details: process.env.NODE_ENV === 'development' ? error : 'Failed to submit consultation request'
+        details: error.message || error.details || error.hint || JSON.stringify(error)
       });
     }
 
