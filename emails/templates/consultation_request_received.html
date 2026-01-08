@@ -5,98 +5,90 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Consultation Request Received - Apply Bureau</title>
 </head>
-<body style="margin: 0; padding: 0; font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif; background-color: #f4f7f9; color: #2d3748;">
-    <table border="0" cellpadding="0" cellspacing="0" width="100%" style="table-layout: fixed;">
+<body style="margin: 0; padding: 0; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif; background-color: #f5f5f5; color: #333333; line-height: 1.6;">
+    <table border="0" cellpadding="0" cellspacing="0" width="100%" style="min-width: 100%;">
         <tr>
-            <td align="center" style="padding: 40px 0;">
-                <table border="0" cellpadding="0" cellspacing="0" width="600" style="background-color: #ffffff; border-radius: 8px; overflow: hidden; border: 1px solid #e2e8f0; box-shadow: 0 4px 12px rgba(0,0,0,0.05);">
-                    <!-- Header -->
+            <td align="center" style="padding: 40px 20px;">
+                <table border="0" cellpadding="0" cellspacing="0" width="600" style="max-width: 600px; background-color: #ffffff; border-radius: 4px; box-shadow: 0 1px 3px rgba(0,0,0,0.1);">
+                    
+                    <!-- Header with Logo -->
                     <tr>
-                        <td align="center" style="padding: 40px 40px 20px 40px; background: linear-gradient(135deg, #10b981 0%, #06b6d4 100%);">
-                            <img src="https://raw.githubusercontent.com/jesusboy-ops/Apply_Bureau_backend/main/logo.png" alt="Apply Bureau" width="160" style="display: block; border: 0;">
-                            <h1 style="color: #ffffff; font-size: 28px; font-weight: 600; margin: 20px 0 0 0;">Request Received!</h1>
+                        <td style="padding: 32px 40px; border-bottom: 1px solid #e5e5e5;">
+                            <img src="https://raw.githubusercontent.com/jesusboy-ops/Apply_Bureau_backend/main/logo.png" alt="Apply Bureau" width="140" style="display: block;">
                         </td>
                     </tr>
                     
-                    <!-- Content -->
+                    <!-- Main Content -->
                     <tr>
                         <td style="padding: 40px;">
-                            <h2 style="font-size: 24px; color: #1a202c; margin-bottom: 20px;">Hello {{client_name}}!</h2>
+                            <h1 style="margin: 0 0 24px 0; font-size: 24px; font-weight: 600; color: #111111;">Your Request Has Been Received</h1>
                             
-                            <p style="font-size: 16px; line-height: 1.6; color: #4a5568; margin-bottom: 20px;">
-                                Thank you for your interest in Apply Bureau's professional career advisory services. We have successfully received your consultation request.
+                            <p style="margin: 0 0 20px 0; font-size: 16px; color: #555555;">
+                                Hello {{client_name}},
                             </p>
                             
-                            <!-- Request Details -->
-                            <table border="0" cellpadding="0" cellspacing="0" width="100%" style="background-color: #f8fafc; border-radius: 8px; margin: 30px 0;">
+                            <p style="margin: 0 0 20px 0; font-size: 16px; color: #555555;">
+                                Thank you for submitting your consultation request with Apply Bureau. We have received your application and our team is currently reviewing it.
+                            </p>
+                            
+                            <!-- Request Details Box -->
+                            <table border="0" cellpadding="0" cellspacing="0" width="100%" style="margin: 28px 0; background-color: #fafafa; border-left: 3px solid #10b981;">
                                 <tr>
-                                    <td style="padding: 30px; border-left: 4px solid #10b981;">
-                                        <h3 style="margin: 0 0 20px 0; font-size: 18px; color: #2d3748;">📋 Your Request Details</h3>
+                                    <td style="padding: 20px 24px;">
+                                        <p style="margin: 0 0 12px 0; font-size: 14px; font-weight: 600; color: #333333; text-transform: uppercase; letter-spacing: 0.5px;">Request Details</p>
                                         <table border="0" cellpadding="0" cellspacing="0" width="100%">
                                             <tr>
-                                                <td style="padding: 8px 0; font-size: 15px; color: #2d3748; font-weight: 600; width: 140px;">Request ID:</td>
-                                                <td style="padding: 8px 0; font-size: 15px; color: #4a5568;">{{request_id}}</td>
+                                                <td style="padding: 6px 0; font-size: 14px; color: #666666; width: 140px;">Reference ID:</td>
+                                                <td style="padding: 6px 0; font-size: 14px; color: #333333; font-weight: 500;">{{request_id}}</td>
                                             </tr>
                                             <tr>
-                                                <td style="padding: 8px 0; font-size: 15px; color: #2d3748; font-weight: 600;">Target Roles:</td>
-                                                <td style="padding: 8px 0; font-size: 15px; color: #4a5568;">{{role_targets}}</td>
+                                                <td style="padding: 6px 0; font-size: 14px; color: #666666;">Target Roles:</td>
+                                                <td style="padding: 6px 0; font-size: 14px; color: #333333;">{{role_targets}}</td>
                                             </tr>
                                             <tr>
-                                                <td style="padding: 8px 0; font-size: 15px; color: #2d3748; font-weight: 600;">Package Interest:</td>
-                                                <td style="padding: 8px 0; font-size: 15px; color: #4a5568;">{{package_interest}}</td>
+                                                <td style="padding: 6px 0; font-size: 14px; color: #666666;">Package:</td>
+                                                <td style="padding: 6px 0; font-size: 14px; color: #333333;">{{package_interest}}</td>
                                             </tr>
                                             <tr>
-                                                <td style="padding: 8px 0; font-size: 15px; color: #2d3748; font-weight: 600;">Status:</td>
-                                                <td style="padding: 8px 0; font-size: 15px; color: #10b981; font-weight: 600;">Under Review</td>
+                                                <td style="padding: 6px 0; font-size: 14px; color: #666666;">Status:</td>
+                                                <td style="padding: 6px 0; font-size: 14px; color: #10b981; font-weight: 500;">Under Review</td>
                                             </tr>
                                         </table>
                                     </td>
                                 </tr>
                             </table>
                             
-                            <!-- Next Steps -->
-                            <table border="0" cellpadding="0" cellspacing="0" width="100%" style="background-color: #e0f7fa; border-radius: 8px; margin: 30px 0;">
-                                <tr>
-                                    <td style="padding: 30px; border-left: 4px solid #06b6d4;">
-                                        <h3 style="margin: 0 0 20px 0; font-size: 18px; color: #2d3748;">🚀 What Happens Next?</h3>
-                                        <ul style="margin: 0; padding-left: 20px; font-size: 15px; color: #4a5568; line-height: 1.8;">
-                                            <li>Our expert team will review your consultation request</li>
-                                            <li>We'll assess your career goals and package requirements</li>
-                                            <li>You'll receive a response within 24 hours</li>
-                                            <li>If approved, we'll schedule your personalized consultation</li>
-                                        </ul>
-                                    </td>
-                                </tr>
-                            </table>
+                            <p style="margin: 0 0 20px 0; font-size: 16px; color: #555555;">
+                                <strong>What happens next?</strong>
+                            </p>
                             
-                            <p style="font-size: 16px; line-height: 1.6; color: #4a5568; margin-bottom: 16px;">
+                            <p style="margin: 0 0 28px 0; font-size: 15px; color: #555555;">
                                 {{next_steps}}
                             </p>
                             
-                            <p style="font-size: 16px; line-height: 1.6; color: #4a5568;">
-                                We're excited about the opportunity to help you advance your career and achieve your professional goals.
-                            </p>
-                            
-                            <p style="font-size: 14px; color: #a0aec0; text-align: center; margin-top: 30px;">
-                                Questions? Contact us at <a href="mailto:admin@applybureau.com" style="color: #10b981; text-decoration: none;">admin@applybureau.com</a>
-                            </p>
+                            <!-- CTA Button -->
+                            <table border="0" cellpadding="0" cellspacing="0">
+                                <tr>
+                                    <td style="border-radius: 4px; background-color: #10b981;">
+                                        <a href="https://applybureau.com/dashboard" style="display: inline-block; padding: 14px 28px; font-size: 15px; font-weight: 500; color: #ffffff; text-decoration: none;">View Your Dashboard</a>
+                                    </td>
+                                </tr>
+                            </table>
                         </td>
                     </tr>
                     
                     <!-- Footer -->
                     <tr>
-                        <td style="padding: 40px; background-color: #1a202c; color: #ffffff; text-align: center; font-size: 12px;">
-                            <p style="margin: 0 0 10px 0; font-weight: 600;">Apply Bureau</p>
-                            <p style="margin: 0 0 20px 0;">Professional Career Advisory Services</p>
-                            <p style="margin: 0;">
-                                <a href="mailto:admin@applybureau.com" style="color: #10b981; text-decoration: none;">Contact Support</a> | 
-                                <a href="#" style="color: #10b981; text-decoration: none;">Privacy Policy</a>
+                        <td style="padding: 24px 40px; border-top: 1px solid #e5e5e5; background-color: #fafafa;">
+                            <p style="margin: 0 0 8px 0; font-size: 13px; color: #888888;">
+                                Questions? Reply to this email or contact us at <a href="mailto:admin@applybureau.com" style="color: #10b981; text-decoration: none;">admin@applybureau.com</a>
                             </p>
-                            <p style="margin: 20px 0 0 0; color: #a0aec0;">
-                                &copy; 2026 Apply Bureau. All rights reserved.
+                            <p style="margin: 0; font-size: 12px; color: #aaaaaa;">
+                                © 2026 Apply Bureau. All rights reserved.
                             </p>
                         </td>
                     </tr>
+                    
                 </table>
             </td>
         </tr>

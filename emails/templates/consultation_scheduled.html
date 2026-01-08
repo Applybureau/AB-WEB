@@ -1,132 +1,95 @@
-<!-- SUBJECT: Your Consultation is Scheduled -->
 <!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Consultation Scheduled</title>
+    <title>Consultation Scheduled - Apply Bureau</title>
 </head>
-<body style="margin: 0; padding: 0; font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif; background-color: #f4f7f9; color: #2d3748;">
-    <table border="0" cellpadding="0" cellspacing="0" width="100%" style="table-layout: fixed;">
+<body style="margin: 0; padding: 0; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif; background-color: #f5f5f5; color: #333333; line-height: 1.6;">
+    <table border="0" cellpadding="0" cellspacing="0" width="100%" style="min-width: 100%;">
         <tr>
-            <td align="center" style="padding: 40px 0;">
-                <table border="0" cellpadding="0" cellspacing="0" width="600" style="background-color: #ffffff; border-radius: 8px; overflow: hidden; border: 1px solid #e2e8f0; box-shadow: 0 4px 12px rgba(0,0,0,0.05);">
+            <td align="center" style="padding: 40px 20px;">
+                <table border="0" cellpadding="0" cellspacing="0" width="600" style="max-width: 600px; background-color: #ffffff; border-radius: 4px; box-shadow: 0 1px 3px rgba(0,0,0,0.1);">
+                    
                     <!-- Header with Logo -->
                     <tr>
-                        <td align="center" style="padding: 40px 40px 20px 40px; background: linear-gradient(135deg, #10b981 0%, #06b6d4 100%);">
-                            <img src="https://raw.githubusercontent.com/jesusboy-ops/Apply_Bureau_backend/main/logo.png" alt="Apply Bureau" width="160" style="display: block; border: 0;">
-                            <h1 style="color: #ffffff; font-size: 28px; font-weight: 600; margin: 20px 0 0 0;">Consultation Scheduled!</h1>
+                        <td style="padding: 32px 40px; border-bottom: 1px solid #e5e5e5;">
+                            <img src="https://raw.githubusercontent.com/jesusboy-ops/Apply_Bureau_backend/main/logo.png" alt="Apply Bureau" width="140" style="display: block;">
                         </td>
                     </tr>
                     
                     <!-- Main Content -->
                     <tr>
                         <td style="padding: 40px;">
-                            <h2 style="font-size: 24px; color: #1a202c; margin-bottom: 20px;">Great news, {{client_name}}!</h2>
+                            <h1 style="margin: 0 0 24px 0; font-size: 24px; font-weight: 600; color: #111111;">Your Consultation is Scheduled</h1>
                             
-                            <p style="font-size: 16px; line-height: 1.6; color: #4a5568; margin-bottom: 20px;">Your consultation with our expert career advisor has been successfully scheduled. We're excited to help you advance your career journey!</p>
+                            <p style="margin: 0 0 20px 0; font-size: 16px; color: #555555;">
+                                Hello {{client_name}},
+                            </p>
                             
-                            <!-- Consultation Details -->
-                            <table border="0" cellpadding="0" cellspacing="0" width="100%" style="background-color: #f8fafc; border-radius: 8px; margin: 30px 0;">
+                            <p style="margin: 0 0 20px 0; font-size: 16px; color: #555555;">
+                                Your consultation session has been scheduled. Please find the details below.
+                            </p>
+                            
+                            <!-- Schedule Details Box -->
+                            <table border="0" cellpadding="0" cellspacing="0" width="100%" style="margin: 28px 0; background-color: #eff6ff; border-left: 3px solid #3b82f6;">
                                 <tr>
-                                    <td style="padding: 30px; border-left: 4px solid #10b981;">
-                                        <h3 style="margin: 0 0 20px 0; font-size: 18px; color: #2d3748;">📅 Consultation Details</h3>
+                                    <td style="padding: 20px 24px;">
+                                        <p style="margin: 0 0 12px 0; font-size: 14px; font-weight: 600; color: #1e40af; text-transform: uppercase; letter-spacing: 0.5px;">Meeting Details</p>
                                         <table border="0" cellpadding="0" cellspacing="0" width="100%">
                                             <tr>
-                                                <td style="padding: 8px 0; font-size: 15px; color: #2d3748; font-weight: 600; width: 120px;">📅 Date:</td>
-                                                <td style="padding: 8px 0; font-size: 15px; color: #4a5568;">{{consultation_date}}</td>
+                                                <td style="padding: 6px 0; font-size: 14px; color: #666666; width: 100px;">Date:</td>
+                                                <td style="padding: 6px 0; font-size: 14px; color: #333333; font-weight: 500;">{{scheduled_date}}</td>
                                             </tr>
                                             <tr>
-                                                <td style="padding: 8px 0; font-size: 15px; color: #2d3748; font-weight: 600;">🕐 Time:</td>
-                                                <td style="padding: 8px 0; font-size: 15px; color: #4a5568;">{{consultation_time}}</td>
+                                                <td style="padding: 6px 0; font-size: 14px; color: #666666;">Time:</td>
+                                                <td style="padding: 6px 0; font-size: 14px; color: #333333; font-weight: 500;">{{scheduled_time}}</td>
                                             </tr>
                                             <tr>
-                                                <td style="padding: 8px 0; font-size: 15px; color: #2d3748; font-weight: 600;">⏱️ Duration:</td>
-                                                <td style="padding: 8px 0; font-size: 15px; color: #4a5568;">60 minutes</td>
+                                                <td style="padding: 6px 0; font-size: 14px; color: #666666;">Package:</td>
+                                                <td style="padding: 6px 0; font-size: 14px; color: #333333;">{{package_interest}}</td>
                                             </tr>
-                                            <tr>
-                                                <td style="padding: 8px 0; font-size: 15px; color: #2d3748; font-weight: 600;">💼 Type:</td>
-                                                <td style="padding: 8px 0; font-size: 15px; color: #4a5568;">{{consultation_type}}</td>
-                                            </tr>
-                                            {{#consultation_notes}}
-                                            <tr>
-                                                <td style="padding: 8px 0; font-size: 15px; color: #2d3748; font-weight: 600;">📝 Notes:</td>
-                                                <td style="padding: 8px 0; font-size: 15px; color: #4a5568;">{{consultation_notes}}</td>
-                                            </tr>
-                                            {{/consultation_notes}}
                                         </table>
                                     </td>
                                 </tr>
                             </table>
                             
-                            <!-- Preparation Tips -->
-                            <table border="0" cellpadding="0" cellspacing="0" width="100%" style="background-color: #f0fff4; border-radius: 8px; margin: 30px 0;">
+                            <!-- Meeting Link Button -->
+                            <table border="0" cellpadding="0" cellspacing="0" style="margin-bottom: 24px;">
                                 <tr>
-                                    <td style="padding: 30px; border-left: 4px solid #10b981;">
-                                        <h3 style="margin: 0 0 20px 0; font-size: 18px; color: #2d3748;">How to Prepare for Your Session</h3>
-                                        <table border="0" cellpadding="0" cellspacing="0" width="100%">
-                                            <tr><td style="padding: 4px 0; font-size: 15px; color: #4a5568;">💡 Have your current resume ready for review and feedback</td></tr>
-                                            <tr><td style="padding: 4px 0; font-size: 15px; color: #4a5568;">💡 Prepare specific questions about your job search strategy</td></tr>
-                                            <tr><td style="padding: 4px 0; font-size: 15px; color: #4a5568;">💡 Think about your career goals and challenges you're facing</td></tr>
-                                            <tr><td style="padding: 4px 0; font-size: 15px; color: #4a5568;">💡 Join the meeting 5 minutes early to ensure smooth connection</td></tr>
-                                            <tr><td style="padding: 4px 0; font-size: 15px; color: #4a5568;">💡 Find a quiet space with good internet connection</td></tr>
-                                        </table>
+                                    <td style="border-radius: 4px; background-color: #3b82f6;">
+                                        <a href="{{meeting_url}}" style="display: inline-block; padding: 14px 28px; font-size: 15px; font-weight: 500; color: #ffffff; text-decoration: none;">Join Meeting</a>
                                     </td>
                                 </tr>
                             </table>
                             
-                            {{#google_meet_link}}
-                            <!-- Google Meet Link -->
-                            <table border="0" cellpadding="0" cellspacing="0" width="100%" style="margin: 30px 0;">
-                                <tr>
-                                    <td align="center" style="background: linear-gradient(135deg, #10b981 0%, #06b6d4 100%); border-radius: 8px; padding: 20px;">
-                                        <h3 style="color: #ffffff; margin: 0 0 15px 0; font-size: 18px;">🎥 Join Your Video Consultation</h3>
-                                        <a href="{{google_meet_link}}" style="background-color: #ffffff; color: #10b981; padding: 12px 24px; text-decoration: none; border-radius: 6px; font-weight: 600; font-size: 16px; display: inline-block;">Join Google Meet</a>
-                                        <p style="color: #ffffff; margin: 15px 0 0 0; font-size: 14px;">Click the button above or copy this link: {{google_meet_link}}</p>
-                                    </td>
-                                </tr>
-                            </table>
-                            {{/google_meet_link}}
-
-                            {{#preparation_notes}}
-                            <!-- Custom Preparation Notes -->
-                            <table border="0" cellpadding="0" cellspacing="0" width="100%" style="background-color: #f0fff4; border-radius: 8px; margin: 30px 0;">
-                                <tr>
-                                    <td style="padding: 30px; border-left: 4px solid #10b981;">
-                                        <h3 style="margin: 0 0 20px 0; font-size: 18px; color: #2d3748;">📋 Special Preparation Notes</h3>
-                                        <p style="margin: 0; font-size: 15px; color: #4a5568; line-height: 1.6;">{{preparation_notes}}</p>
-                                    </td>
-                                </tr>
-                            </table>
-                            {{/preparation_notes}}
+                            <p style="margin: 0 0 20px 0; font-size: 15px; color: #555555;">
+                                {{meeting_details}}
+                            </p>
                             
-                            <!-- CTA Button -->
-                            <table border="0" cellpadding="0" cellspacing="0" width="100%" style="margin: 30px 0;">
+                            <!-- Dashboard Link -->
+                            <table border="0" cellpadding="0" cellspacing="0">
                                 <tr>
-                                    <td align="center">
-                                        <a href="{{dashboard_link}}" style="background: linear-gradient(135deg, #10b981 0%, #06b6d4 100%); color: #ffffff; padding: 16px 32px; text-decoration: none; border-radius: 8px; font-weight: 600; font-size: 16px; display: inline-block;">View in Dashboard</a>
+                                    <td style="border-radius: 4px; border: 1px solid #10b981;">
+                                        <a href="https://applybureau.com/dashboard" style="display: inline-block; padding: 12px 24px; font-size: 14px; font-weight: 500; color: #10b981; text-decoration: none;">View Dashboard</a>
                                     </td>
                                 </tr>
                             </table>
-                            
-                            <p style="font-size: 16px; line-height: 1.6; color: #4a5568;">You can find all consultation details, meeting links, and preparation materials in your dashboard. We look forward to helping you achieve your career goals!</p>
                         </td>
                     </tr>
                     
                     <!-- Footer -->
                     <tr>
-                        <td style="padding: 40px; background-color: #1a202c; color: #ffffff; text-align: center; font-size: 12px;">
-                            <p style="margin: 0 0 10px 0; font-weight: 600;">Apply Bureau Team</p>
-                            <p style="margin: 0 0 20px 0;">Your Partner in Career Success</p>
-                            <p style="margin: 0;">
-                                <a href="mailto:{{contact_email}}" style="color: #10b981; text-decoration: none;">Contact Support</a> | 
-                                <a href="{{dashboard_link}}" style="color: #10b981; text-decoration: none;">Dashboard</a>
+                        <td style="padding: 24px 40px; border-top: 1px solid #e5e5e5; background-color: #fafafa;">
+                            <p style="margin: 0 0 8px 0; font-size: 13px; color: #888888;">
+                                Need to reschedule? Contact us at <a href="mailto:admin@applybureau.com" style="color: #10b981; text-decoration: none;">admin@applybureau.com</a>
                             </p>
-                            <p style="margin: 20px 0 0 0; color: #a0aec0;">
-                                &copy; {{current_year}} {{company_name}}. All rights reserved.
+                            <p style="margin: 0; font-size: 12px; color: #aaaaaa;">
+                                © 2026 Apply Bureau. All rights reserved.
                             </p>
                         </td>
                     </tr>
+                    
                 </table>
             </td>
         </tr>
