@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Consultation Request Received - Apply Bureau</title>
+    <title>Consultation Approved - Apply Bureau</title>
 </head>
 <body style="margin: 0; padding: 0; font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif; background-color: #f4f7f9; color: #2d3748;">
     <table border="0" cellpadding="0" cellspacing="0" width="100%" style="table-layout: fixed;">
@@ -14,67 +14,48 @@
                     <tr>
                         <td align="center" style="padding: 40px 40px 20px 40px; background: linear-gradient(135deg, #10b981 0%, #06b6d4 100%);">
                             <img src="https://raw.githubusercontent.com/jesusboy-ops/Apply_Bureau_backend/main/logo.png" alt="Apply Bureau" width="160" style="display: block; border: 0;">
-                            <h1 style="color: #ffffff; font-size: 28px; font-weight: 600; margin: 20px 0 0 0;">Request Received!</h1>
+                            <h1 style="color: #ffffff; font-size: 28px; font-weight: 600; margin: 20px 0 0 0;">🎉 Consultation Approved!</h1>
                         </td>
                     </tr>
                     
                     <!-- Content -->
                     <tr>
                         <td style="padding: 40px;">
-                            <h2 style="font-size: 24px; color: #1a202c; margin-bottom: 20px;">Hello {{client_name}}!</h2>
+                            <h2 style="font-size: 24px; color: #1a202c; margin-bottom: 20px;">Great news, {{client_name}}!</h2>
                             
                             <p style="font-size: 16px; line-height: 1.6; color: #4a5568; margin-bottom: 20px;">
-                                Thank you for your interest in Apply Bureau's professional career advisory services. We have successfully received your consultation request.
+                                We're excited to inform you that your consultation request has been approved! Our team has reviewed your career goals and we're confident we can help you achieve them.
                             </p>
                             
                             <!-- Request Details -->
-                            <table border="0" cellpadding="0" cellspacing="0" width="100%" style="background-color: #f8fafc; border-radius: 8px; margin: 30px 0;">
+                            <table border="0" cellpadding="0" cellspacing="0" width="100%" style="background-color: #ecfdf5; border-radius: 8px; margin: 30px 0;">
                                 <tr>
                                     <td style="padding: 30px; border-left: 4px solid #10b981;">
-                                        <h3 style="margin: 0 0 20px 0; font-size: 18px; color: #2d3748;">📋 Your Request Details</h3>
+                                        <h3 style="margin: 0 0 20px 0; font-size: 18px; color: #2d3748;">✅ Approved Request Details</h3>
                                         <table border="0" cellpadding="0" cellspacing="0" width="100%">
                                             <tr>
-                                                <td style="padding: 8px 0; font-size: 15px; color: #2d3748; font-weight: 600; width: 140px;">Request ID:</td>
-                                                <td style="padding: 8px 0; font-size: 15px; color: #4a5568;">{{request_id}}</td>
-                                            </tr>
-                                            <tr>
-                                                <td style="padding: 8px 0; font-size: 15px; color: #2d3748; font-weight: 600;">Target Roles:</td>
+                                                <td style="padding: 8px 0; font-size: 15px; color: #2d3748; font-weight: 600; width: 140px;">Target Roles:</td>
                                                 <td style="padding: 8px 0; font-size: 15px; color: #4a5568;">{{role_targets}}</td>
                                             </tr>
                                             <tr>
-                                                <td style="padding: 8px 0; font-size: 15px; color: #2d3748; font-weight: 600;">Package Interest:</td>
+                                                <td style="padding: 8px 0; font-size: 15px; color: #2d3748; font-weight: 600;">Package:</td>
                                                 <td style="padding: 8px 0; font-size: 15px; color: #4a5568;">{{package_interest}}</td>
                                             </tr>
                                             <tr>
                                                 <td style="padding: 8px 0; font-size: 15px; color: #2d3748; font-weight: 600;">Status:</td>
-                                                <td style="padding: 8px 0; font-size: 15px; color: #10b981; font-weight: 600;">Under Review</td>
+                                                <td style="padding: 8px 0; font-size: 15px; color: #10b981; font-weight: 600;">Approved</td>
                                             </tr>
                                         </table>
                                     </td>
                                 </tr>
                             </table>
                             
-                            <!-- Next Steps -->
-                            <table border="0" cellpadding="0" cellspacing="0" width="100%" style="background-color: #e0f7fa; border-radius: 8px; margin: 30px 0;">
-                                <tr>
-                                    <td style="padding: 30px; border-left: 4px solid #06b6d4;">
-                                        <h3 style="margin: 0 0 20px 0; font-size: 18px; color: #2d3748;">🚀 What Happens Next?</h3>
-                                        <ul style="margin: 0; padding-left: 20px; font-size: 15px; color: #4a5568; line-height: 1.8;">
-                                            <li>Our expert team will review your consultation request</li>
-                                            <li>We'll assess your career goals and package requirements</li>
-                                            <li>You'll receive a response within 24 hours</li>
-                                            <li>If approved, we'll schedule your personalized consultation</li>
-                                        </ul>
-                                    </td>
-                                </tr>
-                            </table>
-                            
-                            <p style="font-size: 16px; line-height: 1.6; color: #4a5568; margin-bottom: 16px;">
+                            <p style="font-size: 16px; line-height: 1.6; color: #4a5568; margin-bottom: 20px;">
                                 {{next_steps}}
                             </p>
                             
                             <p style="font-size: 16px; line-height: 1.6; color: #4a5568;">
-                                We're excited about the opportunity to help you advance your career and achieve your professional goals.
+                                We look forward to working with you and helping you advance your career to the next level.
                             </p>
                             
                             <p style="font-size: 14px; color: #a0aec0; text-align: center; margin-top: 30px;">

@@ -23,8 +23,8 @@
                         <td style="padding: 40px;">
                             <h2 style="font-size: 24px; color: #1a202c; margin-bottom: 20px;">Admin Notification</h2>
                             
-                            <p style="font-size: 16px; line-height: 1.6; color: #4a5568;">
-                                A new consultation request has been submitted through the website and requires your attention.
+                            <p style="font-size: 16px; line-height: 1.6; color: #4a5568; margin-bottom: 20px;">
+                                A new consultation request has been submitted through the Apply Bureau website and requires your review.
                             </p>
                             
                             <!-- Client Details -->
@@ -34,107 +34,60 @@
                                         <h3 style="margin: 0 0 20px 0; font-size: 18px; color: #2d3748;">👤 Client Information</h3>
                                         <table border="0" cellpadding="0" cellspacing="0" width="100%">
                                             <tr>
-                                                <td style="padding: 8px 0; font-size: 15px; color: #2d3748; font-weight: 600; width: 150px;">Name:</td>
+                                                <td style="padding: 8px 0; font-size: 15px; color: #2d3748; font-weight: 600; width: 140px;">Name:</td>
                                                 <td style="padding: 8px 0; font-size: 15px; color: #4a5568;">{{client_name}}</td>
                                             </tr>
                                             <tr>
                                                 <td style="padding: 8px 0; font-size: 15px; color: #2d3748; font-weight: 600;">Email:</td>
-                                                <td style="padding: 8px 0; font-size: 15px; color: #4a5568;"><a href="mailto:{{client_email}}" style="color: #10b981; text-decoration: none;">{{client_email}}</a></td>
+                                                <td style="padding: 8px 0; font-size: 15px; color: #4a5568;">{{client_email}}</td>
                                             </tr>
-                                            {{#if client_phone}}
                                             <tr>
-                                                <td style="padding: 8px 0; font-size: 15px; color: #2d3748; font-weight: 600;">Phone:</td>
-                                                <td style="padding: 8px 0; font-size: 15px; color: #4a5568;"><a href="tel:{{client_phone}}" style="color: #10b981; text-decoration: none;">{{client_phone}}</a></td>
+                                                <td style="padding: 8px 0; font-size: 15px; color: #2d3748; font-weight: 600;">Target Roles:</td>
+                                                <td style="padding: 8px 0; font-size: 15px; color: #4a5568;">{{role_targets}}</td>
                                             </tr>
-                                            {{/if}}
-                                            {{#if company}}
                                             <tr>
-                                                <td style="padding: 8px 0; font-size: 15px; color: #2d3748; font-weight: 600;">Company:</td>
-                                                <td style="padding: 8px 0; font-size: 15px; color: #4a5568;">{{company}}</td>
+                                                <td style="padding: 8px 0; font-size: 15px; color: #2d3748; font-weight: 600;">Package Interest:</td>
+                                                <td style="padding: 8px 0; font-size: 15px; color: #4a5568;">{{package_interest}}</td>
                                             </tr>
-                                            {{/if}}
-                                            {{#if job_title}}
                                             <tr>
-                                                <td style="padding: 8px 0; font-size: 15px; color: #2d3748; font-weight: 600;">Job Title:</td>
-                                                <td style="padding: 8px 0; font-size: 15px; color: #4a5568;">{{job_title}}</td>
+                                                <td style="padding: 8px 0; font-size: 15px; color: #2d3748; font-weight: 600;">Employment Status:</td>
+                                                <td style="padding: 8px 0; font-size: 15px; color: #4a5568;">{{employment_status}}</td>
                                             </tr>
-                                            {{/if}}
+                                            <tr>
+                                                <td style="padding: 8px 0; font-size: 15px; color: #2d3748; font-weight: 600;">Area of Concern:</td>
+                                                <td style="padding: 8px 0; font-size: 15px; color: #4a5568;">{{area_of_concern}}</td>
+                                            </tr>
                                         </table>
                                     </td>
                                 </tr>
                             </table>
                             
-                            <!-- Request Details -->
-                            <table border="0" cellpadding="0" cellspacing="0" width="100%" style="background-color: #f0f9ff; border-radius: 8px; margin: 30px 0;">
+                            <!-- Action Required -->
+                            <table border="0" cellpadding="0" cellspacing="0" width="100%" style="background-color: #fee2e2; border-radius: 8px; margin: 30px 0;">
                                 <tr>
-                                    <td style="padding: 30px; border-left: 4px solid #06b6d4;">
-                                        <h3 style="margin: 0 0 20px 0; font-size: 18px; color: #2d3748;">📋 Request Details</h3>
-                                        <table border="0" cellpadding="0" cellspacing="0" width="100%">
-                                            <tr>
-                                                <td style="padding: 8px 0; font-size: 15px; color: #2d3748; font-weight: 600; width: 150px;">Request ID:</td>
-                                                <td style="padding: 8px 0; font-size: 15px; color: #4a5568; font-family: monospace; background-color: #f7fafc; padding: 4px 8px; border-radius: 4px;">#{{request_id}}</td>
-                                            </tr>
-                                            <tr>
-                                                <td style="padding: 8px 0; font-size: 15px; color: #2d3748; font-weight: 600;">Service Type:</td>
-                                                <td style="padding: 8px 0; font-size: 15px; color: #4a5568;">{{consultation_type}}</td>
-                                            </tr>
-                                            <tr>
-                                                <td style="padding: 8px 0; font-size: 15px; color: #2d3748; font-weight: 600;">Urgency:</td>
-                                                <td style="padding: 8px 0; font-size: 15px; color: #4a5568;">
-                                                    <span style="background-color: {{#if (eq urgency_level 'urgent')}}#fee2e2; color: #dc2626{{else if (eq urgency_level 'high')}}#fef3c7; color: #d97706{{else}}#f0fdf4; color: #16a34a{{/if}}; padding: 4px 8px; border-radius: 4px; font-size: 12px; font-weight: 600; text-transform: uppercase;">{{urgency_level}}</span>
-                                                </td>
-                                            </tr>
-                                            {{#if preferred_date}}
-                                            <tr>
-                                                <td style="padding: 8px 0; font-size: 15px; color: #2d3748; font-weight: 600;">Preferred Date:</td>
-                                                <td style="padding: 8px 0; font-size: 15px; color: #4a5568;">{{preferred_date}}</td>
-                                            </tr>
-                                            {{/if}}
-                                            {{#if preferred_time}}
-                                            <tr>
-                                                <td style="padding: 8px 0; font-size: 15px; color: #2d3748; font-weight: 600;">Preferred Time:</td>
-                                                <td style="padding: 8px 0; font-size: 15px; color: #4a5568;">{{preferred_time}}</td>
-                                            </tr>
-                                            {{/if}}
-                                        </table>
+                                    <td style="padding: 30px; border-left: 4px solid #ef4444;">
+                                        <h3 style="margin: 0 0 20px 0; font-size: 18px; color: #2d3748;">⚡ Action Required</h3>
+                                        <ul style="margin: 0; padding-left: 20px; font-size: 15px; color: #4a5568; line-height: 1.8;">
+                                            <li>Review the consultation request details</li>
+                                            <li>Assess client's career goals and package fit</li>
+                                            <li>Approve or reject the request with notes</li>
+                                            <li>If approved, schedule the consultation session</li>
+                                        </ul>
                                     </td>
                                 </tr>
                             </table>
                             
-                            {{#if message}}
-                            <!-- Client Message -->
-                            <table border="0" cellpadding="0" cellspacing="0" width="100%" style="background-color: #f8fafc; border-radius: 8px; margin: 30px 0;">
-                                <tr>
-                                    <td style="padding: 30px; border-left: 4px solid #64748b;">
-                                        <h3 style="margin: 0 0 15px 0; font-size: 18px; color: #2d3748;">💬 Client Message</h3>
-                                        <p style="margin: 0; font-size: 15px; color: #4a5568; line-height: 1.6; font-style: italic;">"{{message}}"</p>
-                                    </td>
-                                </tr>
-                            </table>
-                            {{/if}}
-                            
-                            <!-- Action Button -->
+                            <!-- Admin Dashboard Button -->
                             <table border="0" cellpadding="0" cellspacing="0" width="100%" style="margin: 35px 0;">
                                 <tr>
                                     <td align="center">
-                                        <a href="{{admin_dashboard_url}}" style="background: linear-gradient(135deg, #10b981 0%, #06b6d4 100%); color: #ffffff; padding: 16px 32px; text-decoration: none; border-radius: 8px; font-weight: 600; font-size: 16px; display: inline-block;">Review & Respond</a>
+                                        <a href="{{admin_dashboard_url}}" style="background: linear-gradient(135deg, #f59e0b 0%, #ef4444 100%); color: #ffffff; padding: 16px 32px; text-decoration: none; border-radius: 8px; font-weight: 600; font-size: 16px; display: inline-block;">Review in Admin Dashboard</a>
                                     </td>
                                 </tr>
                             </table>
                             
-                            <p style="font-size: 16px; line-height: 1.6; color: #4a5568;">
-                                <strong>Required Actions:</strong>
-                            </p>
-                            
-                            <ul style="padding-left: 20px; font-size: 14px; color: #718096; line-height: 2;">
-                                <li>Review the client's request and background</li>
-                                <li>Confirm or suggest alternative consultation times</li>
-                                <li>Prepare meeting agenda and materials</li>
-                                <li>Send confirmation with meeting details</li>
-                            </ul>
-                            
                             <p style="font-size: 14px; color: #a0aec0; text-align: center; margin-top: 30px;">
-                                This notification was sent automatically when a consultation request was submitted.
+                                This is an automated notification from the Apply Bureau system.
                             </p>
                         </td>
                     </tr>
@@ -143,10 +96,10 @@
                     <tr>
                         <td style="padding: 40px; background-color: #1a202c; color: #ffffff; text-align: center; font-size: 12px;">
                             <p style="margin: 0 0 10px 0; font-weight: 600;">Apply Bureau Admin System</p>
-                            <p style="margin: 0 0 20px 0;">Consultation Request Management</p>
+                            <p style="margin: 0 0 20px 0;">Professional Career Advisory Management</p>
                             <p style="margin: 0;">
-                                <a href="{{admin_dashboard_url}}" style="color: #10b981; text-decoration: none;">Admin Dashboard</a> | 
-                                <a href="mailto:admin@applybureau.com" style="color: #10b981; text-decoration: none;">Contact Support</a>
+                                <a href="mailto:admin@applybureau.com" style="color: #10b981; text-decoration: none;">Admin Support</a> | 
+                                <a href="{{admin_dashboard_url}}" style="color: #10b981; text-decoration: none;">Admin Dashboard</a>
                             </p>
                             <p style="margin: 20px 0 0 0; color: #a0aec0;">
                                 &copy; 2026 Apply Bureau. All rights reserved.
