@@ -186,7 +186,7 @@ router.get('/', authenticateToken, requireAdmin, async (req, res) => {
 router.patch('/:id', authenticateToken, requireAdmin, async (req, res) => {
   try {
     const { id } = req.params;
-    const { status, admin_notes } = req.body;
+    const { status, admin_notes, scheduled_date, scheduled_time, meeting_url } = req.body;
 
     if (!status) {
       return res.status(400).json({ error: 'Status is required' });
@@ -200,6 +200,10 @@ router.patch('/:id', authenticateToken, requireAdmin, async (req, res) => {
       status,
       admin_notes: admin_notes || null
     };
+
+    // Add scheduling fields if provided
+    if (scheduled_date) updateData.preferred_date = scheduled_date;
+    if (scheduled_time) updateData.preferred_time = scheduled_time;
 
     const { data: consultation, error } = await supabaseAdmin
       .from('consultations')
@@ -224,17 +228,21 @@ router.patch('/:id', authenticateToken, requireAdmin, async (req, res) => {
 
       if (status === 'approved') {
         emailTemplate = 'consultation_approved';
-        emailData.next_steps = 'We will contact you shortly to schedule your consultation session.';
+        emailData.next_steps = admin_notes || 'We will contact you shortly to schedule your consultation session.';
       } else if (status === 'rejected') {
         emailTemplate = 'consultation_rejected';
         emailData.reason = admin_notes || 'Your request does not meet our current criteria.';
       } else if (status === 'scheduled') {
-        emailTemplate = 'consultation_confirmed';
-        emailData.meeting_details = admin_notes || 'Meeting details will be provided separately.';
+        emailTemplate = 'consultation_scheduled';
+        emailData.scheduled_date = scheduled_date || 'To be confirmed';
+        emailData.scheduled_time = scheduled_time || 'To be confirmed';
+        emailData.meeting_url = meeting_url || '';
+        emailData.meeting_details = admin_notes || 'Please check your email for meeting details.';
       }
 
       if (emailTemplate) {
         await sendEmail(consultation.email, emailTemplate, emailData);
+        console.log(`Email sent: ${emailTemplate} to ${consultation.email}`);
       }
     } catch (emailError) {
       console.error('Failed to send status update email:', emailError);
@@ -247,6 +255,120 @@ router.patch('/:id', authenticateToken, requireAdmin, async (req, res) => {
   } catch (error) {
     console.error('Update consultation request error:', error);
     res.status(500).json({ error: 'Failed to update consultation request' });
+  }
+});
+
+// POST /api/consultations/:id/invite - Send invitation to approved client (PROTECTED)
+router.post('/:id/invite', authenticateToken, requireAdmin, async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { invite_message, signup_link } = req.body;
+
+    // Get the consultation
+    const { data: consultation, error: fetchError } = await supabaseAdmin
+      .from('consultations')
+      .select('*')
+      .eq('id', id)
+      .single();
+
+    if (fetchError || !consultation) {
+      return res.status(404).json({ error: 'Consultation request not found' });
+    }
+
+    // Send invitation email
+    try {
+      await sendEmail(consultation.email, 'signup_invite', {
+        client_name: consultation.full_name,
+        package_interest: consultation.package_interest || 'Career Advisory Package',
+        invite_message: invite_message || 'You have been approved to join Apply Bureau!',
+        signup_link: signup_link || 'https://applybureau.com/signup',
+        role_targets: consultation.role_targets
+      });
+
+      // Update consultation status to show invitation was sent
+      await supabaseAdmin
+        .from('consultations')
+        .update({ 
+          status: 'approved',
+          admin_notes: `Invitation sent on ${new Date().toISOString()}. ${consultation.admin_notes || ''}`
+        })
+        .eq('id', id);
+
+      res.json({
+        message: 'Invitation sent successfully',
+        email: consultation.email
+      });
+    } catch (emailError) {
+      console.error('Failed to send invitation email:', emailError);
+      res.status(500).json({ error: 'Failed to send invitation email' });
+    }
+  } catch (error) {
+    console.error('Invite error:', error);
+    res.status(500).json({ error: 'Failed to send invitation' });
+  }
+});
+
+// POST /api/consultations/:id/schedule - Schedule a consultation (PROTECTED)
+router.post('/:id/schedule', authenticateToken, requireAdmin, async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { scheduled_date, scheduled_time, meeting_url, notes } = req.body;
+
+    if (!scheduled_date || !scheduled_time) {
+      return res.status(400).json({ error: 'Scheduled date and time are required' });
+    }
+
+    // Get the consultation
+    const { data: consultation, error: fetchError } = await supabaseAdmin
+      .from('consultations')
+      .select('*')
+      .eq('id', id)
+      .single();
+
+    if (fetchError || !consultation) {
+      return res.status(404).json({ error: 'Consultation request not found' });
+    }
+
+    // Update consultation with schedule
+    const { data: updatedConsultation, error: updateError } = await supabaseAdmin
+      .from('consultations')
+      .update({
+        status: 'scheduled',
+        preferred_date: scheduled_date,
+        preferred_time: scheduled_time,
+        admin_notes: notes || `Scheduled for ${scheduled_date} at ${scheduled_time}`
+      })
+      .eq('id', id)
+      .select()
+      .single();
+
+    if (updateError) {
+      return res.status(500).json({ error: 'Failed to update consultation' });
+    }
+
+    // Send scheduling email
+    try {
+      await sendEmail(consultation.email, 'consultation_scheduled', {
+        client_name: consultation.full_name,
+        scheduled_date: scheduled_date,
+        scheduled_time: scheduled_time,
+        meeting_url: meeting_url || '',
+        package_interest: consultation.package_interest || 'Career Advisory Package',
+        role_targets: consultation.role_targets,
+        notes: notes || ''
+      });
+      console.log(`Scheduling email sent to ${consultation.email}`);
+    } catch (emailError) {
+      console.error('Failed to send scheduling email:', emailError);
+    }
+
+    res.json({
+      message: 'Consultation scheduled successfully',
+      consultation: updatedConsultation
+    });
+  } catch (error) {
+    console.error('Schedule error:', error);
+    res.status(500).json({ error: 'Failed to schedule consultation' });
   }
 });
 
