@@ -8,6 +8,9 @@ const router = express.Router();
 // POST /api/consultations - Accept consultation requests from website (PUBLIC)
 router.post('/', async (req, res) => {
   try {
+    console.log('=== CONSULTATION REQUEST DEBUG ===');
+    console.log('Request body:', JSON.stringify(req.body, null, 2));
+    
     const {
       full_name,
       email,
@@ -25,6 +28,7 @@ router.post('/', async (req, res) => {
 
     // Validate required fields
     if (!full_name || !email || !role_targets) {
+      console.log('Validation failed: missing required fields');
       return res.status(400).json({ 
         error: 'Missing required fields: full_name, email, role_targets' 
       });
@@ -33,8 +37,11 @@ router.post('/', async (req, res) => {
     // Validate email format
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
     if (!emailRegex.test(email)) {
+      console.log('Validation failed: invalid email format');
       return res.status(400).json({ error: 'Invalid email format' });
     }
+
+    console.log('Validation passed, preparing data...');
 
     // Create a comprehensive message that includes all the user's data
     const detailedMessage = [
@@ -63,11 +70,10 @@ router.post('/', async (req, res) => {
       urgency_level: 'normal',
       status: 'pending',
       source: 'website'
-      // Remove any fields that might cause foreign key issues
-      // confirmed_by, rejected_by, rescheduled_by will be null by default
     };
 
-    console.log('Attempting to insert consultation with data:', consultationData);
+    console.log('Prepared consultation data:', JSON.stringify(consultationData, null, 2));
+    console.log('Attempting database insert...');
 
     // Insert into the existing consultations table
     const { data: consultation, error } = await supabaseAdmin
@@ -77,13 +83,17 @@ router.post('/', async (req, res) => {
       .single();
 
     if (error) {
-      console.error('Database error creating consultation:', error);
-      return res.status(500).json({ error: 'Failed to submit consultation request' });
+      console.error('DATABASE ERROR:', JSON.stringify(error, null, 2));
+      return res.status(500).json({ 
+        error: 'Database error',
+        details: process.env.NODE_ENV === 'development' ? error : 'Failed to submit consultation request'
+      });
     }
 
-    console.log('Successfully created consultation:', consultation.id);
+    console.log('Database insert successful:', consultation.id);
 
-    // Send confirmation email to client
+    // Try to send confirmation email (but don't fail if it doesn't work)
+    console.log('Attempting to send confirmation email...');
     try {
       await sendEmail(email, 'consultation_request_received', {
         client_name: full_name,
@@ -92,13 +102,14 @@ router.post('/', async (req, res) => {
         package_interest: package_interest || 'Not specified',
         next_steps: 'Our team will review your request and contact you within 24 hours.'
       });
-      console.log('Confirmation email sent to client');
+      console.log('Confirmation email sent successfully');
     } catch (emailError) {
-      console.error('Failed to send confirmation email:', emailError);
-      // Don't fail the request if email fails
+      console.error('EMAIL ERROR (non-fatal):', emailError.message);
+      // Continue - don't fail the request if email fails
     }
 
-    // Send notification email to admin
+    // Try to send admin notification email (but don't fail if it doesn't work)
+    console.log('Attempting to send admin notification email...');
     try {
       await sendEmail('admin@applybureau.com', 'new_consultation_request', {
         client_name: full_name,
@@ -107,22 +118,28 @@ router.post('/', async (req, res) => {
         package_interest: package_interest || 'Not specified',
         employment_status: employment_status || 'Not specified',
         area_of_concern: area_of_concern || 'Not specified',
-        admin_dashboard_url: `${process.env.FRONTEND_URL || 'https://apply-bureau-frontend.com'}/admin/consultations`
+        admin_dashboard_url: 'https://apply-bureau-frontend.com/admin/consultations'
       });
-      console.log('Admin notification email sent');
+      console.log('Admin notification email sent successfully');
     } catch (emailError) {
-      console.error('Failed to send admin notification email:', emailError);
-      // Don't fail the request if email fails
+      console.error('ADMIN EMAIL ERROR (non-fatal):', emailError.message);
+      // Continue - don't fail the request if email fails
     }
 
+    console.log('Consultation request completed successfully');
     res.status(201).json({
       id: consultation.id,
       status: 'pending',
       message: 'Consultation request received successfully'
     });
+    
   } catch (error) {
-    console.error('Consultation request error:', error);
-    res.status(500).json({ error: 'Failed to submit consultation request' });
+    console.error('UNEXPECTED ERROR:', error);
+    console.error('Error stack:', error.stack);
+    res.status(500).json({ 
+      error: 'Unexpected server error',
+      details: process.env.NODE_ENV === 'development' ? error.message : 'Failed to submit consultation request'
+    });
   }
 });
 
