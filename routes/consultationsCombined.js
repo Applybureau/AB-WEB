@@ -56,7 +56,7 @@ router.post('/', async (req, res) => {
       linkedin_url ? `LinkedIn: ${linkedin_url}` : ''
     ].filter(Boolean).join('\n');
 
-    // Map to the existing consultations table structure (based on debug output)
+    // Map to the existing consultations table structure (exact match with existing record)
     const consultationData = {
       full_name,
       email,
@@ -69,7 +69,22 @@ router.post('/', async (req, res) => {
       message: detailedMessage,
       urgency_level: 'normal',
       status: 'pending',
-      source: 'website'
+      source: 'website',
+      // Explicitly set all foreign key fields to null to avoid constraint issues
+      confirmed_by: null,
+      confirmed_at: null,
+      scheduled_date: null,
+      scheduled_time: null,
+      meeting_url: null,
+      admin_notes: null,
+      rejected_by: null,
+      rejected_at: null,
+      rejection_reason: null,
+      rescheduled_by: null,
+      rescheduled_at: null,
+      reschedule_reason: null,
+      consultation_request_id: null
+      // created_at and updated_at will be auto-generated
     };
 
     console.log('Prepared consultation data:', JSON.stringify(consultationData, null, 2));
