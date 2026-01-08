@@ -56,20 +56,26 @@ router.post('/', async (req, res) => {
       linkedin_url ? `LinkedIn: ${linkedin_url}` : ''
     ].filter(Boolean).join('\n');
 
-    // Map to the existing consultations table structure (only use columns that exist)
+    // Map to the consultations table structure
     const consultationData = {
       full_name,
       email,
       phone: phone || null,
+      linkedin_url: linkedin_url || null,
+      role_targets: role_targets || null,
+      location_preferences: location_preferences || null,
+      minimum_salary: minimum_salary || null,
+      target_market: target_market || null,
+      employment_status: employment_status || null,
+      package_interest: package_interest || null,
+      area_of_concern: area_of_concern || null,
+      consultation_window: consultation_window || null,
       job_title: role_targets,
       consultation_type: 'career_strategy',
-      preferred_date: null,
-      preferred_time: consultation_window || null,
       message: detailedMessage,
       urgency_level: 'normal',
       status: 'pending',
       source: 'website'
-      // Don't include columns that might not exist: company, confirmed_by, rejected_by, etc.
     };
 
     console.log('Prepared consultation data:', JSON.stringify(consultationData, null, 2));
@@ -148,7 +154,6 @@ router.get('/', authenticateToken, requireAdmin, async (req, res) => {
   try {
     const { status, limit = 50, offset = 0, search } = req.query;
 
-    // Query the existing consultations table
     let query = supabaseAdmin
       .from('consultations')
       .select('*')
@@ -160,7 +165,7 @@ router.get('/', authenticateToken, requireAdmin, async (req, res) => {
     }
 
     if (search) {
-      query = query.or(`full_name.ilike.%${search}%,email.ilike.%${search}%,job_title.ilike.%${search}%`);
+      query = query.or(`full_name.ilike.%${search}%,email.ilike.%${search}%,role_targets.ilike.%${search}%`);
     }
 
     const { data: consultations, error } = await query;
@@ -170,32 +175,7 @@ router.get('/', authenticateToken, requireAdmin, async (req, res) => {
       return res.status(500).json({ error: 'Failed to fetch consultation requests' });
     }
 
-    // Transform the data to match the user's expected API response format
-    const transformedConsultations = (consultations || []).map(consultation => ({
-      id: consultation.id,
-      full_name: consultation.full_name,
-      email: consultation.email,
-      phone: consultation.phone,
-      linkedin_url: null, // Not stored in original structure
-      role_targets: consultation.job_title,
-      location_preferences: null, // Extract from message if needed
-      minimum_salary: null, // Extract from message if needed
-      target_market: consultation.company,
-      employment_status: null, // Extract from message if needed
-      package_interest: null, // Extract from message if needed
-      area_of_concern: null, // Extract from message if needed
-      consultation_window: consultation.preferred_time,
-      status: consultation.status,
-      created_at: consultation.created_at,
-      admin_notes: consultation.admin_notes,
-      // Include original fields for admin reference
-      consultation_type: consultation.consultation_type,
-      message: consultation.message,
-      urgency_level: consultation.urgency_level,
-      source: consultation.source
-    }));
-
-    res.json(transformedConsultations);
+    res.json(consultations || []);
   } catch (error) {
     console.error('Fetch consultation requests error:', error);
     res.status(500).json({ error: 'Failed to fetch consultation requests' });
@@ -207,7 +187,6 @@ router.patch('/:id', authenticateToken, requireAdmin, async (req, res) => {
   try {
     const { id } = req.params;
     const { status, admin_notes } = req.body;
-    const adminId = req.user.userId || req.user.id;
 
     if (!status) {
       return res.status(400).json({ error: 'Status is required' });
@@ -221,16 +200,6 @@ router.patch('/:id', authenticateToken, requireAdmin, async (req, res) => {
       status,
       admin_notes: admin_notes || null
     };
-
-    // Add status-specific fields based on the existing table structure
-    if (status === 'approved') {
-      updateData.confirmed_by = adminId;
-      updateData.confirmed_at = new Date().toISOString();
-    } else if (status === 'rejected') {
-      updateData.rejected_by = adminId;
-      updateData.rejected_at = new Date().toISOString();
-      updateData.rejection_reason = admin_notes || 'Request rejected by admin';
-    }
 
     const { data: consultation, error } = await supabaseAdmin
       .from('consultations')
@@ -249,8 +218,8 @@ router.patch('/:id', authenticateToken, requireAdmin, async (req, res) => {
       let emailTemplate = null;
       let emailData = {
         client_name: consultation.full_name,
-        role_targets: consultation.job_title,
-        package_interest: 'Career Advisory Package'
+        role_targets: consultation.role_targets || consultation.job_title,
+        package_interest: consultation.package_interest || 'Career Advisory Package'
       };
 
       if (status === 'approved') {
@@ -266,21 +235,14 @@ router.patch('/:id', authenticateToken, requireAdmin, async (req, res) => {
 
       if (emailTemplate) {
         await sendEmail(consultation.email, emailTemplate, emailData);
-        console.log(`Status update email sent: ${emailTemplate}`);
       }
     } catch (emailError) {
       console.error('Failed to send status update email:', emailError);
-      // Don't fail the update if email fails
     }
 
     res.json({
       message: 'Consultation request updated successfully',
-      consultation: {
-        id: consultation.id,
-        status: consultation.status,
-        admin_notes: consultation.admin_notes,
-        updated_at: consultation.updated_at
-      }
+      consultation
     });
   } catch (error) {
     console.error('Update consultation request error:', error);
@@ -303,25 +265,7 @@ router.get('/:id', authenticateToken, requireAdmin, async (req, res) => {
       return res.status(404).json({ error: 'Consultation request not found' });
     }
 
-    // Transform to match expected API format
-    const transformedConsultation = {
-      id: consultation.id,
-      full_name: consultation.full_name,
-      email: consultation.email,
-      phone: consultation.phone,
-      role_targets: consultation.job_title,
-      target_market: consultation.company,
-      consultation_window: consultation.preferred_time,
-      status: consultation.status,
-      created_at: consultation.created_at,
-      admin_notes: consultation.admin_notes,
-      message: consultation.message,
-      consultation_type: consultation.consultation_type,
-      urgency_level: consultation.urgency_level,
-      source: consultation.source
-    };
-
-    res.json(transformedConsultation);
+    res.json(consultation);
   } catch (error) {
     console.error('Get consultation request error:', error);
     res.status(500).json({ error: 'Failed to fetch consultation request' });
