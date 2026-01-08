@@ -36,70 +36,52 @@ router.post('/', async (req, res) => {
       return res.status(400).json({ error: 'Invalid email format' });
     }
 
-    // Map the user's API specification to the existing database structure
+    // Create a comprehensive message that includes all the user's data
+    const detailedMessage = [
+      `Role Targets: ${role_targets}`,
+      `Location Preferences: ${location_preferences || 'Not specified'}`,
+      `Minimum Salary: ${minimum_salary || 'Not specified'}`,
+      `Target Market: ${target_market || 'Not specified'}`,
+      `Employment Status: ${employment_status || 'Not specified'}`,
+      `Package Interest: ${package_interest || 'Not specified'}`,
+      `Area of Concern: ${area_of_concern || 'Not specified'}`,
+      `Consultation Window: ${consultation_window || 'Not specified'}`,
+      linkedin_url ? `LinkedIn: ${linkedin_url}` : ''
+    ].filter(Boolean).join('\n');
+
+    // Map to the existing consultations table structure (based on debug output)
     const consultationData = {
       full_name,
       email,
-      phone,
-      company: target_market || null, // Map target_market to company
-      job_title: role_targets, // Map role_targets to job_title
-      consultation_type: 'career_strategy', // Default consultation type
-      message: `Role Targets: ${role_targets}\n` +
-               `Location Preferences: ${location_preferences || 'Not specified'}\n` +
-               `Minimum Salary: ${minimum_salary || 'Not specified'}\n` +
-               `Employment Status: ${employment_status || 'Not specified'}\n` +
-               `Package Interest: ${package_interest || 'Not specified'}\n` +
-               `Area of Concern: ${area_of_concern || 'Not specified'}\n` +
-               `Consultation Window: ${consultation_window || 'Not specified'}`,
+      phone: phone || null,
+      company: target_market || null,
+      job_title: role_targets,
+      consultation_type: 'career_strategy',
+      preferred_date: null,
+      preferred_time: consultation_window || null,
+      message: detailedMessage,
       urgency_level: 'normal',
       status: 'pending',
       source: 'website'
+      // Remove any fields that might cause foreign key issues
+      // confirmed_by, rejected_by, rescheduled_by will be null by default
     };
 
-    // Try to insert into consultation_requests table first (new structure)
-    let consultation, error;
-    
-    try {
-      const result = await supabaseAdmin
-        .from('consultation_requests')
-        .insert({
-          full_name,
-          email,
-          phone,
-          linkedin_url,
-          role_targets,
-          location_preferences,
-          minimum_salary,
-          target_market,
-          employment_status,
-          package_interest,
-          area_of_concern,
-          consultation_window,
-          status: 'pending'
-        })
-        .select()
-        .single();
-        
-      consultation = result.data;
-      error = result.error;
-    } catch (newTableError) {
-      console.log('consultation_requests table not available, using consultations table');
-      
-      // Fall back to the existing consultations table structure
-      const fallbackResult = await supabaseAdmin
-        .from('consultations')
-        .insert(consultationData)
-        .select()
-        .single();
-        
-      consultation = fallbackResult.data;
-      error = fallbackResult.error;
-    }
+    console.log('Attempting to insert consultation with data:', consultationData);
+
+    // Insert into the existing consultations table
+    const { data: consultation, error } = await supabaseAdmin
+      .from('consultations')
+      .insert(consultationData)
+      .select()
+      .single();
 
     if (error) {
-      console.error('Error creating consultation request:', error);
+      console.error('Database error creating consultation:', error);
       return res.status(500).json({ error: 'Failed to submit consultation request' });
     }
+
+    console.log('Successfully created consultation:', consultation.id);
 
     // Send confirmation email to client
     try {
@@ -110,6 +92,7 @@ router.post('/', async (req, res) => {
         package_interest: package_interest || 'Not specified',
         next_steps: 'Our team will review your request and contact you within 24 hours.'
       });
+      console.log('Confirmation email sent to client');
     } catch (emailError) {
       console.error('Failed to send confirmation email:', emailError);
       // Don't fail the request if email fails
@@ -124,8 +107,9 @@ router.post('/', async (req, res) => {
         package_interest: package_interest || 'Not specified',
         employment_status: employment_status || 'Not specified',
         area_of_concern: area_of_concern || 'Not specified',
-        admin_dashboard_url: `${process.env.FRONTEND_URL}/admin/consultations`
+        admin_dashboard_url: `${process.env.FRONTEND_URL || 'https://apply-bureau-frontend.com'}/admin/consultations`
       });
+      console.log('Admin notification email sent');
     } catch (emailError) {
       console.error('Failed to send admin notification email:', emailError);
       // Don't fail the request if email fails
@@ -147,9 +131,9 @@ router.get('/', authenticateToken, requireAdmin, async (req, res) => {
   try {
     const { status, limit = 50, offset = 0, search } = req.query;
 
-    // First try the new consultation_requests table
+    // Query the existing consultations table
     let query = supabaseAdmin
-      .from('consultation_requests')
+      .from('consultations')
       .select('*')
       .order('created_at', { ascending: false })
       .range(offset, offset + limit - 1);
@@ -159,36 +143,42 @@ router.get('/', authenticateToken, requireAdmin, async (req, res) => {
     }
 
     if (search) {
-      query = query.or(`full_name.ilike.%${search}%,email.ilike.%${search}%,role_targets.ilike.%${search}%`);
+      query = query.or(`full_name.ilike.%${search}%,email.ilike.%${search}%,job_title.ilike.%${search}%`);
     }
 
     const { data: consultations, error } = await query;
 
     if (error) {
-      console.error('Error fetching consultation requests:', error);
-      
-      // If consultation_requests table doesn't exist, fall back to consultations table
-      console.log('Falling back to consultations table...');
-      try {
-        const fallbackQuery = supabaseAdmin
-          .from('consultations')
-          .select('*')
-          .order('created_at', { ascending: false })
-          .range(offset, offset + limit - 1);
-          
-        const { data: fallbackConsultations, error: fallbackError } = await fallbackQuery;
-        
-        if (fallbackError) {
-          return res.status(500).json({ error: 'Failed to fetch consultation requests' });
-        }
-        
-        return res.json(fallbackConsultations || []);
-      } catch (fallbackErr) {
-        return res.status(500).json({ error: 'Failed to fetch consultation requests' });
-      }
+      console.error('Error fetching consultations:', error);
+      return res.status(500).json({ error: 'Failed to fetch consultation requests' });
     }
 
-    res.json(consultations || []);
+    // Transform the data to match the user's expected API response format
+    const transformedConsultations = (consultations || []).map(consultation => ({
+      id: consultation.id,
+      full_name: consultation.full_name,
+      email: consultation.email,
+      phone: consultation.phone,
+      linkedin_url: null, // Not stored in original structure
+      role_targets: consultation.job_title,
+      location_preferences: null, // Extract from message if needed
+      minimum_salary: null, // Extract from message if needed
+      target_market: consultation.company,
+      employment_status: null, // Extract from message if needed
+      package_interest: null, // Extract from message if needed
+      area_of_concern: null, // Extract from message if needed
+      consultation_window: consultation.preferred_time,
+      status: consultation.status,
+      created_at: consultation.created_at,
+      admin_notes: consultation.admin_notes,
+      // Include original fields for admin reference
+      consultation_type: consultation.consultation_type,
+      message: consultation.message,
+      urgency_level: consultation.urgency_level,
+      source: consultation.source
+    }));
+
+    res.json(transformedConsultations);
   } catch (error) {
     console.error('Fetch consultation requests error:', error);
     res.status(500).json({ error: 'Failed to fetch consultation requests' });
@@ -212,22 +202,28 @@ router.patch('/:id', authenticateToken, requireAdmin, async (req, res) => {
 
     const updateData = {
       status,
-      processed_by: adminId,
-      processed_at: new Date().toISOString()
+      admin_notes: admin_notes || null
     };
 
-    if (admin_notes !== undefined) {
-      updateData.admin_notes = admin_notes;
+    // Add status-specific fields based on the existing table structure
+    if (status === 'approved') {
+      updateData.confirmed_by = adminId;
+      updateData.confirmed_at = new Date().toISOString();
+    } else if (status === 'rejected') {
+      updateData.rejected_by = adminId;
+      updateData.rejected_at = new Date().toISOString();
+      updateData.rejection_reason = admin_notes || 'Request rejected by admin';
     }
 
     const { data: consultation, error } = await supabaseAdmin
-      .from('consultation_requests')
+      .from('consultations')
       .update(updateData)
       .eq('id', id)
       .select()
       .single();
 
     if (error || !consultation) {
+      console.error('Error updating consultation:', error);
       return res.status(404).json({ error: 'Consultation request not found' });
     }
 
@@ -236,8 +232,8 @@ router.patch('/:id', authenticateToken, requireAdmin, async (req, res) => {
       let emailTemplate = null;
       let emailData = {
         client_name: consultation.full_name,
-        role_targets: consultation.role_targets,
-        package_interest: consultation.package_interest || 'Not specified'
+        role_targets: consultation.job_title,
+        package_interest: 'Career Advisory Package'
       };
 
       if (status === 'approved') {
@@ -253,6 +249,7 @@ router.patch('/:id', authenticateToken, requireAdmin, async (req, res) => {
 
       if (emailTemplate) {
         await sendEmail(consultation.email, emailTemplate, emailData);
+        console.log(`Status update email sent: ${emailTemplate}`);
       }
     } catch (emailError) {
       console.error('Failed to send status update email:', emailError);
@@ -261,7 +258,12 @@ router.patch('/:id', authenticateToken, requireAdmin, async (req, res) => {
 
     res.json({
       message: 'Consultation request updated successfully',
-      consultation
+      consultation: {
+        id: consultation.id,
+        status: consultation.status,
+        admin_notes: consultation.admin_notes,
+        updated_at: consultation.updated_at
+      }
     });
   } catch (error) {
     console.error('Update consultation request error:', error);
@@ -275,7 +277,7 @@ router.get('/:id', authenticateToken, requireAdmin, async (req, res) => {
     const { id } = req.params;
 
     const { data: consultation, error } = await supabaseAdmin
-      .from('consultation_requests')
+      .from('consultations')
       .select('*')
       .eq('id', id)
       .single();
@@ -284,7 +286,25 @@ router.get('/:id', authenticateToken, requireAdmin, async (req, res) => {
       return res.status(404).json({ error: 'Consultation request not found' });
     }
 
-    res.json(consultation);
+    // Transform to match expected API format
+    const transformedConsultation = {
+      id: consultation.id,
+      full_name: consultation.full_name,
+      email: consultation.email,
+      phone: consultation.phone,
+      role_targets: consultation.job_title,
+      target_market: consultation.company,
+      consultation_window: consultation.preferred_time,
+      status: consultation.status,
+      created_at: consultation.created_at,
+      admin_notes: consultation.admin_notes,
+      message: consultation.message,
+      consultation_type: consultation.consultation_type,
+      urgency_level: consultation.urgency_level,
+      source: consultation.source
+    };
+
+    res.json(transformedConsultation);
   } catch (error) {
     console.error('Get consultation request error:', error);
     res.status(500).json({ error: 'Failed to fetch consultation request' });
