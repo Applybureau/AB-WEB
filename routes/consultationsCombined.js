@@ -36,26 +36,65 @@ router.post('/', async (req, res) => {
       return res.status(400).json({ error: 'Invalid email format' });
     }
 
-    // Create consultation request
-    const { data: consultation, error } = await supabaseAdmin
-      .from('consultation_requests')
-      .insert({
-        full_name,
-        email,
-        phone,
-        linkedin_url,
-        role_targets,
-        location_preferences,
-        minimum_salary,
-        target_market,
-        employment_status,
-        package_interest,
-        area_of_concern,
-        consultation_window,
-        status: 'pending'
-      })
-      .select()
-      .single();
+    // Map the user's API specification to the existing database structure
+    const consultationData = {
+      full_name,
+      email,
+      phone,
+      company: target_market || null, // Map target_market to company
+      job_title: role_targets, // Map role_targets to job_title
+      consultation_type: 'career_strategy', // Default consultation type
+      message: `Role Targets: ${role_targets}\n` +
+               `Location Preferences: ${location_preferences || 'Not specified'}\n` +
+               `Minimum Salary: ${minimum_salary || 'Not specified'}\n` +
+               `Employment Status: ${employment_status || 'Not specified'}\n` +
+               `Package Interest: ${package_interest || 'Not specified'}\n` +
+               `Area of Concern: ${area_of_concern || 'Not specified'}\n` +
+               `Consultation Window: ${consultation_window || 'Not specified'}`,
+      urgency_level: 'normal',
+      status: 'pending',
+      source: 'website'
+    };
+
+    // Try to insert into consultation_requests table first (new structure)
+    let consultation, error;
+    
+    try {
+      const result = await supabaseAdmin
+        .from('consultation_requests')
+        .insert({
+          full_name,
+          email,
+          phone,
+          linkedin_url,
+          role_targets,
+          location_preferences,
+          minimum_salary,
+          target_market,
+          employment_status,
+          package_interest,
+          area_of_concern,
+          consultation_window,
+          status: 'pending'
+        })
+        .select()
+        .single();
+        
+      consultation = result.data;
+      error = result.error;
+    } catch (newTableError) {
+      console.log('consultation_requests table not available, using consultations table');
+      
+      // Fall back to the existing consultations table structure
+      const fallbackResult = await supabaseAdmin
+        .from('consultations')
+        .insert(consultationData)
+        .select()
+        .single();
+        
+      consultation = fallbackResult.data;
+      error = fallbackResult.error;
+    }
 
     if (error) {
       console.error('Error creating consultation request:', error);
@@ -108,6 +147,7 @@ router.get('/', authenticateToken, requireAdmin, async (req, res) => {
   try {
     const { status, limit = 50, offset = 0, search } = req.query;
 
+    // First try the new consultation_requests table
     let query = supabaseAdmin
       .from('consultation_requests')
       .select('*')
@@ -126,7 +166,26 @@ router.get('/', authenticateToken, requireAdmin, async (req, res) => {
 
     if (error) {
       console.error('Error fetching consultation requests:', error);
-      return res.status(500).json({ error: 'Failed to fetch consultation requests' });
+      
+      // If consultation_requests table doesn't exist, fall back to consultations table
+      console.log('Falling back to consultations table...');
+      try {
+        const fallbackQuery = supabaseAdmin
+          .from('consultations')
+          .select('*')
+          .order('created_at', { ascending: false })
+          .range(offset, offset + limit - 1);
+          
+        const { data: fallbackConsultations, error: fallbackError } = await fallbackQuery;
+        
+        if (fallbackError) {
+          return res.status(500).json({ error: 'Failed to fetch consultation requests' });
+        }
+        
+        return res.json(fallbackConsultations || []);
+      } catch (fallbackErr) {
+        return res.status(500).json({ error: 'Failed to fetch consultation requests' });
+      }
     }
 
     res.json(consultations || []);
