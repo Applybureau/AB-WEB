@@ -4,6 +4,24 @@ const path = require('path');
 
 const resend = new Resend(process.env.RESEND_API_KEY);
 
+// Base64 encoded Apply Bureau logo - loaded from file at runtime for maintainability
+// Falls back to external URL if Base64 loading fails
+let LOGO_BASE64 = null;
+
+const loadLogoBase64 = async () => {
+  if (LOGO_BASE64) return LOGO_BASE64;
+  
+  try {
+    const logoPath = path.join(__dirname, '..', '..', 'logo.png');
+    const logoBuffer = await fs.readFile(logoPath);
+    LOGO_BASE64 = logoBuffer.toString('base64');
+    return LOGO_BASE64;
+  } catch (error) {
+    console.warn('Could not load logo.png for Base64 encoding, using external URL fallback');
+    return null;
+  }
+};
+
 const getEmailTemplate = async (templateName) => {
   const templatePath = path.join(__dirname, '..', 'emails', 'templates', `${templateName}.html`);
   try {
@@ -27,12 +45,16 @@ const sendEmail = async (to, templateName, variables = {}) => {
   try {
     const template = await getEmailTemplate(templateName);
     
-    // Default variables
+    // Load Base64 logo
+    const logoBase64 = await loadLogoBase64();
+    
+    // Default variables including Base64 logo for inline embedding
     const defaultVariables = {
       dashboard_link: `${process.env.FRONTEND_URL || 'http://localhost:5173'}/dashboard`,
       contact_email: 'support@applybureau.com',
       company_name: 'Apply Bureau',
-      current_year: new Date().getFullYear()
+      current_year: new Date().getFullYear(),
+      logo_base64: logoBase64 || ''
     };
 
     const allVariables = { ...defaultVariables, ...variables };
@@ -70,5 +92,6 @@ const sendEmail = async (to, templateName, variables = {}) => {
 module.exports = {
   sendEmail,
   getEmailTemplate,
-  replaceTemplateVariables
+  replaceTemplateVariables,
+  loadLogoBase64
 };

@@ -31,6 +31,12 @@ const adminManagementRoutes = require('./routes/adminManagement');
 const fileManagementRoutes = require('./routes/fileManagement');
 const adminDashboardRoutes = require('./routes/adminDashboard');
 
+// New Pipeline Routes
+const leadsRoutes = require('./routes/leads');
+const registrationRoutes = require('./routes/registration');
+const contactRequestsRoutes = require('./routes/contactRequests');
+const meetingsRoutes = require('./routes/meetings');
+
 const app = express();
 const PORT = process.env.PORT || 3000;
 
@@ -207,6 +213,12 @@ app.use('/api/public', publicRoutes); // Public routes for website integration
 app.use('/api/admin-management', adminManagementRoutes); // Enhanced admin management
 app.use('/api/files', fileManagementRoutes); // File upload and management
 app.use('/api/admin-dashboard', adminDashboardRoutes); // Admin-specific dashboard
+
+// New Pipeline Routes - Consultation to Client
+app.use('/api/leads', leadsRoutes); // Lead submission and management
+app.use('/api/register', registrationRoutes); // Registration flow
+app.use('/api/contact-requests', contactRequestsRoutes); // Contact form submissions
+app.use('/api/meetings', meetingsRoutes); // Meeting scheduling
 
 // Admin routes with enhanced security
 app.get('/api/admin/stats', require('./utils/auth').authenticateToken, require('./utils/auth').requireAdmin, (req, res) => {

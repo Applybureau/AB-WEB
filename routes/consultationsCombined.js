@@ -238,17 +238,8 @@ router.patch('/:id', authenticateToken, requireAdmin, async (req, res) => {
         emailTemplate = 'consultation_scheduled';
         emailData.scheduled_date = scheduled_date || 'To be confirmed';
         emailData.scheduled_time = scheduled_time || 'To be confirmed';
-        // Generate meeting button HTML only if meeting_url is provided
-        emailData.meeting_button = meeting_url 
-          ? `<table border="0" cellpadding="0" cellspacing="0" style="margin-bottom: 24px;">
-              <tr>
-                <td style="border-radius: 4px; background-color: #3b82f6;">
-                  <a href="${meeting_url}" style="display: inline-block; padding: 14px 28px; font-size: 15px; font-weight: 500; color: #ffffff; text-decoration: none;">Join Meeting</a>
-                </td>
-              </tr>
-            </table>`
-          : '';
-        emailData.meeting_details = admin_notes || 'Please check your email for meeting details.';
+        emailData.meeting_url = meeting_url || 'https://meet.google.com/';
+        emailData.meeting_details = admin_notes || 'We look forward to speaking with you.';
       }
 
       if (emailTemplate) {
@@ -359,22 +350,11 @@ router.post('/:id/schedule', authenticateToken, requireAdmin, async (req, res) =
 
     // Send scheduling email
     try {
-      // Generate meeting button HTML only if meeting_url is provided
-      const meetingButtonHtml = meeting_url 
-        ? `<table border="0" cellpadding="0" cellspacing="0" style="margin-bottom: 24px;">
-            <tr>
-              <td style="border-radius: 4px; background-color: #3b82f6;">
-                <a href="${meeting_url}" style="display: inline-block; padding: 14px 28px; font-size: 15px; font-weight: 500; color: #ffffff; text-decoration: none;">Join Meeting</a>
-              </td>
-            </tr>
-          </table>`
-        : '';
-
       await sendEmail(consultation.email, 'consultation_scheduled', {
         client_name: consultation.full_name,
         scheduled_date: scheduled_date,
         scheduled_time: scheduled_time,
-        meeting_button: meetingButtonHtml,
+        meeting_url: meeting_url || 'https://meet.google.com/',
         package_interest: consultation.package_interest || 'Career Advisory Package',
         role_targets: consultation.role_targets,
         meeting_details: notes || 'We look forward to speaking with you.'
