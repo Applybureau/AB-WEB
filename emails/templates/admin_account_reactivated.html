@@ -1,82 +1,58 @@
+<!-- SUBJECT: Account Reactivated - Apply Bureau -->
 <!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Account Reactivated - Apply Bureau</title>
+    <title>Account Reactivated</title>
 </head>
-<body style="margin: 0; padding: 0; font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif; background-color: #f4f7f9; color: #2d3748;">
+<body style="margin: 0; padding: 0; font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif; background-color: #E5E7EB;">
     <table border="0" cellpadding="0" cellspacing="0" width="100%" style="table-layout: fixed;">
         <tr>
-            <td align="center" style="padding: 40px 0;">
-                <table border="0" cellpadding="0" cellspacing="0" width="600" style="background-color: #ffffff; border-radius: 8px; overflow: hidden; border: 1px solid #e2e8f0; box-shadow: 0 4px 12px rgba(0,0,0,0.05);">
-                    <!-- Header -->
+            <td align="center" style="padding: 40px 20px;">
+                <table border="0" cellpadding="0" cellspacing="0" width="600" style="max-width: 600px; background-color: #FFFFFF; border-radius: 8px; overflow: hidden;">
+                    <!-- Logo Header -->
                     <tr>
-                        <td align="center" style="padding: 40px 40px 20px 40px;">
-                            <img src="https://raw.githubusercontent.com/jesusboy-ops/Apply_Bureau_backend/master/logo.png" alt="Apply Bureau" width="160" style="display: block; border: 0;">
+                        <td align="center" style="padding: 40px 40px 30px 40px; background-color: #FFFFFF;">
+                            <img src="data:image/png;base64,{{logo_base64}}" alt="Apply Bureau" width="180" style="display: block; border: 0;">
                         </td>
                     </tr>
-                    
-                    <!-- Content -->
+                    <!-- Main Content -->
                     <tr>
-                        <td style="padding: 0 40px;">
-                            <h2 style="font-size: 24px; color: #10b981; margin-bottom: 20px; text-align: center;">Account Reactivated</h2>
-                            
-                            <p style="font-size: 16px; line-height: 1.6; color: #4a5568;">Hello {{admin_name}},</p>
-                            
-                            <p style="font-size: 16px; line-height: 1.6; color: #4a5568;">
-                                Great news! Your Apply Bureau admin account has been reactivated by {{reactivated_by}}.
+                        <td style="padding: 0 40px 40px 40px; background-color: #FFFFFF;">
+                            <h1 style="color: #1A1A1A; font-size: 24px; font-weight: 600; margin: 0 0 24px 0; text-align: center; line-height: 1.3;">
+                                Account Reactivated
+                            </h1>
+                            <p style="color: #1A1A1A; font-size: 16px; line-height: 1.7; margin: 0 0 20px 0;">
+                                Hello {{admin_name}},
                             </p>
-                            
-                            <!-- Reactivation Details -->
-                            <table border="0" cellpadding="0" cellspacing="0" width="100%" style="background-color: #c6f6d5; border-radius: 6px; margin: 30px 0;">
-                                <tr>
-                                    <td style="padding: 25px; border-left: 4px solid #10b981;">
-                                        <h3 style="margin: 0 0 15px 0; font-size: 18px; color: #2d3748;">Reactivation Details</h3>
-                                        <p style="margin: 5px 0; font-size: 15px;"><strong>Reactivated By:</strong> {{reactivated_by}}</p>
-                                        <p style="margin: 5px 0; font-size: 15px;"><strong>Date:</strong> {{current_date}}</p>
-                                        <p style="margin: 5px 0; font-size: 15px;"><strong>Status:</strong> Active</p>
-                                    </td>
-                                </tr>
-                            </table>
-                            
-                            <p style="font-size: 16px; line-height: 1.6; color: #4a5568;">
-                                <strong>Your account privileges have been restored:</strong>
+                            <p style="color: #1A1A1A; font-size: 16px; line-height: 1.7; margin: 0 0 20px 0;">
+                                Your admin account has been reactivated. You can now access the Apply Bureau admin dashboard again.
                             </p>
-                            
-                            <ul style="padding-left: 20px; font-size: 14px; color: #718096; line-height: 2;">
-                                <li>Full access to your admin dashboard</li>
-                                <li>Ability to manage clients and consultations</li>
-                                <li>Access to reports and analytics</li>
-                                <li>Email notifications are re-enabled</li>
-                            </ul>
-                            
-                            <p style="font-size: 16px; line-height: 1.6; color: #4a5568;">
-                                You can now log in to your admin dashboard using your existing credentials.
-                            </p>
-                            
-                            <!-- Login Button -->
-                            <table border="0" cellpadding="0" cellspacing="0" width="100%" style="margin: 35px 0;">
+                            <!-- CTA Button -->
+                            <table border="0" cellpadding="0" cellspacing="0" width="100%" style="margin: 0 0 24px 0;">
                                 <tr>
                                     <td align="center">
-                                        <a href="{{login_url}}" style="background-color: #10b981; color: #ffffff; padding: 16px 32px; text-decoration: none; border-radius: 5px; font-weight: 600; font-size: 16px; display: inline-block;">Access Admin Dashboard</a>
+                                        <a href="{{admin_login_url}}" style="display: inline-block; background-color: #2563EB; color: #FFFFFF; padding: 16px 48px; text-decoration: none; border-radius: 6px; font-weight: 600; font-size: 16px;">
+                                            Access Dashboard
+                                        </a>
                                     </td>
                                 </tr>
                             </table>
-                            
-                            <p style="font-size: 14px; color: #a0aec0; text-align: center; margin-top: 30px;">
-                                For assistance, contact: <a href="mailto:{{contact_email}}" style="color: #10b981; text-decoration: none;">{{contact_email}}</a>
+                            <p style="color: #1A1A1A; font-size: 16px; line-height: 1.7; margin: 0;">
+                                Best regards,<br>
+                                <strong>The Apply Bureau Team</strong>
                             </p>
                         </td>
                     </tr>
-                    
                     <!-- Footer -->
                     <tr>
-                        <td style="padding: 40px; background-color: #1a202c; color: #ffffff; text-align: center; font-size: 12px;">
-                            <p style="margin: 0 0 10px 0;">&copy; 2026 Apply Bureau. All rights reserved.</p>
-                            <p style="margin: 0;">
-                                <a href="mailto:{{contact_email}}" style="color: #10b981; text-decoration: none;">Contact Support</a> | 
-                                <a href="#" style="color: #10b981; text-decoration: none;">Privacy Policy</a>
+                        <td style="padding: 30px 40px; background-color: #F1F5F9;">
+                            <p style="color: #64748B; font-size: 14px; line-height: 1.6; margin: 0 0 10px 0; text-align: center;">
+                                Questions? Contact us at <a href="mailto:support@applybureau.com" style="color: #475569; text-decoration: underline;">support@applybureau.com</a>
+                            </p>
+                            <p style="color: #94A3B8; font-size: 12px; margin: 0; text-align: center;">
+                                &copy; {{current_year}} Apply Bureau. All rights reserved.
                             </p>
                         </td>
                     </tr>

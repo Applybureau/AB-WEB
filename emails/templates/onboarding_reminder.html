@@ -1,145 +1,67 @@
-<!-- SUBJECT: Complete Your Apply Bureau Registration -->
+<!-- SUBJECT: Complete Your Profile - Apply Bureau -->
 <!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Complete Your Registration</title>
-    <style>
-        body {
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            line-height: 1.6;
-            color: #333;
-            max-width: 600px;
-            margin: 0 auto;
-            padding: 20px;
-            background-color: #f8f9fa;
-        }
-        .container {
-            background-color: white;
-            border-radius: 10px;
-            padding: 40px;
-            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
-        }
-        .header {
-            text-align: center;
-            margin-bottom: 30px;
-        }
-        .logo {
-            max-width: 200px;
-            height: auto;
-        }
-        .content {
-            margin-bottom: 30px;
-        }
-        .progress-bar {
-            background-color: #e9ecef;
-            border-radius: 10px;
-            height: 20px;
-            margin: 20px 0;
-            overflow: hidden;
-        }
-        .progress-fill {
-            background-color: #28a745;
-            height: 100%;
-            width: 60%;
-            border-radius: 10px;
-        }
-        .checklist {
-            background-color: #f8f9fa;
-            padding: 20px;
-            border-radius: 5px;
-            margin: 20px 0;
-        }
-        .checklist ul {
-            list-style: none;
-            padding: 0;
-        }
-        .checklist li {
-            padding: 8px 0;
-            border-bottom: 1px solid #dee2e6;
-        }
-        .checklist li:last-child {
-            border-bottom: none;
-        }
-        .cta-button {
-            display: inline-block;
-            background-color: #007bff;
-            color: white;
-            padding: 15px 30px;
-            text-decoration: none;
-            border-radius: 5px;
-            font-weight: bold;
-            margin: 20px 0;
-        }
-        .cta-button:hover {
-            background-color: #0056b3;
-        }
-        .footer {
-            text-align: center;
-            margin-top: 40px;
-            padding-top: 20px;
-            border-top: 1px solid #eee;
-            color: #666;
-            font-size: 14px;
-        }
-    </style>
+    <title>Complete Your Profile</title>
 </head>
-<body>
-    <div class="container">
-        <div class="header">
-            <img src="{{logo_url}}" alt="Apply Bureau" class="logo">
-        </div>
-        
-        <div class="content">
-            <h2>Complete Your Apply Bureau Registration</h2>
-            
-            <p>Hello {{client_name}},</p>
-            
-            <p>We noticed you haven't completed your registration with Apply Bureau yet. We're excited to help you with your job search, but we need a bit more information to get started!</p>
-            
-            <div class="progress-bar">
-                <div class="progress-fill"></div>
-            </div>
-            <p style="text-align: center; color: #666; font-size: 14px;">Registration Progress: 60% Complete</p>
-            
-            <div class="checklist">
-                <h3>📋 Complete Your Profile</h3>
-                <ul>
-                    <li>✅ Account created</li>
-                    <li>✅ Email verified</li>
-                    <li>❌ Upload your resume</li>
-                    <li>❌ Set your career goals</li>
-                    <li>❌ Define your target role</li>
-                    <li>❌ Change your temporary password</li>
-                </ul>
-            </div>
-            
-            <p><strong>Why complete your registration?</strong></p>
-            <ul>
-                <li>🎯 Get personalized job applications</li>
-                <li>📊 Track your application progress</li>
-                <li>💬 Communicate directly with your advisor</li>
-                <li>📅 Schedule follow-up consultations</li>
-                <li>📈 Access detailed analytics and insights</li>
-            </ul>
-            
-            <div style="text-align: center;">
-                <a href="{{dashboard_link}}" class="cta-button">Complete Registration</a>
-            </div>
-            
-            <p>It only takes 5 minutes to complete, and once done, your dedicated advisor can start working on your applications immediately.</p>
-            
-            <p>If you have any questions or need assistance, please don't hesitate to reach out to us.</p>
-            
-            <p>Best regards,<br>
-            The Apply Bureau Team</p>
-        </div>
-        
-        <div class="footer">
-            <p>&copy; {{current_year}} {{company_name}}. All rights reserved.</p>
-            <p>Need help? Contact us at <a href="mailto:{{contact_email}}">{{contact_email}}</a></p>
-        </div>
-    </div>
+<body style="margin: 0; padding: 0; font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif; background-color: #E5E7EB;">
+    <table border="0" cellpadding="0" cellspacing="0" width="100%" style="table-layout: fixed;">
+        <tr>
+            <td align="center" style="padding: 40px 20px;">
+                <table border="0" cellpadding="0" cellspacing="0" width="600" style="max-width: 600px; background-color: #FFFFFF; border-radius: 8px; overflow: hidden;">
+                    <!-- Logo Header -->
+                    <tr>
+                        <td align="center" style="padding: 40px 40px 30px 40px; background-color: #FFFFFF;">
+                            <img src="data:image/png;base64,{{logo_base64}}" alt="Apply Bureau" width="180" style="display: block; border: 0;">
+                        </td>
+                    </tr>
+                    <!-- Main Content -->
+                    <tr>
+                        <td style="padding: 0 40px 40px 40px; background-color: #FFFFFF;">
+                            <h1 style="color: #1A1A1A; font-size: 24px; font-weight: 600; margin: 0 0 24px 0; text-align: center; line-height: 1.3;">
+                                Complete Your Profile
+                            </h1>
+                            <p style="color: #1A1A1A; font-size: 16px; line-height: 1.7; margin: 0 0 20px 0;">
+                                Hello {{client_name}},
+                            </p>
+                            <p style="color: #1A1A1A; font-size: 16px; line-height: 1.7; margin: 0 0 20px 0;">
+                                We noticed you haven't completed your profile yet. A complete profile helps us better understand your career goals and provide personalized recommendations.
+                            </p>
+                            <p style="color: #1A1A1A; font-size: 16px; line-height: 1.7; margin: 0 0 24px 0;">
+                                Take a few minutes to complete your profile:
+                            </p>
+                            <!-- CTA Button -->
+                            <table border="0" cellpadding="0" cellspacing="0" width="100%" style="margin: 0 0 24px 0;">
+                                <tr>
+                                    <td align="center">
+                                        <a href="{{dashboard_url}}" style="display: inline-block; background-color: #2563EB; color: #FFFFFF; padding: 16px 48px; text-decoration: none; border-radius: 6px; font-weight: 600; font-size: 16px;">
+                                            Complete Profile
+                                        </a>
+                                    </td>
+                                </tr>
+                            </table>
+                            <p style="color: #1A1A1A; font-size: 16px; line-height: 1.7; margin: 0;">
+                                Best regards,<br>
+                                <strong>The Apply Bureau Team</strong>
+                            </p>
+                        </td>
+                    </tr>
+                    <!-- Footer -->
+                    <tr>
+                        <td style="padding: 30px 40px; background-color: #F1F5F9;">
+                            <p style="color: #64748B; font-size: 14px; line-height: 1.6; margin: 0 0 10px 0; text-align: center;">
+                                Questions? Contact us at <a href="mailto:support@applybureau.com" style="color: #475569; text-decoration: underline;">support@applybureau.com</a>
+                            </p>
+                            <p style="color: #94A3B8; font-size: 12px; margin: 0; text-align: center;">
+                                &copy; {{current_year}} Apply Bureau. All rights reserved.
+                            </p>
+                        </td>
+                    </tr>
+                </table>
+            </td>
+        </tr>
+    </table>
 </body>
 </html>

@@ -4,74 +4,86 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Meeting Scheduled - Apply Bureau</title>
+    <title>Meeting Scheduled</title>
 </head>
-<body style="margin: 0; padding: 0; font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif; background-color: #1a202c;">
+<body style="margin: 0; padding: 0; font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif; background-color: #E5E7EB;">
     <table border="0" cellpadding="0" cellspacing="0" width="100%" style="table-layout: fixed;">
         <tr>
-            <td align="center" style="padding: 40px 0;">
-                <table border="0" cellpadding="0" cellspacing="0" width="800" style="max-width: 800px; background-color: #1a202c;">
-                    <!-- Logo Section -->
+            <td align="center" style="padding: 40px 20px;">
+                <table border="0" cellpadding="0" cellspacing="0" width="600" style="max-width: 600px; background-color: #FFFFFF; border-radius: 8px; overflow: hidden;">
+                    <!-- Logo Header -->
                     <tr>
-                        <td align="center" style="padding: 40px 40px 30px 40px;">
-                            <img src="data:image/png;base64,{{logo_base64}}" 
-                                 alt="Apply Bureau Logo" width="200" style="display: block; border: 0;">
+                        <td align="center" style="padding: 40px 40px 30px 40px; background-color: #FFFFFF;">
+                            <img src="data:image/png;base64,{{logo_base64}}" alt="Apply Bureau" width="180" style="display: block; border: 0;">
                         </td>
                     </tr>
                     <!-- Main Content -->
                     <tr>
-                        <td style="padding: 0 40px 40px 40px;">
-                            <h1 style="color: #FFFFFF; font-size: 28px; font-weight: 600; margin: 0 0 24px 0; text-align: center;">
+                        <td style="padding: 0 40px 40px 40px; background-color: #FFFFFF;">
+                            <h1 style="color: #1A1A1A; font-size: 24px; font-weight: 600; margin: 0 0 24px 0; text-align: center; line-height: 1.3;">
                                 Your Meeting Has Been Scheduled
                             </h1>
-                            <p style="color: #FFFFFF; font-size: 16px; line-height: 1.6; margin: 0 0 20px 0; text-align: center;">
+                            <p style="color: #1A1A1A; font-size: 16px; line-height: 1.7; margin: 0 0 20px 0;">
                                 Hello {{client_name}},
                             </p>
-                            <p style="color: #FFFFFF; font-size: 16px; line-height: 1.6; margin: 0 0 30px 0; text-align: center;">
+                            <p style="color: #1A1A1A; font-size: 16px; line-height: 1.7; margin: 0 0 24px 0;">
                                 Your consultation meeting has been scheduled. Please find the details below:
                             </p>
                             <!-- Meeting Details Box -->
-                            <table border="0" cellpadding="0" cellspacing="0" width="100%" style="margin: 0 0 30px 0; background-color: #2d3748; border-radius: 8px;">
+                            <table border="0" cellpadding="0" cellspacing="0" width="100%" style="margin: 0 0 24px 0; background-color: #F8FAFC; border-radius: 6px; border: 1px solid #E2E8F0;">
                                 <tr>
-                                    <td style="padding: 30px;">
+                                    <td style="padding: 24px;">
                                         <table border="0" cellpadding="0" cellspacing="0" width="100%">
                                             <tr>
-                                                <td style="padding: 8px 0;">
-                                                    <p style="color: #a0aec0; font-size: 12px; margin: 0; text-transform: uppercase; letter-spacing: 1px;">Date</p>
-                                                    <p style="color: #FFFFFF; font-size: 18px; font-weight: 600; margin: 4px 0 0 0;">{{meeting_date}}</p>
+                                                <td style="padding: 0 0 16px 0;">
+                                                    <p style="color: #64748B; font-size: 12px; margin: 0; text-transform: uppercase; letter-spacing: 1px; font-weight: 600;">Date</p>
+                                                    <p style="color: #1A1A1A; font-size: 18px; font-weight: 600; margin: 6px 0 0 0;">{{meeting_date}}</p>
                                                 </td>
                                             </tr>
                                             <tr>
-                                                <td style="padding: 16px 0 8px 0;">
-                                                    <p style="color: #a0aec0; font-size: 12px; margin: 0; text-transform: uppercase; letter-spacing: 1px;">Time</p>
-                                                    <p style="color: #FFFFFF; font-size: 18px; font-weight: 600; margin: 4px 0 0 0;">{{meeting_time}}</p>
+                                                <td style="padding: 0 0 16px 0;">
+                                                    <p style="color: #64748B; font-size: 12px; margin: 0; text-transform: uppercase; letter-spacing: 1px; font-weight: 600;">Time</p>
+                                                    <p style="color: #1A1A1A; font-size: 18px; font-weight: 600; margin: 6px 0 0 0;">{{meeting_time}}</p>
+                                                </td>
+                                            </tr>
+                                            <tr>
+                                                <td style="padding: 0;">
+                                                    <p style="color: #64748B; font-size: 12px; margin: 0; text-transform: uppercase; letter-spacing: 1px; font-weight: 600;">Meeting Link</p>
+                                                    <p style="color: #2563EB; font-size: 14px; margin: 6px 0 0 0; word-break: break-all;">
+                                                        <a href="{{meeting_link}}" style="color: #2563EB; text-decoration: underline;">{{meeting_link}}</a>
+                                                    </p>
                                                 </td>
                                             </tr>
                                         </table>
                                     </td>
                                 </tr>
                             </table>
-                            <!-- Join Button -->
-                            <table border="0" cellpadding="0" cellspacing="0" width="100%">
+                            <!-- CTA Button -->
+                            <table border="0" cellpadding="0" cellspacing="0" width="100%" style="margin: 0 0 24px 0;">
                                 <tr>
                                     <td align="center">
-                                        <a href="{{meeting_link}}" 
-                                           style="display: inline-block; background-color: #10b981; color: #FFFFFF; padding: 16px 40px; text-decoration: none; border-radius: 8px; font-weight: 600; font-size: 16px;">
+                                        <a href="{{meeting_link}}" style="display: inline-block; background-color: #2563EB; color: #FFFFFF; padding: 16px 48px; text-decoration: none; border-radius: 6px; font-weight: 600; font-size: 16px;">
                                             Join Meeting
                                         </a>
                                     </td>
                                 </tr>
                             </table>
-                            <p style="color: #a0aec0; font-size: 14px; line-height: 1.6; margin: 30px 0 0 0; text-align: center;">
-                                Please join the meeting a few minutes early. If you need to reschedule, contact us at<br>
-                                <a href="mailto:support@applybureau.com" style="color: #10b981; text-decoration: none;">support@applybureau.com</a>
+                            <p style="color: #1A1A1A; font-size: 16px; line-height: 1.7; margin: 0 0 20px 0;">
+                                Please join the meeting a few minutes early to ensure everything is working properly. If you need to reschedule, please contact us as soon as possible.
+                            </p>
+                            <p style="color: #1A1A1A; font-size: 16px; line-height: 1.7; margin: 0;">
+                                Best regards,<br>
+                                <strong>The Apply Bureau Team</strong>
                             </p>
                         </td>
                     </tr>
                     <!-- Footer -->
                     <tr>
-                        <td style="padding: 30px 40px; border-top: 1px solid #2d3748;">
-                            <p style="color: #718096; font-size: 12px; margin: 0; text-align: center;">
+                        <td style="padding: 30px 40px; background-color: #F1F5F9;">
+                            <p style="color: #64748B; font-size: 14px; line-height: 1.6; margin: 0 0 10px 0; text-align: center;">
+                                Questions? Contact us at <a href="mailto:support@applybureau.com" style="color: #475569; text-decoration: underline;">support@applybureau.com</a>
+                            </p>
+                            <p style="color: #94A3B8; font-size: 12px; margin: 0; text-align: center;">
                                 &copy; {{current_year}} Apply Bureau. All rights reserved.
                             </p>
                         </td>
