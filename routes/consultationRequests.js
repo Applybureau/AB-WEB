@@ -1,7 +1,7 @@
 const express = require('express');
 const { supabaseAdmin } = require('../utils/supabase');
 const { authenticateToken, requireAdmin } = require('../utils/auth');
-const { sendEmail } = require('../utils/email');
+const { sendEmail, buildUrl } = require('../utils/email');
 const { upload, uploadToSupabase } = require('../utils/upload');
 const jwt = require('jsonwebtoken');
 const crypto = require('crypto');
@@ -23,7 +23,8 @@ router.post('/', upload.single('resume'), async (req, res) => {
       employment_status,
       package_interest,
       area_of_concern,
-      consultation_window
+      consultation_window,
+      current_country
     } = req.body;
 
     // Validate required fields
@@ -71,6 +72,7 @@ router.post('/', upload.single('resume'), async (req, res) => {
         package_interest,
         area_of_concern,
         consultation_window,
+        current_country,
         pdf_url: pdfUrl,
         pdf_path: pdfPath,
         status: 'pending',
@@ -91,6 +93,7 @@ router.post('/', upload.single('resume'), async (req, res) => {
         request_id: consultation.id,
         role_targets: role_targets,
         package_interest: package_interest || 'Not specified',
+        current_country: current_country || 'Not specified',
         resume_uploaded: pdfUrl ? 'Yes' : 'No',
         next_steps: 'Our team will review your request and contact you within 24 hours.'
       });
@@ -108,9 +111,10 @@ router.post('/', upload.single('resume'), async (req, res) => {
         package_interest: package_interest || 'Not specified',
         employment_status: employment_status || 'Not specified',
         area_of_concern: area_of_concern || 'Not specified',
+        current_country: current_country || 'Not specified',
         resume_uploaded: pdfUrl ? 'Yes - Resume attached' : 'No resume uploaded',
         pdf_url: pdfUrl || 'Not provided',
-        admin_dashboard_url: `${process.env.FRONTEND_URL}/admin/consultations`
+        admin_dashboard_url: buildUrl('/admin/consultations')
       });
     } catch (emailError) {
       console.error('Failed to send admin notification email:', emailError);
@@ -206,7 +210,7 @@ router.patch('/:id', authenticateToken, requireAdmin, async (req, res) => {
 
       // Send approval email with registration link
       try {
-        const registrationLink = `${process.env.FRONTEND_URL}/register?token=${registrationToken}`;
+        const registrationLink = buildUrl(`/register?token=${registrationToken}`);
         await sendEmail(consultation.email, 'consultation_approved', {
           client_name: consultation.full_name,
           role_targets: consultation.role_targets,
@@ -590,7 +594,7 @@ router.post('/register', async (req, res) => {
     try {
       await sendEmail(client.email, 'client_welcome', {
         client_name: client.full_name,
-        dashboard_url: `${process.env.FRONTEND_URL}/client/dashboard`,
+        dashboard_url: buildUrl('/client/dashboard'),
         next_steps: 'Complete your profile to unlock all features and start tracking your job applications.',
         support_email: 'support@applybureau.com'
       });
