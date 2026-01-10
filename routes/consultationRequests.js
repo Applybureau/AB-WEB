@@ -2,11 +2,14 @@ const express = require('express');
 const { supabaseAdmin } = require('../utils/supabase');
 const { authenticateToken, requireAdmin } = require('../utils/auth');
 const { sendEmail } = require('../utils/email');
+const { upload, uploadToSupabase } = require('../utils/upload');
+const jwt = require('jsonwebtoken');
+const crypto = require('crypto');
 
 const router = express.Router();
 
-// POST /api/consultations - Accept consultation requests from website (PUBLIC)
-router.post('/', async (req, res) => {
+// POST /api/consultation-requests - Accept consultation requests from website (PUBLIC)
+router.post('/', upload.single('resume'), async (req, res) => {
   try {
     const {
       full_name,
@@ -36,7 +39,23 @@ router.post('/', async (req, res) => {
       return res.status(400).json({ error: 'Invalid email format' });
     }
 
-    // Create consultation request
+    // Handle PDF upload if provided
+    let pdfUrl = null;
+    let pdfPath = null;
+    
+    if (req.file) {
+      try {
+        const fileName = `consultation_${Date.now()}_${full_name.replace(/\s+/g, '_')}.pdf`;
+        const uploadResult = await uploadToSupabase(req.file, 'consultation-resumes', fileName);
+        pdfUrl = uploadResult.url;
+        pdfPath = uploadResult.path;
+      } catch (uploadError) {
+        console.error('PDF upload error:', uploadError);
+        return res.status(500).json({ error: 'Failed to upload PDF. Please try again.' });
+      }
+    }
+
+    // Create consultation request with enhanced status tracking
     const { data: consultation, error } = await supabaseAdmin
       .from('consultation_requests')
       .insert({
@@ -52,7 +71,10 @@ router.post('/', async (req, res) => {
         package_interest,
         area_of_concern,
         consultation_window,
-        status: 'pending'
+        pdf_url: pdfUrl,
+        pdf_path: pdfPath,
+        status: 'pending',
+        pipeline_status: 'lead'
       })
       .select()
       .single();
@@ -69,6 +91,7 @@ router.post('/', async (req, res) => {
         request_id: consultation.id,
         role_targets: role_targets,
         package_interest: package_interest || 'Not specified',
+        resume_uploaded: pdfUrl ? 'Yes' : 'No',
         next_steps: 'Our team will review your request and contact you within 24 hours.'
       });
     } catch (emailError) {
@@ -85,6 +108,8 @@ router.post('/', async (req, res) => {
         package_interest: package_interest || 'Not specified',
         employment_status: employment_status || 'Not specified',
         area_of_concern: area_of_concern || 'Not specified',
+        resume_uploaded: pdfUrl ? 'Yes - Resume attached' : 'No resume uploaded',
+        pdf_url: pdfUrl || 'Not provided',
         admin_dashboard_url: `${process.env.FRONTEND_URL}/admin/consultations`
       });
     } catch (emailError) {
@@ -95,7 +120,8 @@ router.post('/', async (req, res) => {
     res.status(201).json({
       id: consultation.id,
       status: 'pending',
-      message: 'Consultation request received successfully'
+      message: 'Consultation request received successfully',
+      pdf_uploaded: !!pdfUrl
     });
   } catch (error) {
     console.error('Consultation request error:', error);
@@ -136,18 +162,111 @@ router.get('/', authenticateToken, requireAdmin, async (req, res) => {
   }
 });
 
-// PATCH /api/consultations/:id - Update consultation status (PROTECTED)
+// PATCH /api/consultations/:id - Update consultation status with enhanced workflow (PROTECTED)
 router.patch('/:id', authenticateToken, requireAdmin, async (req, res) => {
   try {
     const { id } = req.params;
-    const { status, admin_notes } = req.body;
+    const { status, admin_notes, action } = req.body;
     const adminId = req.user.userId || req.user.id;
 
-    if (!status) {
-      return res.status(400).json({ error: 'Status is required' });
+    if (!status && !action) {
+      return res.status(400).json({ error: 'Status or action is required' });
     }
 
-    if (!['pending', 'approved', 'rejected', 'scheduled', 'completed'].includes(status)) {
+    // Handle specific actions for the pipeline
+    if (action === 'approve') {
+      // Generate registration token for approved consultations
+      const registrationToken = jwt.sign({
+        consultationId: id,
+        email: '',
+        type: 'client_registration',
+        exp: Math.floor(Date.now() / 1000) + (7 * 24 * 60 * 60) // 7 days
+      }, process.env.JWT_SECRET);
+
+      const updateData = {
+        status: 'approved',
+        pipeline_status: 'approved',
+        approved_by: adminId,
+        approved_at: new Date().toISOString(),
+        registration_token: registrationToken,
+        token_expires_at: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString(),
+        admin_notes
+      };
+
+      const { data: consultation, error } = await supabaseAdmin
+        .from('consultation_requests')
+        .update(updateData)
+        .eq('id', id)
+        .select()
+        .single();
+
+      if (error || !consultation) {
+        return res.status(404).json({ error: 'Consultation request not found' });
+      }
+
+      // Send approval email with registration link
+      try {
+        const registrationLink = `${process.env.FRONTEND_URL}/register?token=${registrationToken}`;
+        await sendEmail(consultation.email, 'consultation_approved', {
+          client_name: consultation.full_name,
+          role_targets: consultation.role_targets,
+          package_interest: consultation.package_interest || 'Not specified',
+          registration_link: registrationLink,
+          token_expires: '7 days',
+          next_steps: 'Click the registration link to create your client account and access our services.'
+        });
+      } catch (emailError) {
+        console.error('Failed to send approval email:', emailError);
+      }
+
+      return res.json({
+        message: 'Consultation approved and registration token generated',
+        consultation,
+        registration_token: registrationToken
+      });
+    }
+
+    if (action === 'reject') {
+      const updateData = {
+        status: 'rejected',
+        pipeline_status: 'rejected',
+        rejected_by: adminId,
+        rejected_at: new Date().toISOString(),
+        rejection_reason: admin_notes || 'Does not meet current criteria',
+        admin_notes
+      };
+
+      const { data: consultation, error } = await supabaseAdmin
+        .from('consultation_requests')
+        .update(updateData)
+        .eq('id', id)
+        .select()
+        .single();
+
+      if (error || !consultation) {
+        return res.status(404).json({ error: 'Consultation request not found' });
+      }
+
+      // Send professional rejection email
+      try {
+        await sendEmail(consultation.email, 'consultation_rejected', {
+          client_name: consultation.full_name,
+          role_targets: consultation.role_targets,
+          reason: consultation.rejection_reason,
+          alternative_resources: 'We recommend exploring our free resources on LinkedIn and our blog for career guidance.'
+        });
+      } catch (emailError) {
+        console.error('Failed to send rejection email:', emailError);
+      }
+
+      return res.json({
+        message: 'Consultation rejected',
+        consultation
+      });
+    }
+
+    // Handle regular status updates
+    if (!['pending', 'under_review', 'approved', 'rejected', 'scheduled', 'completed'].includes(status)) {
       return res.status(400).json({ error: 'Invalid status' });
     }
 
@@ -156,6 +275,13 @@ router.patch('/:id', authenticateToken, requireAdmin, async (req, res) => {
       processed_by: adminId,
       processed_at: new Date().toISOString()
     };
+
+    // Update pipeline status based on regular status
+    if (status === 'under_review') {
+      updateData.pipeline_status = 'under_review';
+      updateData.reviewed_by = adminId;
+      updateData.reviewed_at = new Date().toISOString();
+    }
 
     if (admin_notes !== undefined) {
       updateData.admin_notes = admin_notes;
@@ -181,12 +307,10 @@ router.patch('/:id', authenticateToken, requireAdmin, async (req, res) => {
         package_interest: consultation.package_interest || 'Not specified'
       };
 
-      if (status === 'approved') {
-        emailTemplate = 'consultation_approved';
-        emailData.next_steps = 'We will contact you shortly to schedule your consultation session.';
-      } else if (status === 'rejected') {
-        emailTemplate = 'consultation_rejected';
-        emailData.reason = admin_notes || 'Your request does not meet our current criteria.';
+      if (status === 'under_review') {
+        emailTemplate = 'consultation_under_review';
+        emailData.next_steps = 'Our team is reviewing your consultation request. We will contact you within 24-48 hours.';
+        emailData.estimated_response = '24-48 hours';
       } else if (status === 'scheduled') {
         emailTemplate = 'consultation_confirmed';
         emailData.meeting_details = admin_notes || 'Meeting details will be provided separately.';
@@ -197,7 +321,6 @@ router.patch('/:id', authenticateToken, requireAdmin, async (req, res) => {
       }
     } catch (emailError) {
       console.error('Failed to send status update email:', emailError);
-      // Don't fail the update if email fails
     }
 
     res.json({
@@ -309,6 +432,199 @@ router.post('/contact', async (req, res) => {
   } catch (error) {
     console.error('Contact form error:', error);
     res.status(500).json({ error: 'Failed to submit contact form' });
+  }
+});
+
+// POST /api/consultations/register - Client registration using token (PUBLIC)
+router.post('/register', async (req, res) => {
+  try {
+    const { token, password, confirm_password } = req.body;
+
+    if (!token || !password || !confirm_password) {
+      return res.status(400).json({ 
+        error: 'Registration token, password, and password confirmation are required' 
+      });
+    }
+
+    if (password !== confirm_password) {
+      return res.status(400).json({ error: 'Passwords do not match' });
+    }
+
+    // Validate password strength
+    if (password.length < 8) {
+      return res.status(400).json({ 
+        error: 'Password must be at least 8 characters long' 
+      });
+    }
+
+    // Verify registration token
+    let decoded;
+    try {
+      decoded = jwt.verify(token, process.env.JWT_SECRET);
+    } catch (jwtError) {
+      return res.status(400).json({ error: 'Invalid or expired registration token' });
+    }
+
+    if (decoded.type !== 'client_registration') {
+      return res.status(400).json({ error: 'Invalid registration token type' });
+    }
+
+    // Get consultation request
+    const { data: consultation, error: consultationError } = await supabaseAdmin
+      .from('consultation_requests')
+      .select('*')
+      .eq('id', decoded.consultationId)
+      .eq('registration_token', token)
+      .eq('token_used', false)
+      .single();
+
+    if (consultationError || !consultation) {
+      return res.status(400).json({ error: 'Invalid registration token or token already used' });
+    }
+
+    // Check if token is expired
+    if (new Date() > new Date(consultation.token_expires_at)) {
+      return res.status(400).json({ error: 'Registration token has expired' });
+    }
+
+    // Hash password
+    const bcrypt = require('bcryptjs');
+    const hashedPassword = await bcrypt.hash(password, 12);
+
+    // Create client account
+    const { data: client, error: clientError } = await supabaseAdmin
+      .from('registered_users')
+      .insert({
+        lead_id: consultation.id,
+        email: consultation.email,
+        passcode_hash: hashedPassword,
+        full_name: consultation.full_name,
+        role: 'client',
+        is_active: true
+      })
+      .select()
+      .single();
+
+    if (clientError) {
+      console.error('Error creating client account:', clientError);
+      return res.status(500).json({ error: 'Failed to create client account' });
+    }
+
+    // Update consultation request
+    await supabaseAdmin
+      .from('consultation_requests')
+      .update({
+        status: 'registered',
+        pipeline_status: 'client',
+        registered_at: new Date().toISOString(),
+        user_id: client.id,
+        token_used: true
+      })
+      .eq('id', consultation.id);
+
+    // Generate auth token
+    const authToken = jwt.sign({
+      userId: client.id,
+      email: client.email,
+      role: client.role,
+      exp: Math.floor(Date.now() / 1000) + (24 * 60 * 60) // 24 hours
+    }, process.env.JWT_SECRET);
+
+    // Send welcome email
+    try {
+      await sendEmail(client.email, 'client_welcome', {
+        client_name: client.full_name,
+        dashboard_url: `${process.env.FRONTEND_URL}/client/dashboard`,
+        next_steps: 'Complete your profile to unlock all features and start tracking your job applications.',
+        support_email: 'support@applybureau.com'
+      });
+    } catch (emailError) {
+      console.error('Failed to send welcome email:', emailError);
+    }
+
+    res.status(201).json({
+      message: 'Registration completed successfully',
+      token: authToken,
+      user: {
+        id: client.id,
+        email: client.email,
+        full_name: client.full_name,
+        role: client.role
+      },
+      redirect_to: '/client/profile-setup'
+    });
+  } catch (error) {
+    console.error('Client registration error:', error);
+    res.status(500).json({ error: 'Failed to complete registration' });
+  }
+});
+
+// GET /api/consultations/validate-token/:token - Validate registration token (PUBLIC)
+router.get('/validate-token/:token', async (req, res) => {
+  try {
+    const { token } = req.params;
+
+    // Verify token format
+    let decoded;
+    try {
+      decoded = jwt.verify(token, process.env.JWT_SECRET);
+    } catch (jwtError) {
+      return res.status(400).json({ 
+        valid: false, 
+        error: 'Invalid or expired token' 
+      });
+    }
+
+    if (decoded.type !== 'client_registration') {
+      return res.status(400).json({ 
+        valid: false, 
+        error: 'Invalid token type' 
+      });
+    }
+
+    // Check consultation request
+    const { data: consultation, error } = await supabaseAdmin
+      .from('consultation_requests')
+      .select('id, full_name, email, token_expires_at, token_used')
+      .eq('id', decoded.consultationId)
+      .eq('registration_token', token)
+      .single();
+
+    if (error || !consultation) {
+      return res.status(400).json({ 
+        valid: false, 
+        error: 'Token not found' 
+      });
+    }
+
+    if (consultation.token_used) {
+      return res.status(400).json({ 
+        valid: false, 
+        error: 'Token already used' 
+      });
+    }
+
+    if (new Date() > new Date(consultation.token_expires_at)) {
+      return res.status(400).json({ 
+        valid: false, 
+        error: 'Token expired' 
+      });
+    }
+
+    res.json({
+      valid: true,
+      consultation: {
+        full_name: consultation.full_name,
+        email: consultation.email,
+        expires_at: consultation.token_expires_at
+      }
+    });
+  } catch (error) {
+    console.error('Token validation error:', error);
+    res.status(500).json({ 
+      valid: false, 
+      error: 'Failed to validate token' 
+    });
   }
 });
 

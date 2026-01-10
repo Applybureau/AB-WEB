@@ -36,6 +36,11 @@ const leadsRoutes = require('./routes/leads');
 const registrationRoutes = require('./routes/registration');
 const contactRequestsRoutes = require('./routes/contactRequests');
 const meetingsRoutes = require('./routes/meetings');
+const consultationRequestsRoutes = require('./routes/consultationRequests');
+
+// Client Pipeline Routes
+const clientProfileRoutes = require('./routes/clientProfile');
+const clientDashboardRoutes = require('./routes/clientDashboard');
 
 const app = express();
 const PORT = process.env.PORT || 3000;
@@ -200,7 +205,7 @@ app.get('/system-info', (req, res) => {
 app.use('/api/auth', authRoutes);
 app.use('/api/dashboard', cacheMiddleware(300), dashboardRoutes); // Cache dashboard for 5 minutes
 app.use('/api/enhanced-dashboard', enhancedDashboardRoutes); // Real-time dashboard (no caching)
-app.use('/api/consultations', consultationsCombinedRoutes); // Website consultation requests (public POST + admin GET)
+app.use('/api/consultation-requests', consultationRequestsRoutes); // Enhanced consultation requests (replaces consultationsCombinedRoutes)
 app.use('/api/contact', contactRoutes); // Contact form (public)
 app.use('/api/consultation-management', consultationRoutes); // Internal consultation management (admin only)
 app.use('/api/applications', applicationRoutes);
@@ -219,6 +224,10 @@ app.use('/api/leads', leadsRoutes); // Lead submission and management
 app.use('/api/register', registrationRoutes); // Registration flow
 app.use('/api/contact-requests', contactRequestsRoutes); // Contact form submissions
 app.use('/api/meetings', meetingsRoutes); // Meeting scheduling
+
+// Client Pipeline Routes
+app.use('/api/client/profile', clientProfileRoutes); // Client profile management
+app.use('/api/client/dashboard', clientDashboardRoutes); // Client dashboard
 
 // Admin routes with enhanced security
 app.get('/api/admin/stats', require('./utils/auth').authenticateToken, require('./utils/auth').requireAdmin, (req, res) => {

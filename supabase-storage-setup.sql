@@ -5,6 +5,7 @@
 INSERT INTO storage.buckets (id, name, public)
 VALUES 
     ('resumes', 'resumes', false),
+    ('consultation-resumes', 'consultation-resumes', false),
     ('email-assets', 'email-assets', true);
 
 -- Create storage policies for resumes bucket
@@ -31,6 +32,22 @@ CREATE POLICY "Clients can delete own resume" ON storage.objects
     FOR DELETE USING (
         bucket_id = 'resumes' AND 
         auth.uid()::text = (storage.foldername(name))[1]
+    );
+
+-- Create storage policies for consultation-resumes bucket (public uploads, admin access)
+CREATE POLICY "Anyone can upload consultation resume" ON storage.objects
+    FOR INSERT WITH CHECK (bucket_id = 'consultation-resumes');
+
+CREATE POLICY "Admins can view consultation resumes" ON storage.objects
+    FOR SELECT USING (
+        bucket_id = 'consultation-resumes' AND 
+        (EXISTS (SELECT 1 FROM registered_users WHERE id = auth.uid() AND role = 'admin') OR auth.uid() IS NULL)
+    );
+
+CREATE POLICY "Admins can manage consultation resumes" ON storage.objects
+    FOR ALL USING (
+        bucket_id = 'consultation-resumes' AND 
+        EXISTS (SELECT 1 FROM registered_users WHERE id = auth.uid() AND role = 'admin')
     );
 
 -- Create storage policies for email-assets bucket (public read)
