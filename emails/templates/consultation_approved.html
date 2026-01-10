@@ -14,7 +14,7 @@
                     <!-- Logo Header -->
                     <tr>
                         <td align="center" style="padding: 40px 40px 30px 40px; background-color: #FFFFFF;">
-                            <img src="https://res.cloudinary.com/dbehg8jsv/image/upload/v1767902182/AB_Logo-removebg-preview_mlji6p.png" alt="Apply Bureau" width="180" style="display: block; border: 0;">
+                            <img src="https://res.cloudinary.com/dbehg8jsv/image/upload/v1767902182/AB_Logo-removebg-preview_mlji6p.png" alt="Apply Bureau" width="220" height="auto" style="display: block; border: 0; max-width: 100%;">
                         </td>
                     </tr>
                     <!-- Main Content -->
@@ -27,25 +27,57 @@
                                 Hello {{client_name}},
                             </p>
                             <p style="color: #1A1A1A; font-size: 16px; line-height: 1.7; margin: 0 0 20px 0;">
-                                Great news! Your consultation request has been approved. We're excited to help you with your career journey.
+                                Great news! Your consultation request has been approved. We're excited to help you with your career journey and welcome you to Apply Bureau!
+                            </p>
+                            <p style="color: #1A1A1A; font-size: 16px; line-height: 1.7; margin: 0 0 20px 0;">
+                                To get started, please create your secure client account using the link below:
+                            </p>
+                            <!-- Registration CTA Button -->
+                            <table border="0" cellpadding="0" cellspacing="0" width="100%" style="margin: 0 0 24px 0;">
+                                <tr>
+                                    <td align="center">
+                                        <a href="{{registration_link}}" style="display: inline-block; background-color: #059669; color: #FFFFFF; padding: 16px 48px; text-decoration: none; border-radius: 6px; font-weight: 600; font-size: 16px;">
+                                            Create My Account
+                                        </a>
+                                    </td>
+                                </tr>
+                            </table>
+                            <p style="color: #DC2626; font-size: 14px; line-height: 1.6; margin: 0 0 20px 0; text-align: center; font-weight: 500;">
+                                ⚠️ This registration link expires in {{token_expires}}
                             </p>
                             <!-- Details Box -->
                             <table border="0" cellpadding="0" cellspacing="0" width="100%" style="margin: 0 0 24px 0; background-color: #F8FAFC; border-radius: 6px; border: 1px solid #E2E8F0;">
                                 <tr>
                                     <td style="padding: 24px;">
-                                        <p style="color: #64748B; font-size: 12px; margin: 0 0 6px 0; text-transform: uppercase; letter-spacing: 1px; font-weight: 600;">Consultation Type</p>
-                                        <p style="color: #1A1A1A; font-size: 16px; font-weight: 600; margin: 0 0 16px 0;">{{consultation_type}}</p>
-                                        <p style="color: #64748B; font-size: 12px; margin: 0 0 6px 0; text-transform: uppercase; letter-spacing: 1px; font-weight: 600;">Scheduled Date</p>
-                                        <p style="color: #1A1A1A; font-size: 16px; font-weight: 600; margin: 0;">{{scheduled_date}} at {{scheduled_time}}</p>
+                                        <p style="color: #64748B; font-size: 12px; margin: 0 0 6px 0; text-transform: uppercase; letter-spacing: 1px; font-weight: 600;">Target Roles</p>
+                                        <p style="color: #1A1A1A; font-size: 16px; font-weight: 600; margin: 0 0 16px 0;">{{role_targets}}</p>
+                                        <p style="color: #64748B; font-size: 12px; margin: 0 0 6px 0; text-transform: uppercase; letter-spacing: 1px; font-weight: 600;">Service Package</p>
+                                        <p style="color: #1A1A1A; font-size: 16px; font-weight: 600; margin: 0;">{{package_interest}}</p>
                                     </td>
                                 </tr>
                             </table>
-                            <!-- CTA Button -->
+                            <!-- Next Steps -->
+                            <table border="0" cellpadding="0" cellspacing="0" width="100%" style="margin: 0 0 24px 0; background-color: #EFF6FF; border-radius: 6px; border: 1px solid #DBEAFE;">
+                                <tr>
+                                    <td style="padding: 24px;">
+                                        <h3 style="color: #1E40AF; font-size: 18px; font-weight: 600; margin: 0 0 12px 0;">What's Next?</h3>
+                                        <ol style="color: #1A1A1A; font-size: 14px; line-height: 1.6; margin: 0; padding-left: 20px;">
+                                            <li style="margin-bottom: 8px;">Create your account using the registration link above</li>
+                                            <li style="margin-bottom: 8px;">Complete your detailed profile</li>
+                                            <li style="margin-bottom: 8px;">Upload your current resume for optimization</li>
+                                            <li style="margin-bottom: 8px;">Schedule your strategy session</li>
+                                            <li style="margin-bottom: 0;">Start tracking your applications</li>
+                                        </ol>
+                                    </td>
+                                </tr>
+                            </table>
+                            <!-- Dashboard Button -->
                             <table border="0" cellpadding="0" cellspacing="0" width="100%" style="margin: 0 0 24px 0;">
                                 <tr>
                                     <td align="center">
-                                        <a href="http://localhost:5173/dashboard" style="display: inline-block; background-color: #10b981; color: #FFFFFF; padding: 16px 48px; text-decoration: none; border-radius: 6px; font-weight: 600; font-size: 16px;">
-                                            View Dashboard
+                                        <p style="color: #64748B; font-size: 14px; margin: 0 0 12px 0;">Already have an account?</p>
+                                        <a href="{{dashboard_link}}" style="display: inline-block; background-color: #0f172a; color: #FFFFFF; padding: 12px 32px; text-decoration: none; border-radius: 6px; font-weight: 500; font-size: 14px;">
+                                            Go to Dashboard
                                         </a>
                                     </td>
                                 </tr>

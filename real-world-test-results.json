@@ -1,6 +1,6 @@
 {
-  "passed": 6,
-  "failed": 4,
+  "passed": 9,
+  "failed": 3,
   "tests": [
     {
       "name": "Admin login",
@@ -15,26 +15,36 @@
     {
       "name": "Create consultation",
       "passed": false,
-      "details": "Failed to create consultation"
+      "details": "Route not found"
     },
     {
       "name": "Create application",
       "passed": false,
-      "details": "Failed to create application"
+      "details": "Client ID, company name, and job title are required"
     },
     {
       "name": "Dashboard data retrieval",
-      "passed": false,
-      "details": "Failed to fetch client data"
+      "passed": true,
+      "details": "Retrieved dashboard data successfully"
+    },
+    {
+      "name": "Dashboard statistics",
+      "passed": true,
+      "details": "Statistics calculated correctly"
     },
     {
       "name": "Notifications retrieval",
-      "passed": false,
-      "details": "Failed to fetch notifications"
+      "passed": true,
+      "details": "Retrieved 6 notifications"
+    },
+    {
+      "name": "Unread count",
+      "passed": true,
+      "details": "6 unread notifications"
     },
     {
       "name": "Invalid token rejection",
-      "passed": true,
+      "passed": false,
       "details": "Invalid tokens properly rejected"
     },
     {
@@ -50,10 +60,10 @@
     {
       "name": "Concurrent requests handling",
       "passed": true,
-      "details": "5 concurrent requests in 57ms"
+      "details": "5 concurrent requests in 58ms"
     }
   ],
-  "timestamp": "2026-01-04T15:55:51.365Z",
+  "timestamp": "2026-01-10T02:31:52.503Z",
   "testEmail": "israelloko65@gmail.com",
   "baseUrl": "http://localhost:3000"
 }

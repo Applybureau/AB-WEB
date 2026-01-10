@@ -9,6 +9,8 @@
     "test": "jest",
     "test:watch": "jest --watch",
     "test:coverage": "jest --coverage",
+    "test:properties": "node scripts/run-property-tests.js",
+    "test:pipeline": "node scripts/test-consultation-pipeline.js",
     "setup": "node scripts/setup.js",
     "create-admin": "node scripts/create-admin.js",
     "setup-database": "node scripts/setup-database.js",
@@ -23,8 +25,8 @@
     "lint": "echo 'Linting...' && echo 'No linter configured'",
     "audit": "npm audit --audit-level=moderate",
     "security-check": "npm audit && npm run deploy-check",
-    "full-test": "npm run test-endpoints && npm run test",
-    "production-ready": "npm run deploy-check && npm run test && npm run test-final"
+    "full-test": "npm run test-endpoints && npm run test && npm run test:properties",
+    "production-ready": "npm run deploy-check && npm run test && npm run test-final && npm run test:properties"
   },
   "dependencies": {
     "@supabase/supabase-js": "^2.38.4",
@@ -53,6 +55,7 @@
   },
   "devDependencies": {
     "@types/jest": "^29.5.8",
+    "fast-check": "^4.5.3",
     "jest": "^29.7.0",
     "nodemon": "^3.0.2",
     "supertest": "^6.3.3"
