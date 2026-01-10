@@ -73,8 +73,68 @@ const deleteFromSupabase = async (bucket, filePath) => {
   }
 };
 
+const downloadFromSupabase = async (bucket, filePath) => {
+  try {
+    const { data, error } = await supabaseAdmin.storage
+      .from(bucket)
+      .download(filePath);
+
+    if (error) {
+      console.error('Supabase download error:', error);
+      throw error;
+    }
+
+    // Convert blob to buffer
+    const buffer = Buffer.from(await data.arrayBuffer());
+    
+    return {
+      buffer: buffer,
+      contentType: 'application/pdf',
+      size: buffer.length
+    };
+  } catch (error) {
+    console.error('Download from Supabase failed:', error);
+    throw error;
+  }
+};
+
+const updateFileInSupabase = async (bucket, filePath, buffer, contentType = 'application/pdf') => {
+  try {
+    // Delete existing file first
+    await deleteFromSupabase(bucket, filePath);
+    
+    // Upload updated file
+    const { data, error } = await supabaseAdmin.storage
+      .from(bucket)
+      .upload(filePath, buffer, {
+        contentType: contentType,
+        upsert: true
+      });
+
+    if (error) {
+      console.error('Supabase update error:', error);
+      throw error;
+    }
+
+    // Get public URL
+    const { data: urlData } = supabaseAdmin.storage
+      .from(bucket)
+      .getPublicUrl(filePath);
+
+    return {
+      path: data.path,
+      url: urlData.publicUrl
+    };
+  } catch (error) {
+    console.error('Update file in Supabase failed:', error);
+    throw error;
+  }
+};
+
 module.exports = {
   upload,
   uploadToSupabase,
-  deleteFromSupabase
+  deleteFromSupabase,
+  downloadFromSupabase,
+  updateFileInSupabase
 };
