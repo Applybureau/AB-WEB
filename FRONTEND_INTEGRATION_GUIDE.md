@@ -206,6 +206,209 @@ const submitConsultation = async (formData) => {
 }
 ```
 
+### 1.1 Consultation Form with PDF Upload
+
+**Frontend Form Component with File Upload:**
+```jsx
+// ConsultationFormWithPDF.jsx
+import React, { useState } from 'react';
+
+const ConsultationFormWithPDF = () => {
+  const [formData, setFormData] = useState({
+    full_name: '',
+    email: '',
+    phone: '',
+    linkedin_url: '',
+    role_targets: '',
+    location_preferences: '',
+    minimum_salary: '',
+    target_market: '',
+    employment_status: 'Currently Employed',
+    package_interest: 'Tier 1',
+    area_of_concern: '',
+    consultation_window: ''
+  });
+
+  const [resumeFile, setResumeFile] = useState(null);
+  const [loading, setLoading] = useState(false);
+  const [success, setSuccess] = useState(false);
+  const [uploadProgress, setUploadProgress] = useState(0);
+
+  const handleFileChange = (e) => {
+    const file = e.target.files[0];
+    if (file) {
+      // Validate file type
+      if (file.type !== 'application/pdf') {
+        alert('Please select a PDF file');
+        return;
+      }
+      
+      // Validate file size (5MB limit)
+      if (file.size > 5 * 1024 * 1024) {
+        alert('File size must be less than 5MB');
+        return;
+      }
+      
+      setResumeFile(file);
+    }
+  };
+
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    setLoading(true);
+    setUploadProgress(0);
+
+    try {
+      // Create FormData for file upload
+      const submitData = new FormData();
+      
+      // Add all form fields
+      Object.keys(formData).forEach(key => {
+        if (formData[key]) {
+          submitData.append(key, formData[key]);
+        }
+      });
+      
+      // Add resume file if selected
+      if (resumeFile) {
+        submitData.append('resume', resumeFile);
+      }
+
+      const response = await fetch('/api/consultation-requests', {
+        method: 'POST',
+        body: submitData, // Don't set Content-Type header for FormData
+      });
+
+      const result = await response.json();
+
+      if (response.ok) {
+        setSuccess(true);
+        setUploadProgress(100);
+        console.log('Consultation submitted:', result.id);
+        console.log('PDF uploaded:', result.pdf_uploaded);
+      } else {
+        throw new Error(result.error || 'Submission failed');
+      }
+    } catch (error) {
+      console.error('Error:', error);
+      alert('Submission failed: ' + error.message);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  return (
+    <form onSubmit={handleSubmit} encType="multipart/form-data">
+      {/* Standard form fields */}
+      <input
+        type="text"
+        placeholder="Full Name"
+        value={formData.full_name}
+        onChange={(e) => setFormData({...formData, full_name: e.target.value})}
+        required
+      />
+      
+      <input
+        type="email"
+        placeholder="Email"
+        value={formData.email}
+        onChange={(e) => setFormData({...formData, email: e.target.value})}
+        required
+      />
+
+      <input
+        type="text"
+        placeholder="Role Targets"
+        value={formData.role_targets}
+        onChange={(e) => setFormData({...formData, role_targets: e.target.value})}
+        required
+      />
+
+      {/* Add other form fields similarly */}
+
+      {/* PDF Upload Field */}
+      <div className="file-upload-section">
+        <label htmlFor="resume">Upload Resume (PDF, max 5MB):</label>
+        <input
+          type="file"
+          id="resume"
+          name="resume"
+          accept=".pdf"
+          onChange={handleFileChange}
+        />
+        
+        {resumeFile && (
+          <div className="file-info">
+            <p>Selected: {resumeFile.name}</p>
+            <p>Size: {(resumeFile.size / 1024 / 1024).toFixed(2)} MB</p>
+          </div>
+        )}
+      </div>
+
+      {/* Progress indicator */}
+      {loading && uploadProgress > 0 && (
+        <div className="upload-progress">
+          <div className="progress-bar">
+            <div 
+              className="progress-fill" 
+              style={{ width: `${uploadProgress}%` }}
+            ></div>
+          </div>
+          <p>Uploading... {uploadProgress}%</p>
+        </div>
+      )}
+      
+      <button type="submit" disabled={loading}>
+        {loading ? 'Submitting...' : 'Submit Consultation Request'}
+      </button>
+
+      {success && (
+        <div className="success-message">
+          Consultation request submitted successfully! 
+          {resumeFile && <p>✅ Resume uploaded successfully</p>}
+          You'll receive an email confirmation shortly.
+        </div>
+      )}
+    </form>
+  );
+};
+```
+
+**API Call Example with File Upload:**
+```javascript
+// POST /api/consultation-requests with PDF
+const submitConsultationWithPDF = async (formData, resumeFile) => {
+  const submitData = new FormData();
+  
+  // Add form fields
+  Object.keys(formData).forEach(key => {
+    if (formData[key]) {
+      submitData.append(key, formData[key]);
+    }
+  });
+  
+  // Add resume file
+  if (resumeFile) {
+    submitData.append('resume', resumeFile);
+  }
+
+  const response = await fetch('/api/consultation-requests', {
+    method: 'POST',
+    body: submitData, // FormData automatically sets correct Content-Type
+  });
+
+  return await response.json();
+};
+
+// Expected Response with PDF:
+{
+  "id": "253cecd4-be4d-4c9f-a7ed-5a56698a60eb",
+  "status": "pending",
+  "message": "Consultation request received successfully",
+  "pdf_uploaded": true
+}
+```
+
 ### 2. Admin Dashboard Implementation
 
 **Admin Login:**
