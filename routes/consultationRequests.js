@@ -3,8 +3,8 @@ const { supabaseAdmin } = require('../utils/supabase');
 const { authenticateToken, requireAdmin } = require('../utils/auth');
 const { sendEmail, buildUrl } = require('../utils/email');
 const { upload, uploadToSupabase } = require('../utils/upload');
+const { NotificationHelpers } = require('../utils/notifications');
 const jwt = require('jsonwebtoken');
-const crypto = require('crypto');
 
 const router = express.Router();
 
@@ -121,6 +121,14 @@ router.post('/', upload.single('resume'), async (req, res) => {
       // Don't fail the request if email fails
     }
 
+    // Create admin notification
+    try {
+      await NotificationHelpers.newConsultationRequest(consultation);
+    } catch (notificationError) {
+      console.error('Failed to create admin notification:', notificationError);
+      // Don't fail the request if notification fails
+    }
+
     res.status(201).json({
       id: consultation.id,
       status: 'pending',
@@ -223,6 +231,15 @@ router.patch('/:id', authenticateToken, requireAdmin, async (req, res) => {
         console.error('Failed to send approval email:', emailError);
       }
 
+      // Create client notification if user exists
+      try {
+        if (consultation.user_id) {
+          await NotificationHelpers.consultationApproved(consultation.user_id, consultation);
+        }
+      } catch (notificationError) {
+        console.error('Failed to create approval notification:', notificationError);
+      }
+
       return res.json({
         message: 'Consultation approved and registration token generated',
         consultation,
@@ -261,6 +278,15 @@ router.patch('/:id', authenticateToken, requireAdmin, async (req, res) => {
         });
       } catch (emailError) {
         console.error('Failed to send rejection email:', emailError);
+      }
+
+      // Create client notification if user exists
+      try {
+        if (consultation.user_id) {
+          await NotificationHelpers.consultationRejected(consultation.user_id, consultation, consultation.rejection_reason);
+        }
+      } catch (notificationError) {
+        console.error('Failed to create rejection notification:', notificationError);
       }
 
       return res.json({
@@ -314,6 +340,11 @@ router.patch('/:id', authenticateToken, requireAdmin, async (req, res) => {
         emailData.next_steps = 'Our team is reviewing your consultation request. We will contact you within 24-48 hours.';
         emailData.estimated_response = '24-48 hours';
         emailData.submission_date = new Date(consultation.created_at).toLocaleDateString();
+        
+        // Create client notification if user exists
+        if (consultation.user_id) {
+          await NotificationHelpers.consultationUnderReview(consultation.user_id, consultation);
+        }
       } else if (status === 'scheduled') {
         emailTemplate = 'consultation_confirmed';
         emailData.meeting_details = admin_notes || 'Meeting details will be provided separately.';
