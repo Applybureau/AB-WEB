@@ -69,9 +69,23 @@ const sendEmail = async (to, templateName, variables = {}) => {
       ? `Apply Bureau <noreply@${process.env.VERIFIED_EMAIL_DOMAIN}>`
       : 'Apply Bureau <onboarding@resend.dev>'; // Default Resend domain for testing
 
+    // In testing mode, only send to verified email addresses
+    const isTestingMode = !process.env.VERIFIED_EMAIL_DOMAIN;
+    const verifiedTestEmail = 'israelloko65@gmail.com';
+    
+    let actualRecipient = to;
+    if (isTestingMode && to !== verifiedTestEmail) {
+      console.log(`📧 Testing mode: Redirecting email from ${to} to ${verifiedTestEmail}`);
+      actualRecipient = verifiedTestEmail;
+      
+      // Add original recipient info to email content
+      allVariables.original_recipient = to;
+      allVariables.testing_notice = `This email was originally intended for ${to} but redirected for testing purposes.`;
+    }
+
     const { data, error } = await resend.emails.send({
       from: fromEmail,
-      to: [to],
+      to: [actualRecipient],
       subject: subject,
       html: htmlContent
     });

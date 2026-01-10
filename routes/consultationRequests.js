@@ -271,9 +271,7 @@ router.patch('/:id', authenticateToken, requireAdmin, async (req, res) => {
     }
 
     const updateData = {
-      status,
-      processed_by: adminId,
-      processed_at: new Date().toISOString()
+      status
     };
 
     // Update pipeline status based on regular status
@@ -311,6 +309,7 @@ router.patch('/:id', authenticateToken, requireAdmin, async (req, res) => {
         emailTemplate = 'consultation_under_review';
         emailData.next_steps = 'Our team is reviewing your consultation request. We will contact you within 24-48 hours.';
         emailData.estimated_response = '24-48 hours';
+        emailData.submission_date = new Date(consultation.created_at).toLocaleDateString();
       } else if (status === 'scheduled') {
         emailTemplate = 'consultation_confirmed';
         emailData.meeting_details = admin_notes || 'Meeting details will be provided separately.';
@@ -318,9 +317,16 @@ router.patch('/:id', authenticateToken, requireAdmin, async (req, res) => {
 
       if (emailTemplate) {
         await sendEmail(consultation.email, emailTemplate, emailData);
+        console.log(`✅ ${status} email sent successfully to:`, consultation.email);
       }
     } catch (emailError) {
       console.error('Failed to send status update email:', emailError);
+      
+      // Don't fail the entire request if email fails - just log it
+      // This is especially important for Resend testing limitations
+      if (emailError.statusCode === 403 && emailError.name === 'validation_error') {
+        console.log('📧 Email sending restricted to verified addresses in testing mode');
+      }
     }
 
     res.json({
@@ -352,6 +358,56 @@ router.get('/:id', authenticateToken, requireAdmin, async (req, res) => {
   } catch (error) {
     console.error('Get consultation request error:', error);
     res.status(500).json({ error: 'Failed to fetch consultation request' });
+  }
+});
+
+// GET /api/consultation-requests/:id/pdf - Download PDF file (PROTECTED)
+router.get('/:id/pdf', authenticateToken, requireAdmin, async (req, res) => {
+  try {
+    const { id } = req.params;
+
+    // Get consultation request
+    const { data: consultation, error } = await supabaseAdmin
+      .from('consultation_requests')
+      .select('pdf_url, pdf_path, full_name')
+      .eq('id', id)
+      .single();
+
+    if (error || !consultation) {
+      return res.status(404).json({ error: 'Consultation request not found' });
+    }
+
+    if (!consultation.pdf_url || !consultation.pdf_path) {
+      return res.status(404).json({ error: 'No PDF file found for this consultation' });
+    }
+
+    // Extract file path from the stored pdf_path
+    const filePath = consultation.pdf_path;
+
+    // Download file from Supabase storage
+    const { data: fileData, error: downloadError } = await supabaseAdmin.storage
+      .from('consultation-resumes')
+      .download(filePath);
+
+    if (downloadError) {
+      console.error('Error downloading PDF:', downloadError);
+      return res.status(500).json({ error: 'Failed to download PDF file' });
+    }
+
+    // Convert blob to buffer
+    const buffer = Buffer.from(await fileData.arrayBuffer());
+
+    // Set headers for PDF download
+    const fileName = consultation.pdf_path || `${consultation.full_name}_resume.pdf`;
+    res.setHeader('Content-Type', 'application/pdf');
+    res.setHeader('Content-Disposition', `attachment; filename="${fileName}"`);
+    res.setHeader('Content-Length', buffer.length);
+
+    // Send the PDF file
+    res.send(buffer);
+  } catch (error) {
+    console.error('PDF download error:', error);
+    res.status(500).json({ error: 'Failed to download PDF file' });
   }
 });
 
