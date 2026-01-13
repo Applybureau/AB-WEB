@@ -53,3 +53,8 @@ module.exports = {
   requireClient,
   rateLimiter
 };
+  authenticateToken,
+  requireAdmin,
+  requireClient,
+  rateLimiter
+};

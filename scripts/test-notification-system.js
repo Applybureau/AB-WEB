@@ -14,7 +14,7 @@ const API_URL = `${BASE_URL}/api`;
 
 // Test data
 const testConsultation = {
-  id: 'test-consultation-id',
+  id: '00000000-0000-0000-0000-000000000002',
   full_name: 'John Doe',
   email: 'john.doe@example.com',
   role_targets: 'Software Engineer',
@@ -22,7 +22,7 @@ const testConsultation = {
   current_country: 'United States'
 };
 
-const testUserId = 'test-user-id-123';
+const testUserId = '00000000-0000-0000-0000-000000000001';
 
 async function testNotificationSystem() {
   console.log('🧪 Testing Comprehensive Notification System');
@@ -102,7 +102,7 @@ async function testNotificationSystem() {
     console.log('\n5. Testing Application Tracking Notifications...');
     
     const testApplication = {
-      id: 'test-app-id',
+      id: '00000000-0000-0000-0000-000000000003',
       company: 'Tech Corp',
       position: 'Senior Developer'
     };
@@ -135,7 +135,7 @@ async function testNotificationSystem() {
     console.log('\n7. Testing Meeting Notifications...');
     
     const testMeeting = {
-      id: 'test-meeting-id',
+      id: '00000000-0000-0000-0000-000000000004',
       scheduled_at: new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString()
     };
 

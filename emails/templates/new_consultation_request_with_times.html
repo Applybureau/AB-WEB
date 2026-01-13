@@ -1,0 +1,121 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>New Consultation Request - Apply Bureau</title>
+    <style>
+        body { font-family: Arial, sans-serif; line-height: 1.6; color: #333; margin: 0; padding: 20px; background-color: #f4f4f4; }
+        .container { max-width: 600px; margin: 0 auto; background: white; padding: 30px; border-radius: 10px; box-shadow: 0 0 10px rgba(0,0,0,0.1); }
+        .header { text-align: center; margin-bottom: 30px; }
+        .logo { font-size: 24px; font-weight: bold; color: #2c3e50; margin-bottom: 10px; }
+        .title { color: #e74c3c; font-size: 20px; margin-bottom: 20px; }
+        .section { margin-bottom: 25px; }
+        .section h3 { color: #2c3e50; border-bottom: 2px solid #3498db; padding-bottom: 5px; }
+        .info-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; margin: 15px 0; }
+        .info-item { background: #f8f9fa; padding: 10px; border-radius: 5px; }
+        .info-label { font-weight: bold; color: #2c3e50; }
+        .time-slots { background: #e8f5e8; padding: 15px; border-radius: 8px; margin: 15px 0; }
+        .time-slot { background: white; padding: 10px; margin: 8px 0; border-radius: 5px; border-left: 4px solid #27ae60; }
+        .urgent { background: #fff3cd; border: 1px solid #ffeaa7; padding: 15px; border-radius: 8px; margin: 15px 0; }
+        .action-button { display: inline-block; background: #3498db; color: white; padding: 12px 25px; text-decoration: none; border-radius: 5px; margin: 10px 5px; }
+        .footer { text-align: center; margin-top: 30px; padding-top: 20px; border-top: 1px solid #eee; color: #666; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <div class="logo">Apply Bureau</div>
+            <div class="title">🚨 New Consultation Request</div>
+        </div>
+
+        <div class="urgent">
+            <strong>Action Required:</strong> A new client has requested an initial consultation and provided 3 time slot options. Please review and confirm one of the time slots.
+        </div>
+
+        <div class="section">
+            <h3>👤 Client Information</h3>
+            <div class="info-grid">
+                <div class="info-item">
+                    <div class="info-label">Name:</div>
+                    {{client_name}}
+                </div>
+                <div class="info-item">
+                    <div class="info-label">Email:</div>
+                    {{client_email}}
+                </div>
+                <div class="info-item">
+                    <div class="info-label">Phone:</div>
+                    {{client_phone}}
+                </div>
+                <div class="info-item">
+                    <div class="info-label">Country:</div>
+                    {{current_country}}
+                </div>
+            </div>
+        </div>
+
+        <div class="section">
+            <h3>💼 Career Information</h3>
+            <div class="info-grid">
+                <div class="info-item">
+                    <div class="info-label">Target Role:</div>
+                    {{role_targets}}
+                </div>
+                <div class="info-item">
+                    <div class="info-label">Package Interest:</div>
+                    {{package_interest}}
+                </div>
+                <div class="info-item">
+                    <div class="info-label">Employment Status:</div>
+                    {{employment_status}}
+                </div>
+                <div class="info-item">
+                    <div class="info-label">Area of Concern:</div>
+                    {{area_of_concern}}
+                </div>
+            </div>
+        </div>
+
+        <div class="section">
+            <h3>📅 Preferred Time Slots (Choose One)</h3>
+            <div class="time-slots">
+                <div class="time-slot">
+                    <strong>Option 1:</strong> {{preferred_time_1}} ({{timezone}})
+                </div>
+                <div class="time-slot">
+                    <strong>Option 2:</strong> {{preferred_time_2}} ({{timezone}})
+                </div>
+                <div class="time-slot">
+                    <strong>Option 3:</strong> {{preferred_time_3}} ({{timezone}})
+                </div>
+            </div>
+        </div>
+
+        <div class="section">
+            <h3>📎 Resume</h3>
+            <div class="info-item">
+                <div class="info-label">Resume Status:</div>
+                {{resume_uploaded}}
+                {{#if pdf_url}}
+                <br><a href="{{pdf_url}}" target="_blank" style="color: #3498db;">📄 View Resume</a>
+                {{/if}}
+            </div>
+        </div>
+
+        <div class="section" style="text-align: center;">
+            <h3>🎯 Next Steps</h3>
+            <p>Please review the consultation request and confirm one of the three time slots.</p>
+            <a href="{{admin_dashboard_url}}" class="action-button">
+                📋 Review in Admin Dashboard
+            </a>
+        </div>
+
+        <div class="footer">
+            <p><strong>Apply Bureau Admin System</strong></p>
+            <p>Consultation ID: {{consultation_id}}</p>
+            <p>This is an automated notification. Please respond through the admin dashboard.</p>
+        </div>
+    </div>
+</body>
+</html>

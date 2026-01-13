@@ -11,14 +11,13 @@ const bodyParser = require('body-parser');
 const logger = require('./utils/logger');
 const { cache, cacheMiddleware } = require('./utils/cache');
 const securityManager = require('./utils/security');
-const { requestMonitor, dbMonitor, performanceMonitor, SystemMonitor } = require('./utils/monitoring');
+const { dbMonitor, performanceMonitor, SystemMonitor } = require('./utils/monitoring');
 
 // Import routes
 const authRoutes = require('./routes/auth');
 const dashboardRoutes = require('./routes/dashboard');
 const enhancedDashboardRoutes = require('./routes/enhancedDashboard');
 const consultationRoutes = require('./routes/consultations');
-const consultationsCombinedRoutes = require('./routes/consultationsCombined');
 const contactRoutes = require('./routes/contact');
 const applicationRoutes = require('./routes/applications');
 const notificationRoutes = require('./routes/notifications');
@@ -37,10 +36,34 @@ const registrationRoutes = require('./routes/registration');
 const contactRequestsRoutes = require('./routes/contactRequests');
 const meetingsRoutes = require('./routes/meetings');
 const consultationRequestsRoutes = require('./routes/consultationRequests');
+const pdfViewerRoutes = require('./routes/pdfViewer');
+
+// New Concierge Routes
+const publicConsultationsRoutes = require('./routes/publicConsultations');
+const adminConciergeRoutes = require('./routes/adminConcierge');
+const clientRegistrationRoutes = require('./routes/clientRegistration');
+const clientOnboarding20QRoutes = require('./routes/clientOnboarding20Q');
+const strategyCallsRoutes = require('./routes/strategyCalls');
 
 // Client Pipeline Routes
 const clientProfileRoutes = require('./routes/clientProfile');
 const clientDashboardRoutes = require('./routes/clientDashboard');
+
+// API Specification Compliant Routes
+const consultationRequestsSpecRoutes = require('./routes/consultationRequestsSpec');
+const contactRequestsSpecRoutes = require('./routes/contactRequestsSpec');
+const adminStatsSpecRoutes = require('./routes/adminStatsSpec');
+const adminNotificationsSpecRoutes = require('./routes/adminNotificationsSpec');
+const authSpecRoutes = require('./routes/authSpec');
+const applicationsSpecRoutes = require('./routes/applicationsSpec');
+const profileSpecRoutes = require('./routes/profileSpec');
+
+// New Complete API Specification Routes
+const mockSessionsRoutes = require('./routes/mockSessions');
+const resourcesRoutes = require('./routes/resources');
+
+// Import error handling middleware
+const { globalErrorHandler } = require('./middleware/errorHandler');
 
 const app = express();
 const PORT = process.env.PORT || 3000;
@@ -176,6 +199,7 @@ app.use('/emails/templates', express.static('emails/templates'));
 // Health check endpoint
 app.get('/health', (req, res) => {
   const healthStatus = SystemMonitor.getHealthStatus();
+  logger.info('Health check requested', { ip: req.ip, userAgent: req.get('User-Agent') });
   res.status(200).json({ 
     ...healthStatus,
     service: 'Apply Bureau Backend'
@@ -185,6 +209,7 @@ app.get('/health', (req, res) => {
 // API Health check endpoint
 app.get('/api/health', (req, res) => {
   const healthStatus = SystemMonitor.getHealthStatus();
+  logger.info('API health check requested', { ip: req.ip, userAgent: req.get('User-Agent') });
   res.status(200).json({ 
     ...healthStatus,
     service: 'Apply Bureau Backend'
@@ -194,10 +219,12 @@ app.get('/api/health', (req, res) => {
 // Detailed system info endpoint (admin only in production)
 app.get('/system-info', (req, res) => {
   if (process.env.NODE_ENV === 'production') {
+    logger.warning('Unauthorized system info access attempt', { ip: req.ip, userAgent: req.get('User-Agent') });
     return res.status(403).json({ error: 'Access denied' });
   }
   
   const systemInfo = SystemMonitor.getSystemInfo();
+  logger.info('System info requested', { ip: req.ip, userAgent: req.get('User-Agent') });
   res.json(systemInfo);
 });
 
@@ -208,7 +235,7 @@ app.use('/api/enhanced-dashboard', enhancedDashboardRoutes); // Real-time dashbo
 app.use('/api/consultation-requests', consultationRequestsRoutes); // Enhanced consultation requests (replaces consultationsCombinedRoutes)
 app.use('/api/contact', contactRoutes); // Contact form (public)
 app.use('/api/consultation-management', consultationRoutes); // Internal consultation management (admin only)
-app.use('/api/applications', applicationRoutes);
+app.use('/api/applications', applicationRoutes); // Main applications route
 app.use('/api/notifications', notificationRoutes);
 app.use('/api/upload', uploadRoutes);
 app.use('/api/admin', adminRoutes);
@@ -224,10 +251,25 @@ app.use('/api/leads', leadsRoutes); // Lead submission and management
 app.use('/api/register', registrationRoutes); // Registration flow
 app.use('/api/contact-requests', contactRequestsRoutes); // Contact form submissions
 app.use('/api/meetings', meetingsRoutes); // Meeting scheduling
+app.use('/api/pdf', pdfViewerRoutes); // PDF viewing and embedding
+
+// New Concierge Routes (Updated for Concierge Model)
+app.use('/api/public-consultations', publicConsultationsRoutes); // Simplified public consultation requests
+app.use('/api/admin/concierge', adminConciergeRoutes); // Admin gatekeeper controls
+app.use('/api/client-registration', clientRegistrationRoutes); // Payment-gated client registration
+app.use('/api/client/onboarding-20q', clientOnboarding20QRoutes); // 20-question onboarding with approval
+app.use('/api/strategy-calls', strategyCallsRoutes); // Strategy call booking system
+
+// Workflow Features Routes (no conflicts)
+const onboardingWorkflowRoutes = require('./routes/onboardingWorkflow');
+app.use('/api/workflow', onboardingWorkflowRoutes); // 20-field onboarding, profile unlock, payment verification
 
 // Client Pipeline Routes
 app.use('/api/client/profile', clientProfileRoutes); // Client profile management
 app.use('/api/client/dashboard', clientDashboardRoutes); // Client dashboard
+
+// Remove conflicting route registrations - keep only the main ones above
+// API Specification routes are integrated into main routes
 
 // Admin routes with enhanced security
 app.get('/api/admin/stats', require('./utils/auth').authenticateToken, require('./utils/auth').requireAdmin, (req, res) => {
@@ -271,8 +313,12 @@ app.post('/api/admin/cache/clear', require('./utils/auth').authenticateToken, re
 
 // 404 handler
 app.use('*', (req, res) => {
+  logger.warning('Route not found', { path: req.path, method: req.method, ip: req.ip });
   res.status(404).json({ error: 'Route not found' });
 });
+
+// Global error handler (must be last middleware)
+app.use(globalErrorHandler);
 
 // Enhanced error handler with detailed logging
 app.use((err, req, res, next) => {
@@ -347,6 +393,11 @@ app.use((err, req, res, next) => {
       details: err 
     })
   });
+  
+  // Call next to ensure proper error handling chain
+  if (res.headersSent) {
+    return next(err);
+  }
 });
 
 // Graceful shutdown

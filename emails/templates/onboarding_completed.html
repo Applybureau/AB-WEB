@@ -1,0 +1,106 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Onboarding Completed - Apply Bureau</title>
+    <style>
+        body { font-family: Arial, sans-serif; line-height: 1.6; color: #333; margin: 0; padding: 0; }
+        .container { max-width: 600px; margin: 0 auto; padding: 20px; }
+        .header { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; padding: 30px; text-align: center; border-radius: 10px 10px 0 0; }
+        .content { background: #f9f9f9; padding: 30px; border-radius: 0 0 10px 10px; }
+        .button { display: inline-block; background: #667eea; color: white; padding: 12px 30px; text-decoration: none; border-radius: 5px; margin: 20px 0; }
+        .footer { text-align: center; margin-top: 30px; color: #666; font-size: 14px; }
+        .status-box { background: #e8f4fd; border-left: 4px solid #2196F3; padding: 15px; margin: 20px 0; }
+        .timeline { background: white; padding: 20px; border-radius: 8px; margin: 20px 0; }
+        .timeline-item { display: flex; align-items: center; margin: 10px 0; }
+        .timeline-dot { width: 12px; height: 12px; background: #667eea; border-radius: 50%; margin-right: 15px; }
+        .timeline-dot.completed { background: #4CAF50; }
+        .timeline-dot.current { background: #FF9800; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🎉 Onboarding Completed!</h1>
+            <p>Thank you for completing your comprehensive onboarding questionnaire</p>
+        </div>
+        
+        <div class="content">
+            <p>Hi {{client_name}},</p>
+            
+            <p>Congratulations! You have successfully completed your 20-question onboarding questionnaire. Your responses have been submitted and are now under review by our team.</p>
+            
+            <div class="status-box">
+                <h3>📋 What happens next?</h3>
+                <p>{{next_steps}}</p>
+            </div>
+            
+            <div class="timeline">
+                <h3>Your Journey Progress</h3>
+                <div class="timeline-item">
+                    <div class="timeline-dot completed"></div>
+                    <span>✅ Consultation completed</span>
+                </div>
+                <div class="timeline-item">
+                    <div class="timeline-dot completed"></div>
+                    <span>✅ Payment verified</span>
+                </div>
+                <div class="timeline-item">
+                    <div class="timeline-dot completed"></div>
+                    <span>✅ Account created</span>
+                </div>
+                <div class="timeline-item">
+                    <div class="timeline-dot completed"></div>
+                    <span>✅ Onboarding questionnaire completed</span>
+                </div>
+                <div class="timeline-item">
+                    <div class="timeline-dot current"></div>
+                    <span>🔄 Profile under review ({{review_timeline}})</span>
+                </div>
+                <div class="timeline-item">
+                    <div class="timeline-dot"></div>
+                    <span>⏳ Full Application Tracker access</span>
+                </div>
+            </div>
+            
+            <h3>📊 Your Onboarding Summary</h3>
+            <p>We've received your comprehensive career profile including:</p>
+            <ul>
+                <li>Current position and experience level</li>
+                <li>Target roles and industries</li>
+                <li>Career timeline and salary expectations</li>
+                <li>Work preferences and company culture fit</li>
+                <li>Location preferences and relocation willingness</li>
+                <li>Key skills and development areas</li>
+                <li>Learning goals and success metrics</li>
+            </ul>
+            
+            <h3>⏰ Review Timeline</h3>
+            <p>Our team will review your profile within <strong>{{review_timeline}}</strong>. Once approved, you'll receive an email notification and gain full access to:</p>
+            <ul>
+                <li>Complete Application Tracker</li>
+                <li>Weekly application analytics</li>
+                <li>Interview preparation resources</li>
+                <li>Personalized career guidance</li>
+                <li>Direct communication with your career concierge</li>
+            </ul>
+            
+            <div class="status-box">
+                <h3>💬 Need Help?</h3>
+                <p>If you have any questions while waiting for your profile review, please don't hesitate to reach out to our support team at <strong>{{support_email}}</strong>.</p>
+            </div>
+            
+            <p>Thank you for choosing Apply Bureau for your career advancement journey!</p>
+            
+            <p>Best regards,<br>
+            <strong>The Apply Bureau Team</strong></p>
+        </div>
+        
+        <div class="footer">
+            <p>Apply Bureau - Your Career Advancement Partner</p>
+            <p>This email was sent regarding your onboarding completion.</p>
+        </div>
+    </div>
+</body>
+</html>

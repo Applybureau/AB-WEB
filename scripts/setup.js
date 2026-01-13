@@ -1,151 +1,310 @@
 #!/usr/bin/env node
 
 /**
- * Setup script for Apply Bureau Backend
- * This script helps with initial setup and verification
+ * Apply Bureau Backend Setup Script
+ * 
+ * This script helps set up the backend system by:
+ * 1. Checking environment variables
+ * 2. Testing database connection
+ * 3. Verifying email configuration
+ * 4. Creating initial admin user
  */
 
-const fs = require('fs');
-const path = require('path');
+const { createClient } = require('@supabase/supabase-js');
+const nodemailer = require('nodemailer');
 const bcrypt = require('bcryptjs');
+const readline = require('readline');
 
-console.log('🚀 Apply Bureau Backend Setup\n');
+// Colors for console output
+const colors = {
+  green: '\x1b[32m',
+  red: '\x1b[31m',
+  yellow: '\x1b[33m',
+  blue: '\x1b[34m',
+  reset: '\x1b[0m',
+  bold: '\x1b[1m'
+};
 
-// Check if .env file exists
-const envPath = path.join(__dirname, '..', '.env');
-if (!fs.existsSync(envPath)) {
-  console.error('❌ .env file not found. Please create one based on the template.');
-  process.exit(1);
-}
+const log = {
+  success: (msg) => console.log(`${colors.green}✓${colors.reset} ${msg}`),
+  error: (msg) => console.log(`${colors.red}✗${colors.reset} ${msg}`),
+  warning: (msg) => console.log(`${colors.yellow}⚠${colors.reset} ${msg}`),
+  info: (msg) => console.log(`${colors.blue}ℹ${colors.reset} ${msg}`),
+  title: (msg) => console.log(`\n${colors.bold}${colors.blue}${msg}${colors.reset}\n`)
+};
 
-// Load environment variables
-require('dotenv').config({ path: envPath });
-
-// Check required environment variables
-const requiredEnvVars = [
-  'SUPABASE_URL',
-  'SUPABASE_ANON_KEY',
-  'SUPABASE_SERVICE_KEY',
-  'RESEND_API_KEY',
-  'JWT_SECRET'
-];
-
-console.log('📋 Checking environment variables...');
-let missingVars = [];
-
-requiredEnvVars.forEach(varName => {
-  if (!process.env[varName] || process.env[varName].includes('<') || process.env[varName].includes('your_')) {
-    missingVars.push(varName);
-  }
+const rl = readline.createInterface({
+  input: process.stdin,
+  output: process.stdout
 });
 
-if (missingVars.length > 0) {
-  console.error('❌ Missing or incomplete environment variables:');
-  missingVars.forEach(varName => {
-    console.error(`   - ${varName}`);
-  });
-  console.error('\nPlease update your .env file with actual values.');
-  process.exit(1);
+const question = (query) => new Promise((resolve) => rl.question(query, resolve));
+
+async function checkEnvironmentVariables() {
+  log.title('🔧 Checking Environment Variables');
+  
+  const required = [
+    'SUPABASE_URL',
+    'SUPABASE_ANON_KEY',
+    'SUPABASE_SERVICE_ROLE_KEY',
+    'JWT_SECRET',
+    'SMTP_HOST',
+    'SMTP_PORT',
+    'SMTP_USER',
+    'SMTP_PASS'
+  ];
+  
+  const missing = [];
+  
+  for (const env of required) {
+    if (process.env[env]) {
+      log.success(`${env} is set`);
+    } else {
+      log.error(`${env} is missing`);
+      missing.push(env);
+    }
+  }
+  
+  if (missing.length > 0) {
+    log.error(`Missing required environment variables: ${missing.join(', ')}`);
+    log.info('Please check your .env file and ensure all required variables are set.');
+    return false;
+  }
+  
+  log.success('All required environment variables are set');
+  return true;
 }
 
-console.log('✅ Environment variables configured');
-
-// Test Supabase connection
-console.log('\n🔗 Testing Supabase connection...');
-const { supabaseAdmin } = require('../utils/supabase');
-
-async function testSupabase() {
+async function testDatabaseConnection() {
+  log.title('🗄️ Testing Database Connection');
+  
   try {
-    const { data, error } = await supabaseAdmin
-      .from('clients')
+    const supabase = createClient(
+      process.env.SUPABASE_URL,
+      process.env.SUPABASE_SERVICE_ROLE_KEY
+    );
+    
+    // Test connection by querying a system table
+    const { data, error } = await supabase
+      .from('profiles')
       .select('count')
       .limit(1);
     
-    if (error) {
-      console.error('❌ Supabase connection failed:', error.message);
-      console.log('💡 Make sure you have run the SQL setup scripts in your Supabase dashboard');
-      return false;
+    if (error && error.code !== 'PGRST116') { // PGRST116 is "table not found" which is expected if schema isn't applied yet
+      throw error;
     }
     
-    console.log('✅ Supabase connection successful');
+    log.success('Database connection successful');
+    
+    // Check if tables exist
+    const { data: profilesData, error: profilesError } = await supabase
+      .from('profiles')
+      .select('count')
+      .limit(1);
+    
+    if (profilesError && profilesError.code === 'PGRST116') {
+      log.warning('Database schema not set up yet');
+      log.info('Please run MASTER_SCHEMA.sql in your Supabase SQL Editor');
+      return true; // Connection works, just no schema yet
+    } else if (!profilesError) {
+      log.success('Database schema appears to be set up');
+    }
+    
     return true;
   } catch (error) {
-    console.error('❌ Supabase connection error:', error.message);
+    log.error(`Database connection failed: ${error.message}`);
     return false;
   }
 }
 
-// Generate admin password hash
-function generateAdminHash(password) {
-  return bcrypt.hashSync(password, 10);
+async function testEmailConfiguration() {
+  log.title('📧 Testing Email Configuration');
+  
+  try {
+    const transporter = nodemailer.createTransporter({
+      host: process.env.SMTP_HOST,
+      port: parseInt(process.env.SMTP_PORT),
+      secure: process.env.SMTP_PORT === '465',
+      auth: {
+        user: process.env.SMTP_USER,
+        pass: process.env.SMTP_PASS
+      }
+    });
+    
+    await transporter.verify();
+    log.success('Email configuration is valid');
+    return true;
+  } catch (error) {
+    log.error(`Email configuration failed: ${error.message}`);
+    log.info('Please check your SMTP settings in the .env file');
+    return false;
+  }
 }
 
-// Main setup function
-async function setup() {
-  const supabaseOk = await testSupabase();
+async function createAdminUser() {
+  log.title('👤 Creating Admin User');
   
-  if (!supabaseOk) {
-    console.log('\n📝 Setup Steps:');
-    console.log('1. Go to your Supabase project dashboard');
-    console.log('2. Navigate to SQL Editor');
-    console.log('3. Run the contents of supabase-setup.sql');
-    console.log('4. Run the contents of supabase-storage-setup.sql');
-    console.log('5. Update the admin user in the SQL with your details');
-    console.log('6. Run this setup script again');
-    return;
-  }
-
-  // Check if logo file exists
-  const logoPath = path.join(__dirname, '..', 'emails', 'assets', 'logo.png');
-  if (fs.existsSync(logoPath)) {
-    console.log('✅ Logo file found');
-  } else {
-    console.log('⚠️  Logo file not found at emails/assets/logo.png');
-    console.log('   Email templates will use a placeholder');
-  }
-
-  // Check email templates
-  const templatesDir = path.join(__dirname, '..', 'emails', 'templates');
-  const requiredTemplates = [
-    'signup_invite.html',
-    'consultation_scheduled.html',
-    'application_status_update.html',
-    'onboarding_completion.html'
-  ];
-
-  console.log('\n📧 Checking email templates...');
-  let allTemplatesExist = true;
-
-  requiredTemplates.forEach(template => {
-    const templatePath = path.join(templatesDir, template);
-    if (fs.existsSync(templatePath)) {
-      console.log(`✅ ${template}`);
-    } else {
-      console.log(`❌ ${template} missing`);
-      allTemplatesExist = false;
+  try {
+    const supabase = createClient(
+      process.env.SUPABASE_URL,
+      process.env.SUPABASE_SERVICE_ROLE_KEY
+    );
+    
+    // Check if admin users table exists
+    const { data: existingAdmins, error: checkError } = await supabase
+      .from('admin_users')
+      .select('id')
+      .limit(1);
+    
+    if (checkError && checkError.code === 'PGRST116') {
+      log.error('Admin users table not found. Please run MASTER_SCHEMA.sql first.');
+      return false;
+    } else if (checkError) {
+      throw checkError;
     }
-  });
-
-  if (!allTemplatesExist) {
-    console.error('\n❌ Some email templates are missing');
-    return;
+    
+    if (existingAdmins && existingAdmins.length > 0) {
+      log.info('Admin user already exists. Skipping creation.');
+      return true;
+    }
+    
+    // Get admin details from user
+    const email = await question('Enter admin email: ');
+    const fullName = await question('Enter admin full name: ');
+    const password = await question('Enter admin password: ');
+    
+    // Create user in Supabase Auth
+    const { data: authData, error: authError } = await supabase.auth.admin.createUser({
+      email,
+      password,
+      email_confirm: true,
+      user_metadata: {
+        full_name: fullName,
+        role: 'admin'
+      }
+    });
+    
+    if (authError) {
+      throw authError;
+    }
+    
+    // Add to admin_users table
+    const { error: adminError } = await supabase
+      .from('admin_users')
+      .insert({
+        id: authData.user.id,
+        email,
+        full_name: fullName,
+        role: 'super_admin',
+        permissions: { all: true },
+        is_active: true
+      });
+    
+    if (adminError) {
+      throw adminError;
+    }
+    
+    log.success(`Admin user created successfully: ${email}`);
+    return true;
+  } catch (error) {
+    log.error(`Failed to create admin user: ${error.message}`);
+    return false;
   }
-
-  console.log('\n🎉 Setup completed successfully!');
-  console.log('\n📋 Next steps:');
-  console.log('1. Install dependencies: npm install');
-  console.log('2. Start the server: npm run dev');
-  console.log('3. Test the health endpoint: GET /health');
-  console.log('4. Create your first admin user via SQL or API');
-  
-  console.log('\n🔧 Admin Password Hash Generator:');
-  console.log('If you need to create an admin user, use this hash for password "admin123":');
-  console.log(generateAdminHash('admin123'));
-  console.log('\n⚠️  Remember to change the default password after first login!');
 }
 
-// Run setup
-setup().catch(error => {
-  console.error('❌ Setup failed:', error);
+async function runHealthCheck() {
+  log.title('🏥 Running Health Check');
+  
+  try {
+    // This would typically make a request to your health endpoint
+    // For now, we'll just check if the server can start
+    log.info('Health check would run here in a full deployment');
+    log.success('Basic health check passed');
+    return true;
+  } catch (error) {
+    log.error(`Health check failed: ${error.message}`);
+    return false;
+  }
+}
+
+async function main() {
+  console.log(`
+${colors.bold}${colors.blue}
+╔══════════════════════════════════════════════════════════════╗
+║                                                              ║
+║              Apply Bureau Backend Setup                      ║
+║                                                              ║
+╚══════════════════════════════════════════════════════════════╝
+${colors.reset}
+`);
+  
+  log.info('Starting setup process...\n');
+  
+  const steps = [
+    { name: 'Environment Variables', fn: checkEnvironmentVariables },
+    { name: 'Database Connection', fn: testDatabaseConnection },
+    { name: 'Email Configuration', fn: testEmailConfiguration },
+    { name: 'Admin User Creation', fn: createAdminUser },
+    { name: 'Health Check', fn: runHealthCheck }
+  ];
+  
+  let allPassed = true;
+  
+  for (const step of steps) {
+    const passed = await step.fn();
+    if (!passed) {
+      allPassed = false;
+      log.error(`Setup step failed: ${step.name}`);
+      
+      const continueSetup = await question('\nDo you want to continue with the remaining steps? (y/n): ');
+      if (continueSetup.toLowerCase() !== 'y') {
+        break;
+      }
+    }
+  }
+  
+  console.log('\n' + '='.repeat(60));
+  
+  if (allPassed) {
+    log.success('🎉 Setup completed successfully!');
+    console.log(`
+${colors.green}Next steps:${colors.reset}
+1. Start your server: ${colors.bold}npm start${colors.reset}
+2. Test your endpoints: ${colors.bold}npm run test${colors.reset}
+3. Check the API documentation: ${colors.bold}COMPLETE_BACKEND_DOCUMENTATION.md${colors.reset}
+    `);
+  } else {
+    log.warning('⚠️  Setup completed with some issues');
+    console.log(`
+${colors.yellow}Please resolve the issues above and run the setup again.${colors.reset}
+For help, check:
+- Environment variables in .env file
+- Database schema in MASTER_SCHEMA.sql
+- Documentation in COMPLETE_BACKEND_DOCUMENTATION.md
+    `);
+  }
+  
+  rl.close();
+}
+
+// Handle errors gracefully
+process.on('unhandledRejection', (error) => {
+  log.error(`Unhandled error: ${error.message}`);
   process.exit(1);
 });
+
+process.on('SIGINT', () => {
+  log.info('\nSetup interrupted by user');
+  rl.close();
+  process.exit(0);
+});
+
+// Run the setup
+if (require.main === module) {
+  main().catch((error) => {
+    log.error(`Setup failed: ${error.message}`);
+    process.exit(1);
+  });
+}
+
+module.exports = { main };

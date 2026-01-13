@@ -1,0 +1,113 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Strategy Call Request Received - Apply Bureau</title>
+    <style>
+        body { font-family: Arial, sans-serif; line-height: 1.6; color: #333; margin: 0; padding: 20px; background-color: #f4f4f4; }
+        .container { max-width: 600px; margin: 0 auto; background: white; padding: 30px; border-radius: 10px; box-shadow: 0 0 10px rgba(0,0,0,0.1); }
+        .header { text-align: center; margin-bottom: 30px; }
+        .logo { font-size: 24px; font-weight: bold; color: #2c3e50; margin-bottom: 10px; }
+        .title { color: #3498db; font-size: 20px; margin-bottom: 20px; }
+        .confirmation-banner { background: linear-gradient(135deg, #3498db, #2980b9); color: white; padding: 20px; border-radius: 10px; text-align: center; margin-bottom: 25px; }
+        .section { margin-bottom: 25px; }
+        .section h3 { color: #2c3e50; border-bottom: 2px solid #3498db; padding-bottom: 5px; }
+        .info-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; margin: 15px 0; }
+        .info-item { background: #f8f9fa; padding: 10px; border-radius: 5px; }
+        .info-label { font-weight: bold; color: #2c3e50; }
+        .time-slots { background: #e8f4fd; padding: 15px; border-radius: 8px; margin: 15px 0; }
+        .time-slot { background: white; padding: 10px; margin: 8px 0; border-radius: 5px; border-left: 4px solid #3498db; }
+        .call-purpose { background: #f0f8ff; padding: 20px; border-radius: 8px; margin: 20px 0; border: 1px solid #3498db; }
+        .next-steps { background: #e8f5e8; padding: 20px; border-radius: 8px; margin: 20px 0; }
+        .footer { text-align: center; margin-top: 30px; padding-top: 20px; border-top: 1px solid #eee; color: #666; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <div class="logo">Apply Bureau</div>
+            <div class="title">📞 Strategy Call Request Received</div>
+        </div>
+
+        <div class="confirmation-banner">
+            <h2 style="margin: 0;">Hi {{client_name}}!</h2>
+            <p style="margin: 10px 0 0 0;">{{confirmation_message}}</p>
+        </div>
+
+        <div class="section">
+            <h3>📋 Your Request Details</h3>
+            <div class="info-grid">
+                <div class="info-item">
+                    <div class="info-label">Package:</div>
+                    {{tier}}
+                </div>
+                <div class="info-item">
+                    <div class="info-label">Call Type:</div>
+                    Strategy & Role Alignment Call
+                </div>
+                <div class="info-item">
+                    <div class="info-label">Preparation Notes:</div>
+                    {{preparation_notes}}
+                </div>
+                <div class="info-item">
+                    <div class="info-label">Topics to Discuss:</div>
+                    {{specific_topics}}
+                </div>
+            </div>
+        </div>
+
+        <div class="section">
+            <h3>📅 Your Preferred Time Slots</h3>
+            <div class="time-slots">
+                <div class="time-slot">
+                    <strong>Option 1:</strong> {{preferred_times.0}} ({{timezone}})
+                </div>
+                <div class="time-slot">
+                    <strong>Option 2:</strong> {{preferred_times.1}} ({{timezone}})
+                </div>
+                <div class="time-slot">
+                    <strong>Option 3:</strong> {{preferred_times.2}} ({{timezone}})
+                </div>
+            </div>
+        </div>
+
+        <div class="call-purpose">
+            <h3 style="margin-top: 0; color: #2c3e50;">🎯 What is the Strategy Call?</h3>
+            <p>{{call_purpose}}</p>
+            <p><strong>During this call, we will:</strong></p>
+            <ul>
+                <li>Review your onboarding questionnaire responses</li>
+                <li>Finalize your resume direction and positioning strategy</li>
+                <li>Define your target roles and ideal company profiles</li>
+                <li>Set search boundaries and application criteria</li>
+                <li>Create your personalized job search strategy</li>
+                <li>Plan the execution timeline for your applications</li>
+            </ul>
+        </div>
+
+        <div class="next-steps">
+            <h3 style="margin-top: 0; color: #2c3e50;">⏭️ What Happens Next?</h3>
+            <p>{{next_steps}}</p>
+            <p><strong>Timeline:</strong> We typically confirm strategy calls within 24 hours of your request.</p>
+        </div>
+
+        <div class="section">
+            <h3>📝 How to Prepare</h3>
+            <ul>
+                <li>Review your onboarding questionnaire responses</li>
+                <li>Prepare specific questions about your job search strategy</li>
+                <li>Have your current resume ready for discussion</li>
+                <li>Think about your ideal role and company preferences</li>
+                <li>Consider any specific challenges you're facing in your job search</li>
+            </ul>
+        </div>
+
+        <div class="footer">
+            <p><strong>Apply Bureau Client Portal</strong></p>
+            <p>Questions? Reply to this email or contact support@applybureau.com</p>
+            <p>You can view your request status in your client dashboard.</p>
+        </div>
+    </div>
+</body>
+</html>

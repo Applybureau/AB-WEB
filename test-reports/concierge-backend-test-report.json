@@ -1,0 +1,77 @@
+{
+  "timestamp": "2026-01-13T23:29:44.185Z",
+  "baseUrl": "https://apply-bureau-backend.vercel.app",
+  "totalTests": 15,
+  "passed": 2,
+  "failed": 13,
+  "successRate": 13,
+  "results": [
+    {
+      "name": "Health Check",
+      "status": "PASSED"
+    },
+    {
+      "name": "Route Imports",
+      "status": "FAILED"
+    },
+    {
+      "name": "Public Consultation Submission",
+      "status": "FAILED"
+    },
+    {
+      "name": "Admin Login",
+      "status": "PASSED"
+    },
+    {
+      "name": "Admin Concierge Consultation List",
+      "status": "FAILED"
+    },
+    {
+      "name": "Admin Consultation Confirmation",
+      "status": "FAILED"
+    },
+    {
+      "name": "Payment Confirmation & Invite",
+      "status": "FAILED"
+    },
+    {
+      "name": "Client Registration (Payment-Gated)",
+      "status": "FAILED"
+    },
+    {
+      "name": "Onboarding Status Check",
+      "status": "FAILED"
+    },
+    {
+      "name": "20-Question Onboarding",
+      "status": "FAILED"
+    },
+    {
+      "name": "Application Tracker Discovery Mode",
+      "status": "FAILED"
+    },
+    {
+      "name": "Admin Onboarding Approval",
+      "status": "FAILED"
+    },
+    {
+      "name": "Application Tracker Access",
+      "status": "FAILED"
+    },
+    {
+      "name": "Weekly Application Grouping",
+      "status": "FAILED"
+    },
+    {
+      "name": "Notification System",
+      "status": "FAILED"
+    }
+  ],
+  "testData": {
+    "consultationId": "",
+    "registrationToken": "Not generated",
+    "onboardingId": "",
+    "adminToken": "Valid",
+    "clientToken": "Invalid"
+  }
+}

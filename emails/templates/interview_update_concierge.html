@@ -1,0 +1,104 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Interview Request Received - Apply Bureau</title>
+</head>
+<body style="margin: 0; padding: 0; font-family: Arial, sans-serif; background-color: #f8fafc;">
+    <table width="100%" cellpadding="0" cellspacing="0" style="background-color: #f8fafc; padding: 20px;">
+        <tr>
+            <td align="center">
+                <table width="600" cellpadding="0" cellspacing="0" style="background-color: #ffffff; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.1);">
+                    <!-- Header -->
+                    <tr>
+                        <td style="background: linear-gradient(135deg, #10b981 0%, #06b6d4 100%); padding: 30px; text-align: center; border-radius: 8px 8px 0 0;">
+                            <h1 style="color: #ffffff; margin: 0; font-size: 28px; font-weight: bold;">Apply Bureau</h1>
+                            <p style="color: #ffffff; margin: 10px 0 0 0; font-size: 16px; opacity: 0.9;">Professional Career Consulting</p>
+                        </td>
+                    </tr>
+                    
+                    <!-- Content -->
+                    <tr>
+                        <td style="padding: 40px 30px;">
+                            <h2 style="color: #1f2937; margin: 0 0 20px 0; font-size: 24px;">Interview Request Received! 🎉</h2>
+                            
+                            <p style="color: #4b5563; font-size: 16px; line-height: 1.6; margin: 0 0 20px 0;">
+                                Dear {{client_name}},
+                            </p>
+                            
+                            <p style="color: #4b5563; font-size: 16px; line-height: 1.6; margin: 0 0 20px 0;">
+                                Excellent news! An interview request has been received for your application. This is a significant step forward in your job search journey.
+                            </p>
+                            
+                            <!-- Application Details -->
+                            <table width="100%" cellpadding="0" cellspacing="0" style="background-color: #f0fdf4; border: 2px solid #10b981; border-radius: 8px; margin: 20px 0;">
+                                <tr>
+                                    <td style="padding: 20px;">
+                                        <h3 style="color: #10b981; margin: 0 0 15px 0; font-size: 18px;">📋 Application Details</h3>
+                                        <p style="color: #1f2937; margin: 5px 0; font-size: 16px;"><strong>Company:</strong> {{company_name}}</p>
+                                        <p style="color: #1f2937; margin: 5px 0; font-size: 16px;"><strong>Position:</strong> {{job_title}}</p>
+                                        {{#if interview_date}}
+                                        <p style="color: #1f2937; margin: 5px 0; font-size: 16px;"><strong>Interview Date:</strong> {{interview_date}}</p>
+                                        {{/if}}
+                                    </td>
+                                </tr>
+                            </table>
+                            
+                            <div style="background-color: #fef3c7; border-left: 4px solid #f59e0b; padding: 15px; margin: 20px 0;">
+                                <h4 style="color: #92400e; margin: 0 0 10px 0; font-size: 16px;">📧 Check Your Application Email</h4>
+                                <p style="color: #92400e; margin: 0; font-size: 14px; line-height: 1.5;">
+                                    Please check your job search email account ({{job_search_email}}) for the interview invitation and any preparation materials or instructions from the employer.
+                                </p>
+                            </div>
+                            
+                            <h3 style="color: #1f2937; margin: 30px 0 15px 0; font-size: 18px;">🎯 Next Steps</h3>
+                            <ol style="color: #4b5563; font-size: 16px; line-height: 1.6; margin: 0 0 20px 0; padding-left: 20px;">
+                                <li><strong>Check your email:</strong> Look for the interview invitation in your job search email account</li>
+                                <li><strong>Respond promptly:</strong> Confirm your availability within 24 hours if possible</li>
+                                <li><strong>Prepare thoroughly:</strong> Research the company and practice common interview questions</li>
+                                <li><strong>Update your tracker:</strong> Log into your dashboard to see the updated application status</li>
+                            </ol>
+                            
+                            <h3 style="color: #1f2937; margin: 30px 0 15px 0; font-size: 18px;">💡 Interview Preparation Tips</h3>
+                            <ul style="color: #4b5563; font-size: 16px; line-height: 1.6; margin: 0 0 20px 0; padding-left: 20px;">
+                                <li>Review the job description and align your experience with their requirements</li>
+                                <li>Research the company's recent news, culture, and values</li>
+                                <li>Prepare specific examples using the STAR method (Situation, Task, Action, Result)</li>
+                                <li>Have thoughtful questions ready about the role and company</li>
+                                <li>Test your technology if it's a virtual interview</li>
+                            </ul>
+                            
+                            <div style="background-color: #eff6ff; border-left: 4px solid #3b82f6; padding: 15px; margin: 20px 0;">
+                                <p style="color: #1e40af; margin: 0; font-size: 14px; line-height: 1.5;">
+                                    <strong>Need interview coaching?</strong> Contact your Apply Bureau team if you'd like to schedule a preparation session. We're here to help you succeed!
+                                </p>
+                            </div>
+                            
+                            <p style="color: #4b5563; font-size: 16px; line-height: 1.6; margin: 20px 0;">
+                                {{message}}
+                            </p>
+                            
+                            <p style="color: #4b5563; font-size: 16px; line-height: 1.6; margin: 0;">
+                                Congratulations on this opportunity, and best of luck with your interview!<br><br>
+                                <strong>Apply Bureau Team</strong><br>
+                                Professional Career Consulting
+                            </p>
+                        </td>
+                    </tr>
+                    
+                    <!-- Footer -->
+                    <tr>
+                        <td style="background-color: #f9fafb; padding: 20px 30px; text-align: center; border-radius: 0 0 8px 8px; border-top: 1px solid #e5e7eb;">
+                            <p style="color: #6b7280; font-size: 14px; margin: 0;">
+                                Apply Bureau - Professional Career Consulting<br>
+                                Helping professionals achieve their career goals
+                            </p>
+                        </td>
+                    </tr>
+                </table>
+            </td>
+        </tr>
+    </table>
+</body>
+</html>
