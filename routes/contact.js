@@ -12,29 +12,27 @@ router.post('/', async (req, res) => {
       firstName,
       lastName,
       full_name,
+      name,
       email,
       phone,
       subject,
       message,
       company,
-      country
+      country,
+      position
     } = req.body;
 
-    // Support both field name formats (firstName/lastName OR full_name)
-    let first_name = firstName;
-    let last_name = lastName;
+    // Support multiple field name formats
+    let contactName = name || full_name;
     
-    if (!first_name && full_name) {
-      // Split full_name into first and last
-      const nameParts = full_name.trim().split(' ');
-      first_name = nameParts[0];
-      last_name = nameParts.slice(1).join(' ') || '';
+    if (!contactName && (firstName || lastName)) {
+      contactName = `${firstName || ''} ${lastName || ''}`.trim();
     }
 
     // Validate required fields
-    if (!first_name || !email || !message) {
+    if (!contactName || !email || !message) {
       return res.status(400).json({ 
-        error: 'Missing required fields: name (firstName/lastName or full_name), email, message' 
+        error: 'Missing required fields: name, email, message' 
       });
     }
 
@@ -48,14 +46,14 @@ router.post('/', async (req, res) => {
     const { data: contact, error } = await supabaseAdmin
       .from('contact_submissions')
       .insert({
-        first_name,
-        last_name,
+        name: contactName,
         email,
         phone,
         subject: subject || 'General Inquiry',
         message,
         company,
         country,
+        position,
         status: 'new'
       })
       .select()
