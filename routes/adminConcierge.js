@@ -488,16 +488,53 @@ router.post('/onboarding/:id/approve', async (req, res) => {
     const { id } = req.params;
     const { admin_notes } = req.body;
 
+    console.log('🔍 Admin approval request:', { id, admin_notes, timestamp: new Date().toISOString() });
+
     // Get onboarding record
     const { data: onboarding, error: fetchError } = await supabaseAdmin
       .from('client_onboarding_20q')
-      .select('*, registered_users!inner(id, email, full_name)')
+      .select('*')
       .eq('id', id)
       .single();
 
+    console.log('🔍 Onboarding lookup result:', { 
+      found: !!onboarding, 
+      error: fetchError?.message,
+      errorCode: fetchError?.code,
+      id: id
+    });
+
     if (fetchError || !onboarding) {
+      console.log('❌ Onboarding record not found for ID:', id);
       return res.status(404).json({ error: 'Onboarding record not found' });
     }
+
+    console.log('✅ Onboarding record found:', { 
+      id: onboarding.id, 
+      user_id: onboarding.user_id, 
+      status: onboarding.execution_status 
+    });
+
+    // Get user data separately
+    const { data: user, error: userError } = await supabaseAdmin
+      .from('registered_users')
+      .select('id, email, full_name')
+      .eq('id', onboarding.user_id)
+      .single();
+
+    console.log('🔍 User lookup result:', { 
+      found: !!user, 
+      error: userError?.message,
+      user_id: onboarding.user_id
+    });
+
+    if (userError || !user) {
+      console.log('❌ User not found for ID:', onboarding.user_id);
+      return res.status(404).json({ error: 'User not found' });
+    }
+
+    // Combine the data
+    onboarding.registered_users = user;
 
     // Update onboarding execution status
     const { error: onboardingUpdateError } = await supabaseAdmin

@@ -13,28 +13,26 @@ const jwt = require('jsonwebtoken');
  * all required fields are preserved and status transitions are valid.
  */
 
+// Define generators outside describe block for export
+const consultationGenerator = fc.record({
+  full_name: fc.string({ minLength: 2, maxLength: 100 }),
+  email: fc.emailAddress(),
+  phone: fc.option(fc.string({ minLength: 10, maxLength: 20 })),
+  linkedin_url: fc.option(fc.webUrl()),
+  role_targets: fc.string({ minLength: 5, maxLength: 200 }),
+  location_preferences: fc.string({ minLength: 3, maxLength: 100 }),
+  minimum_salary: fc.option(fc.string({ minLength: 5, maxLength: 20 })),
+  target_market: fc.string({ minLength: 3, maxLength: 50 }),
+  employment_status: fc.constantFrom('Currently Employed', 'Unemployed', 'Student', 'Freelancer'),
+  package_interest: fc.constantFrom('Tier 1', 'Tier 2', 'Tier 3'),
+  area_of_concern: fc.string({ minLength: 10, maxLength: 500 }),
+  consultation_window: fc.string({ minLength: 5, maxLength: 50 })
+});
+
+const adminNotesGenerator = fc.string({ minLength: 10, maxLength: 200 });
+const passwordGenerator = fc.string({ minLength: 8, maxLength: 50 });
+
 describe('Consultation Lifecycle Integrity Property Tests', () => {
-  // Generator for valid consultation data
-  const consultationGenerator = fc.record({
-    full_name: fc.string({ minLength: 2, maxLength: 100 }),
-    email: fc.emailAddress(),
-    phone: fc.option(fc.string({ minLength: 10, maxLength: 20 })),
-    linkedin_url: fc.option(fc.webUrl()),
-    role_targets: fc.string({ minLength: 5, maxLength: 200 }),
-    location_preferences: fc.string({ minLength: 3, maxLength: 100 }),
-    minimum_salary: fc.option(fc.string({ minLength: 5, maxLength: 20 })),
-    target_market: fc.string({ minLength: 3, maxLength: 50 }),
-    employment_status: fc.constantFrom('Currently Employed', 'Unemployed', 'Student', 'Freelancer'),
-    package_interest: fc.constantFrom('Tier 1', 'Tier 2', 'Tier 3'),
-    area_of_concern: fc.string({ minLength: 10, maxLength: 500 }),
-    consultation_window: fc.string({ minLength: 5, maxLength: 50 })
-  });
-
-  // Generator for admin notes
-  const adminNotesGenerator = fc.string({ minLength: 10, maxLength: 200 });
-
-  // Generator for passwords
-  const passwordGenerator = fc.string({ minLength: 8, maxLength: 50 });
 
   beforeAll(async () => {
     // Ensure test environment is clean

@@ -178,11 +178,20 @@ router.get('/weekly', authenticateToken, isProfileUnlocked, async (req, res) => 
 // POST /api/applications - Create new application (admin only)
 router.post('/', authenticateToken, requireAdmin, ApplicationTrackingController.createApplication);
 
-// PATCH /api/applications/:id - Update application (CONCIERGE INTERVIEW NOTIFICATIONS)
+// PATCH /api/applications/:id - Update application (ENHANCED INTERVIEW NOTIFICATIONS)
 router.patch('/:id', authenticateToken, async (req, res) => {
   try {
     const { id } = req.params;
-    const { status, interview_date, offer_amount, notes, admin_notes } = req.body;
+    const { 
+      status, 
+      interview_date, 
+      offer_amount, 
+      notes, 
+      admin_notes,
+      resume_version_used,
+      job_posting_link,
+      application_method
+    } = req.body;
 
     // Get current application
     const { data: currentApp, error: fetchError } = await supabaseAdmin
@@ -207,11 +216,15 @@ router.patch('/:id', authenticateToken, async (req, res) => {
     if (offer_amount) updateData.offer_amount = offer_amount;
     if (notes !== undefined) updateData.notes = notes;
     if (admin_notes !== undefined) updateData.admin_notes = admin_notes;
+    if (resume_version_used) updateData.resume_version_used = resume_version_used;
+    if (job_posting_link) updateData.job_posting_link = job_posting_link;
+    if (application_method) updateData.application_method = application_method;
 
-    // CONCIERGE FEATURE: Automated interview notification
-    const isInterviewUpdate = status === 'interview' && currentApp.status !== 'interview';
+    // ENHANCED INTERVIEW NOTIFICATION LOGIC
+    const isInterviewUpdate = status === 'interview_requested' && currentApp.status !== 'interview_requested';
     if (isInterviewUpdate) {
       updateData.interview_update_sent = true;
+      updateData.interview_notification_sent_at = new Date().toISOString();
     }
 
     const { data: application, error: updateError } = await supabaseAdmin
@@ -226,7 +239,7 @@ router.patch('/:id', authenticateToken, async (req, res) => {
       return res.status(500).json({ error: 'Failed to update application' });
     }
 
-    // CONCIERGE FEATURE: Send automated interview email
+    // ENHANCED INTERVIEW EMAIL NOTIFICATION
     if (isInterviewUpdate) {
       try {
         // Get client details
@@ -237,14 +250,17 @@ router.patch('/:id', authenticateToken, async (req, res) => {
           .single();
 
         if (client) {
-          await sendEmail(client.email, 'interview_update_concierge', {
+          await sendEmail(client.email, 'interview_update_enhanced', {
             client_name: client.full_name,
-            company_name: application.company_name,
-            job_title: application.job_title,
+            company_name: application.company,
+            job_title: application.role,
             job_search_email: client.job_search_email || client.email,
             interview_date: interview_date || 'To be scheduled',
-            next_steps: 'Check your job search email account for interview details and preparation materials.',
-            message: 'An interview request has been received for your application. Please check your application email account for further details.'
+            job_posting_link: application.job_posting_link || 'Check your application email',
+            application_date: application.applied_date || application.created_at,
+            next_steps: 'Please check the application email account for details. We are monitoring alongside you and will support next steps as needed.',
+            message: 'An interview request has been received for a role we applied to on your behalf.',
+            support_message: 'We are monitoring alongside you and will support next steps as needed.'
           });
 
           // Create notification
@@ -268,7 +284,9 @@ router.patch('/:id', authenticateToken, async (req, res) => {
     res.json({
       message: 'Application updated successfully',
       application,
-      interview_notification_sent: isInterviewUpdate
+      interview_notification_sent: isInterviewUpdate,
+      status_changed: status && status !== currentApp.status,
+      previous_status: currentApp.status
     });
   } catch (error) {
     console.error('Update application error:', error);

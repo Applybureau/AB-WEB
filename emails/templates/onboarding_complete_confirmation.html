@@ -1,0 +1,84 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Onboarding Complete - Apply Bureau</title>
+    <style>
+        body { font-family: Arial, sans-serif; line-height: 1.6; color: #333; margin: 0; padding: 0; }
+        .container { max-width: 600px; margin: 0 auto; padding: 20px; }
+        .header { background: linear-gradient(135deg, #10b981, #06b6d4); color: white; padding: 30px; text-align: center; border-radius: 8px 8px 0 0; }
+        .content { background: #ffffff; padding: 30px; border: 1px solid #e5e7eb; }
+        .footer { background: #f9fafb; padding: 20px; text-align: center; border-radius: 0 0 8px 8px; font-size: 14px; color: #6b7280; }
+        .button { display: inline-block; background: #10b981; color: white; padding: 12px 24px; text-decoration: none; border-radius: 6px; margin: 10px 0; }
+        .highlight { background: #f0f9ff; padding: 15px; border-left: 4px solid #06b6d4; margin: 20px 0; }
+        .success-box { background: #f0fdf4; border: 1px solid #10b981; padding: 20px; border-radius: 8px; margin: 20px 0; }
+        .timeline { background: #f9fafb; padding: 15px; border-radius: 6px; margin: 15px 0; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>✅ Onboarding Complete</h1>
+            <p>Apply Bureau Onboarding Team</p>
+        </div>
+        
+        <div class="content">
+            <p>Hi {{client_name}},</p>
+            
+            <div class="success-box">
+                <h3>🎉 Your onboarding has been completed successfully.</h3>
+                <p>Our team is preparing your application setup.</p>
+            </div>
+            
+            {{#if custom_message}}
+            <div class="highlight">
+                <h4>Personal Message from {{admin_name}}:</h4>
+                <p>{{custom_message}}</p>
+            </div>
+            {{/if}}
+            
+            <h3>📅 What Happens Next</h3>
+            <div class="timeline">
+                <p><strong>✓ Onboarding Review:</strong> Complete</p>
+                <p><strong>🔄 Application Setup:</strong> In Progress</p>
+                <p><strong>📝 Resume Alignment:</strong> Starting Soon</p>
+                <p><strong>🎯 Role Mapping:</strong> Starting Soon</p>
+                <p><strong>📤 Applications Begin:</strong> Within {{expectation_timeline}}</p>
+            </div>
+            
+            <h3>⏰ Timeline Expectation</h3>
+            <p><strong>{{next_steps}}</strong></p>
+            
+            <div class="highlight">
+                <p><strong>{{support_message}}</strong></p>
+            </div>
+            
+            <h3>📊 Your Dashboard</h3>
+            <p>You can now access your full dashboard and application tracker:</p>
+            
+            <p><a href="{{dashboard_url}}" class="button">Access Dashboard</a></p>
+            <p><a href="{{application_tracker_url}}" class="button">View Application Tracker</a></p>
+            
+            <h3>🔔 What to Expect</h3>
+            <ul>
+                <li>Application activity will begin within {{expectation_timeline}}</li>
+                <li>Updates will appear directly in your dashboard</li>
+                <li>You'll receive notifications for interview requests</li>
+                <li>No action is required on your end at this time</li>
+            </ul>
+            
+            <p>We're excited to help you achieve your career goals!</p>
+            
+            <p>Best regards,<br>
+            <strong>{{admin_name}}<br>
+            Apply Bureau Onboarding Team</strong></p>
+        </div>
+        
+        <div class="footer">
+            <p>Apply Bureau - Professional Career Consulting</p>
+            <p>Your application journey starts now. We're here to support you every step of the way.</p>
+        </div>
+    </div>
+</body>
+</html>

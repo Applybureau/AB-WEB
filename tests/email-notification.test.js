@@ -47,8 +47,7 @@ describe('Email Notification Property Tests', () => {
           area_of_concern: fc.string({ minLength: 5, maxLength: 200 })
         }),
         // Generate status change sequence
-        fc.constantFrom('approved', 'rejected')
-      ),
+        fc.constantFrom('approved', 'rejected'),
       async (consultationData, finalStatus) => {
         // Step 1: Create consultation request - should trigger submission emails (Requirements 1.2, 1.3)
         const { data: consultation, error: createError } = await supabaseAdmin
@@ -196,6 +195,6 @@ describe('Email Notification Property Tests', () => {
         // (This is implicit in the synchronous nature of our test, but validates the requirement)
         expect(sendEmail).toHaveBeenCalled();
       }
-    ), { numRuns: 100 });
-  });
+    );
+  }, { numRuns: 100 });
 });

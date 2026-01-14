@@ -38,16 +38,20 @@ const meetingsRoutes = require('./routes/meetings');
 const consultationRequestsRoutes = require('./routes/consultationRequests');
 const pdfViewerRoutes = require('./routes/pdfViewer');
 
-// New Concierge Routes
+// New Enhanced Client Flow Routes
+const strategyCallsRoutes = require('./routes/strategyCalls');
+const clientDashboardRoutes = require('./routes/clientDashboard');
+const clientUploadsRoutes = require('./routes/clientUploads');
+const adminOnboardingTriggersRoutes = require('./routes/adminOnboardingTriggers');
+
+// Concierge Routes
 const publicConsultationsRoutes = require('./routes/publicConsultations');
 const adminConciergeRoutes = require('./routes/adminConcierge');
 const clientRegistrationRoutes = require('./routes/clientRegistration');
 const clientOnboarding20QRoutes = require('./routes/clientOnboarding20Q');
-const strategyCallsRoutes = require('./routes/strategyCalls');
 
 // Client Pipeline Routes
 const clientProfileRoutes = require('./routes/clientProfile');
-const clientDashboardRoutes = require('./routes/clientDashboard');
 
 // API Specification Compliant Routes
 const consultationRequestsSpecRoutes = require('./routes/consultationRequestsSpec');
@@ -253,12 +257,17 @@ app.use('/api/contact-requests', contactRequestsRoutes); // Contact form submiss
 app.use('/api/meetings', meetingsRoutes); // Meeting scheduling
 app.use('/api/pdf', pdfViewerRoutes); // PDF viewing and embedding
 
-// New Concierge Routes (Updated for Concierge Model)
+// New Enhanced Client Flow Routes
+app.use('/api/strategy-calls', strategyCallsRoutes); // Strategy call booking system
+app.use('/api/client/dashboard', clientDashboardRoutes); // Client dashboard with status tracking
+app.use('/api/client/uploads', clientUploadsRoutes); // File upload system (resume, LinkedIn, portfolio)
+app.use('/api/admin/onboarding-triggers', adminOnboardingTriggersRoutes); // Admin onboarding confirmation triggers
+
+// Existing Concierge Routes (Updated for New Flow)
 app.use('/api/public-consultations', publicConsultationsRoutes); // Simplified public consultation requests
 app.use('/api/admin/concierge', adminConciergeRoutes); // Admin gatekeeper controls
 app.use('/api/client-registration', clientRegistrationRoutes); // Payment-gated client registration
 app.use('/api/client/onboarding-20q', clientOnboarding20QRoutes); // 20-question onboarding with approval
-app.use('/api/strategy-calls', strategyCallsRoutes); // Strategy call booking system
 
 // Workflow Features Routes (no conflicts)
 const onboardingWorkflowRoutes = require('./routes/onboardingWorkflow');

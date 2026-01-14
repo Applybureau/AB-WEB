@@ -23,43 +23,50 @@ router.get('/validate-token/:token', async (req, res) => {
       });
     }
 
-    if (decoded.type !== 'client_registration') {
+    if (decoded.type !== 'registration') {
       return res.status(400).json({ 
         valid: false, 
         error: 'Invalid token type' 
       });
     }
 
-    // Check consultation request
-    const { data: consultation, error } = await supabaseAdmin
-      .from('consultation_requests')
-      .select('id, full_name, email, token_expires_at, token_used, payment_received, selected_tier')
-      .eq('id', decoded.consultationId)
-      .eq('registration_token', token)
+    // Check user record from registered_users using email from decoded token
+    const { data: user, error } = await supabaseAdmin
+      .from('registered_users')
+      .select('id, full_name, email, token_expires_at, token_used, payment_confirmed, registration_token')
+      .eq('email', decoded.email)
       .single();
 
-    if (error || !consultation) {
+    if (error || !user) {
       return res.status(400).json({ 
         valid: false, 
         error: 'Token not found' 
       });
     }
 
-    if (consultation.token_used) {
+    // Verify that the token matches what's stored in the database
+    if (user.registration_token !== token) {
+      return res.status(400).json({ 
+        valid: false, 
+        error: 'Token mismatch - please use the token from your email' 
+      });
+    }
+
+    if (user.token_used) {
       return res.status(400).json({ 
         valid: false, 
         error: 'Token already used' 
       });
     }
 
-    if (!consultation.payment_received) {
+    if (!user.payment_confirmed) {
       return res.status(400).json({ 
         valid: false, 
-        error: 'Payment not received - registration not available' 
+        error: 'Payment not confirmed - registration not available' 
       });
     }
 
-    if (new Date() > new Date(consultation.token_expires_at)) {
+    if (new Date() > new Date(user.token_expires_at)) {
       return res.status(400).json({ 
         valid: false, 
         error: 'Token expired' 
@@ -68,11 +75,10 @@ router.get('/validate-token/:token', async (req, res) => {
 
     res.json({
       valid: true,
-      consultation: {
-        full_name: consultation.full_name,
-        email: consultation.email,
-        selected_tier: consultation.selected_tier,
-        expires_at: consultation.token_expires_at
+      client: {
+        full_name: user.full_name,
+        email: user.email,
+        expires_at: user.token_expires_at
       }
     });
   } catch (error) {
@@ -114,114 +120,96 @@ router.post('/register', async (req, res) => {
       return res.status(400).json({ error: 'Invalid or expired registration token' });
     }
 
-    if (decoded.type !== 'client_registration') {
+    if (decoded.type !== 'registration') {
       return res.status(400).json({ error: 'Invalid registration token type' });
     }
 
-    // Get consultation request
-    const { data: consultation, error: consultationError } = await supabaseAdmin
-      .from('consultation_requests')
+    // Get user record from registered_users using email from decoded token
+    const { data: user, error: userError } = await supabaseAdmin
+      .from('registered_users')
       .select('*')
-      .eq('id', decoded.consultationId)
-      .eq('registration_token', token)
+      .eq('email', decoded.email)
       .eq('token_used', false)
-      .eq('payment_received', true) // Must have payment
+      .eq('payment_confirmed', true) // Must have payment confirmed
       .single();
 
-    if (consultationError || !consultation) {
-      return res.status(400).json({ error: 'Invalid registration token or payment not received' });
+    if (userError || !user) {
+      return res.status(400).json({ error: 'Invalid registration token or payment not confirmed' });
+    }
+
+    // Verify that the token matches what's stored in the database
+    if (user.registration_token !== token) {
+      return res.status(400).json({ error: 'Token mismatch - please use the token from your email' });
     }
 
     // Check if token is expired
-    if (new Date() > new Date(consultation.token_expires_at)) {
+    if (new Date() > new Date(user.token_expires_at)) {
       return res.status(400).json({ error: 'Registration token has expired' });
     }
 
     // Hash password
     const hashedPassword = await bcrypt.hash(password, 12);
 
-    // Create client account
-    const { data: client, error: clientError } = await supabaseAdmin
+    // Update user account with password and mark token as used
+    const { data: updatedUser, error: updateError } = await supabaseAdmin
       .from('registered_users')
-      .insert({
-        lead_id: consultation.id,
-        email: consultation.email,
+      .update({
         passcode_hash: hashedPassword,
-        full_name: consultation.full_name,
-        role: 'client',
+        token_used: true,
         is_active: true,
-        tier: consultation.selected_tier,
-        payment_received: true,
-        onboarding_completed: false
+        updated_at: new Date().toISOString()
       })
+      .eq('id', user.id)
       .select()
       .single();
 
-    if (clientError) {
-      console.error('Error creating client account:', clientError);
-      return res.status(500).json({ error: 'Failed to create client account' });
+    if (updateError) {
+      console.error('Error updating user account:', updateError);
+      return res.status(500).json({ error: 'Failed to create account' });
     }
-
-    // Update consultation request
-    await supabaseAdmin
-      .from('consultation_requests')
-      .update({
-        status: 'registered',
-        workflow_stage: 'client_registered_awaiting_onboarding',
-        registered_at: new Date().toISOString(),
-        user_id: client.id,
-        token_used: true
-      })
-      .eq('id', consultation.id);
-
     // Generate auth token
     const authToken = jwt.sign({
-      userId: client.id,
-      email: client.email,
-      role: client.role,
-      tier: client.tier,
+      userId: updatedUser.id,
+      id: updatedUser.id,
+      email: updatedUser.email,
+      role: updatedUser.role,
+      full_name: updatedUser.full_name,
       exp: Math.floor(Date.now() / 1000) + (24 * 60 * 60) // 24 hours
     }, process.env.JWT_SECRET);
 
     // Send welcome email
     try {
-      await sendEmail(client.email, 'client_portal_welcome', {
-        client_name: client.full_name,
-        selected_tier: consultation.selected_tier || 'Your selected package',
+      await sendEmail(updatedUser.email, 'client_portal_welcome', {
+        client_name: updatedUser.full_name,
         dashboard_url: buildUrl('/client/dashboard'),
-        onboarding_url: buildUrl('/client/onboarding'),
-        next_steps: 'Complete your onboarding questionnaire to unlock all features and schedule your strategy call.',
-        support_email: 'support@applybureau.com',
-        portal_features: [
-          'Complete onboarding questionnaire',
-          'Upload your resume and documents',
-          'Provide job-search email credentials',
-          'Schedule your Strategy & Role Alignment Call'
-        ]
+        next_steps: 'Complete your onboarding questionnaire to unlock your Application Tracker.',
+        login_url: buildUrl('/login')
       });
     } catch (emailError) {
       console.error('Failed to send welcome email:', emailError);
+      // Don't fail registration if email fails
     }
 
-    // Create welcome notification
+    // Create notification
     try {
-      await NotificationHelpers.clientRegistrationComplete(client.id, consultation);
+      await NotificationHelpers.clientRegistrationComplete(updatedUser.id, updatedUser);
     } catch (notificationError) {
-      console.error('Failed to create welcome notification:', notificationError);
+      console.error('Failed to create registration notification:', notificationError);
     }
 
     res.status(201).json({
-      message: 'Registration completed successfully',
+      message: 'Account created successfully',
       token: authToken,
       user: {
-        id: client.id,
-        email: client.email,
-        full_name: client.full_name,
-        role: client.role,
-        tier: client.tier,
-        onboarding_completed: false
+        id: updatedUser.id,
+        email: updatedUser.email,
+        full_name: updatedUser.full_name,
+        role: updatedUser.role,
+        profile_unlocked: updatedUser.profile_unlocked,
+        payment_confirmed: updatedUser.payment_confirmed,
+        onboarding_completed: updatedUser.onboarding_completed
       },
-      redirect_to: '/client/onboarding'
+      next_steps: 'Complete your onboarding questionnaire to unlock your Application Tracker.'
     });
   } catch (error) {
     console.error('Client registration error:', error);

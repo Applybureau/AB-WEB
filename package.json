@@ -17,6 +17,7 @@
     "verify-setup": "node scripts/verify-clean-setup.js",
     "create-admin": "node scripts/create-admin.js",
     "create-first-admin": "node scripts/create-first-admin.js",
+    "final-check": "node final-check.js",
     "lint": "echo 'Linting...' && echo 'No linter configured'",
     "audit": "npm audit --audit-level=moderate",
     "security-check": "npm audit",

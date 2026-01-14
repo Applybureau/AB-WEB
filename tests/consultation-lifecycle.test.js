@@ -53,8 +53,7 @@ describe('Consultation Lifecycle Property Tests', () => {
           consultation_window: fc.string({ minLength: 5, maxLength: 50 })
         }),
         // Generate status transitions
-        fc.array(fc.constantFrom('approved', 'rejected'), { minLength: 1, maxLength: 1 })
-      ),
+        fc.array(fc.constantFrom('approved', 'rejected'), { minLength: 1, maxLength: 1 }),
       async (consultationData, statusTransitions) => {
         // Step 1: Create consultation request (Requirements 1.1, 1.4)
         const { data: consultation, error: createError } = await supabaseAdmin
@@ -142,6 +141,6 @@ describe('Consultation Lifecycle Property Tests', () => {
         expect(finalConsultation.email).toBe(consultationData.email);
         expect(finalConsultation.role_targets).toBe(consultationData.role_targets);
       }
-    ), { numRuns: 100 });
-  });
+    );
+  }, { numRuns: 100 });
 });

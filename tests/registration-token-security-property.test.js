@@ -13,15 +13,17 @@ const { supabaseAdmin } = require('../utils/supabase');
  * becomes invalid after use.
  */
 
-describe('Registration Token Security Property Tests', () => {
-  const consultationGenerator = fc.record({
-    full_name: fc.string({ minLength: 2, maxLength: 100 }),
-    email: fc.emailAddress(),
-    role_targets: fc.string({ minLength: 5, maxLength: 200 }),
-    package_interest: fc.constantFrom('Tier 1', 'Tier 2', 'Tier 3')
-  });
+// Define generators outside describe block for export
+const consultationGenerator = fc.record({
+  full_name: fc.string({ minLength: 2, maxLength: 100 }),
+  email: fc.emailAddress(),
+  role_targets: fc.string({ minLength: 5, maxLength: 200 }),
+  package_interest: fc.constantFrom('Tier 1', 'Tier 2', 'Tier 3')
+});
 
-  const passwordGenerator = fc.string({ minLength: 8, maxLength: 50 });
+const passwordGenerator = fc.string({ minLength: 8, maxLength: 50 });
+
+describe('Registration Token Security Property Tests', () => {
 
   beforeAll(() => {
     // Ensure JWT_SECRET is set for tests

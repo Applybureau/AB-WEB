@@ -17,22 +17,24 @@ const { sendEmail } = require('../utils/email');
 jest.mock('../utils/email');
 const mockSendEmail = sendEmail;
 
-describe('Email Notification Consistency Property Tests', () => {
-  const consultationGenerator = fc.record({
-    full_name: fc.string({ minLength: 2, maxLength: 100 }),
-    email: fc.emailAddress(),
-    role_targets: fc.string({ minLength: 5, maxLength: 200 }),
-    package_interest: fc.constantFrom('Tier 1', 'Tier 2', 'Tier 3'),
-    area_of_concern: fc.string({ minLength: 10, maxLength: 500 })
-  });
+// Define generators outside describe block for export
+const consultationGenerator = fc.record({
+  full_name: fc.string({ minLength: 2, maxLength: 100 }),
+  email: fc.emailAddress(),
+  role_targets: fc.string({ minLength: 5, maxLength: 200 }),
+  package_interest: fc.constantFrom('Tier 1', 'Tier 2', 'Tier 3'),
+  area_of_concern: fc.string({ minLength: 10, maxLength: 500 })
+});
 
-  const statusChangeGenerator = fc.constantFrom(
-    'submitted',
-    'under_review', 
-    'approved',
-    'rejected',
-    'registered'
-  );
+const statusChangeGenerator = fc.constantFrom(
+  'submitted',
+  'under_review', 
+  'approved',
+  'rejected',
+  'registered'
+);
+
+describe('Email Notification Consistency Property Tests', () => {
 
   beforeEach(() => {
     // Reset mock before each test

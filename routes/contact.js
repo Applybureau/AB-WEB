@@ -1,7 +1,7 @@
 const express = require('express');
 const { supabaseAdmin } = require('../utils/supabase');
 const { sendEmail } = require('../utils/email');
-const { authenticateToken } = require('../middleware/auth');
+const { authenticateToken } = require('../utils/auth');
 
 const router = express.Router();
 

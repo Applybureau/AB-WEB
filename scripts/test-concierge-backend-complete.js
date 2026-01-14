@@ -1,11 +1,11 @@
+require('dotenv').config();
 const axios = require('axios');
 const fs = require('fs');
 const path = require('path');
+const { supabaseAdmin } = require('../utils/supabase');
 
 // Configuration
-const BASE_URL = process.env.NODE_ENV === 'production' 
-  ? 'https://apply-bureau-backend.vercel.app'
-  : 'http://localhost:3000';
+const BASE_URL = 'http://localhost:3000'; // Always use localhost for testing
 
 console.log('🧪 APPLY BUREAU CONCIERGE BACKEND - COMPREHENSIVE TEST');
 console.log('=====================================================');
@@ -323,11 +323,28 @@ async function testApplicationTrackerDiscoveryMode() {
 async function testOnboardingApproval() {
   console.log('✅ Testing Admin Onboarding Approval...');
   
+  // Get the most recent onboarding ID from database instead of using the stored one
+  const { data: recentOnboarding, error: fetchError } = await supabaseAdmin
+    .from('client_onboarding_20q')
+    .select('id')
+    .eq('execution_status', 'pending_approval')
+    .order('created_at', { ascending: false })
+    .limit(1)
+    .single();
+  
+  if (fetchError || !recentOnboarding) {
+    console.log('❌ No pending onboarding found for approval');
+    return false;
+  }
+  
+  const currentOnboardingId = recentOnboarding.id;
+  console.log(`   Using onboarding ID: ${currentOnboardingId}`);
+  
   const approvalData = {
     admin_notes: 'Excellent onboarding responses. Client is well-prepared and has clear goals. Approved for Application Tracker access.'
   };
   
-  const result = await apiRequest('POST', `/api/admin/concierge/onboarding/${onboardingId}/approve`, approvalData, adminToken);
+  const result = await apiRequest('POST', `/api/admin/concierge/onboarding/${currentOnboardingId}/approve`, approvalData, adminToken);
   
   if (result.success) {
     console.log('✅ Onboarding approval successful');

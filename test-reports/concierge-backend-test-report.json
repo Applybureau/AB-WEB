@@ -1,10 +1,10 @@
 {
-  "timestamp": "2026-01-13T23:29:44.185Z",
-  "baseUrl": "https://apply-bureau-backend.vercel.app",
+  "timestamp": "2026-01-14T07:22:59.681Z",
+  "baseUrl": "http://localhost:3000",
   "totalTests": 15,
-  "passed": 2,
-  "failed": 13,
-  "successRate": 13,
+  "passed": 12,
+  "failed": 3,
+  "successRate": 80,
   "results": [
     {
       "name": "Health Check",
@@ -12,11 +12,11 @@
     },
     {
       "name": "Route Imports",
-      "status": "FAILED"
+      "status": "PASSED"
     },
     {
       "name": "Public Consultation Submission",
-      "status": "FAILED"
+      "status": "PASSED"
     },
     {
       "name": "Admin Login",
@@ -24,31 +24,31 @@
     },
     {
       "name": "Admin Concierge Consultation List",
-      "status": "FAILED"
+      "status": "PASSED"
     },
     {
       "name": "Admin Consultation Confirmation",
-      "status": "FAILED"
+      "status": "PASSED"
     },
     {
       "name": "Payment Confirmation & Invite",
-      "status": "FAILED"
+      "status": "PASSED"
     },
     {
       "name": "Client Registration (Payment-Gated)",
-      "status": "FAILED"
+      "status": "PASSED"
     },
     {
       "name": "Onboarding Status Check",
-      "status": "FAILED"
+      "status": "PASSED"
     },
     {
       "name": "20-Question Onboarding",
-      "status": "FAILED"
+      "status": "PASSED"
     },
     {
       "name": "Application Tracker Discovery Mode",
-      "status": "FAILED"
+      "status": "PASSED"
     },
     {
       "name": "Admin Onboarding Approval",
@@ -64,14 +64,14 @@
     },
     {
       "name": "Notification System",
-      "status": "FAILED"
+      "status": "PASSED"
     }
   ],
   "testData": {
-    "consultationId": "",
-    "registrationToken": "Not generated",
-    "onboardingId": "",
+    "consultationId": "ec3a1432-d4c6-4061-a26b-3e22da435ed8",
+    "registrationToken": "Generated",
+    "onboardingId": "9133d91c-65f2-4599-9a29-830b58e5240e",
     "adminToken": "Valid",
-    "clientToken": "Invalid"
+    "clientToken": "Valid"
   }
 }
