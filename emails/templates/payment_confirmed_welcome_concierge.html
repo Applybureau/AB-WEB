@@ -1,115 +1,137 @@
+<!-- SUBJECT: Payment Confirmed - Welcome to Apply Bureau! - Apply Bureau -->
 <!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Payment Confirmed - Welcome to Apply Bureau</title>
+    <title>Payment Confirmed</title>
 </head>
-<body style="margin: 0; padding: 0; font-family: Arial, sans-serif; background-color: #f8fafc;">
-    <table width="100%" cellpadding="0" cellspacing="0" style="background-color: #f8fafc; padding: 20px;">
+<body style="margin: 0; padding: 0; font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif; background-color: #0F172A;">
+    <table border="0" cellpadding="0" cellspacing="0" width="100%" style="table-layout: fixed;">
         <tr>
-            <td align="center">
-                <table width="600" cellpadding="0" cellspacing="0" style="background-color: #ffffff; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.1);">
-                    <!-- Header -->
+            <td align="center" style="padding: 40px 20px;">
+                <table border="0" cellpadding="0" cellspacing="0" width="600" style="max-width: 600px; background-color: #1E293B; border-radius: 12px; overflow: hidden; box-shadow: 0 4px 6px rgba(0, 0, 0, 0.3);">
+                    
+                    <!-- Logo Header -->
                     <tr>
-                        <td style="background: linear-gradient(135deg, #10b981 0%, #06b6d4 100%); padding: 30px; text-align: center; border-radius: 8px 8px 0 0;">
-                            <h1 style="color: #ffffff; margin: 0; font-size: 28px; font-weight: bold;">Apply Bureau</h1>
-                            <p style="color: #ffffff; margin: 10px 0 0 0; font-size: 16px; opacity: 0.9;">Professional Career Consulting</p>
+                        <td align="center" style="padding: 40px 40px 30px 40px; background: linear-gradient(135deg, #1E293B 0%, #334155 100%);">
+                            <img src="https://res.cloudinary.com/dbehg8jsv/image/upload/v1767902182/AB_Logo-removebg-preview_mlji6p.png" alt="Apply Bureau" width="200" height="auto" style="display: block; border: 0; max-width: 100%;">
                         </td>
                     </tr>
                     
-                    <!-- Content -->
+                    <!-- Main Content -->
                     <tr>
-                        <td style="padding: 40px 30px;">
-                            <h2 style="color: #1f2937; margin: 0 0 20px 0; font-size: 24px;">Welcome to Apply Bureau! 🎉</h2>
+                        <td style="padding: 40px; background-color: #1E293B;">
                             
-                            <p style="color: #4b5563; font-size: 16px; line-height: 1.6; margin: 0 0 20px 0;">
-                                Dear {{client_name}},
+                            <!-- Title -->
+                            <h1 style="color: #F1F5F9; font-size: 28px; font-weight: 700; margin: 0 0 24px 0; text-align: center; line-height: 1.3;">
+                                🎉 Welcome to Apply Bureau!
+                            </h1>
+                            
+                            <!-- Greeting -->
+                            <p style="color: #E2E8F0; font-size: 16px; line-height: 1.7; margin: 0 0 20px 0;">
+                                Hello {{client_name}},
                             </p>
                             
-                            <p style="color: #4b5563; font-size: 16px; line-height: 1.6; margin: 0 0 20px 0;">
-                                Congratulations! Your payment has been confirmed and you're now officially part of the Apply Bureau family. We're excited to help you achieve your career goals.
+                            <!-- Main Message -->
+                            <p style="color: #CBD5E1; font-size: 16px; line-height: 1.7; margin: 0 0 24px 0;">
+                                Congratulations! Your payment has been confirmed and you're now officially part of the Apply Bureau family. We're excited to help you land your dream job!
                             </p>
                             
-                            <!-- Payment Details -->
-                            <table width="100%" cellpadding="0" cellspacing="0" style="background-color: #f0fdf4; border: 2px solid #10b981; border-radius: 8px; margin: 20px 0;">
+                            <!-- Payment Details Box -->
+                            <table border="0" cellpadding="0" cellspacing="0" width="100%" style="margin: 0 0 24px 0; background-color: #334155; border-radius: 8px; border: 1px solid #475569;">
                                 <tr>
-                                    <td style="padding: 20px;">
-                                        <h3 style="color: #10b981; margin: 0 0 15px 0; font-size: 18px;">💳 Payment Confirmed</h3>
-                                        <p style="color: #1f2937; margin: 5px 0; font-size: 16px;"><strong>Amount:</strong> ${{payment_amount}}</p>
-                                        <p style="color: #1f2937; margin: 5px 0; font-size: 16px;"><strong>Method:</strong> {{payment_method}}</p>
-                                        <p style="color: #1f2937; margin: 5px 0; font-size: 16px;"><strong>Reference:</strong> {{payment_reference}}</p>
-                                        <p style="color: #1f2937; margin: 5px 0; font-size: 16px;"><strong>Confirmed by:</strong> {{admin_name}}</p>
+                                    <td style="padding: 24px;">
+                                        <p style="color: #94A3B8; font-size: 12px; margin: 0 0 16px 0; text-transform: uppercase; letter-spacing: 1px; font-weight: 600;">PAYMENT DETAILS</p>
+                                        
+                                        <p style="color: #E2E8F0; font-size: 14px; margin: 0 0 12px 0; line-height: 1.6;">
+                                            <strong style="color: #F1F5F9;">Amount:</strong><br>
+                                            <span style="color: #10B981; font-size: 18px; font-weight: 600;">${{payment_amount}} CAD</span>
+                                        </p>
+                                        
+                                        <p style="color: #E2E8F0; font-size: 14px; margin: 0 0 12px 0; line-height: 1.6;">
+                                            <strong style="color: #F1F5F9;">Payment Method:</strong><br>
+                                            <span style="color: #CBD5E1;">{{payment_method}}</span>
+                                        </p>
+                                        
+                                        <p style="color: #E2E8F0; font-size: 14px; margin: 0; line-height: 1.6;">
+                                            <strong style="color: #F1F5F9;">Reference:</strong><br>
+                                            <span style="color: #CBD5E1;">{{payment_reference}}</span>
+                                        </p>
                                     </td>
                                 </tr>
                             </table>
                             
-                            <h3 style="color: #1f2937; margin: 30px 0 15px 0; font-size: 18px;">🚀 Next Steps</h3>
+                            <!-- Registration Link Button -->
+                            <table border="0" cellpadding="0" cellspacing="0" width="100%" style="margin: 0 0 24px 0;">
+                                <tr>
+                                    <td align="center">
+                                        <a href="{{registration_url}}" style="display: inline-block; padding: 16px 40px; background: linear-gradient(135deg, #10B981 0%, #059669 100%); color: #FFFFFF; text-decoration: none; border-radius: 8px; font-weight: 600; font-size: 16px; box-shadow: 0 4px 6px rgba(16, 185, 129, 0.3);">
+                                            Create Your Account
+                                        </a>
+                                    </td>
+                                </tr>
+                            </table>
                             
-                            <div style="background-color: #fef3c7; border-left: 4px solid #f59e0b; padding: 15px; margin: 20px 0;">
-                                <h4 style="color: #92400e; margin: 0 0 10px 0; font-size: 16px;">1. Create Your Account</h4>
-                                <p style="color: #92400e; margin: 0 0 15px 0; font-size: 14px; line-height: 1.5;">
-                                    Click the button below to create your secure client portal account. This link expires on {{token_expiry}}.
-                                </p>
-                                <table cellpadding="0" cellspacing="0">
-                                    <tr>
-                                        <td style="background-color: #f59e0b; border-radius: 6px;">
-                                            <a href="{{registration_url}}" style="display: inline-block; padding: 12px 24px; color: #ffffff; text-decoration: none; font-weight: bold; font-size: 16px;">Create My Account</a>
-                                        </td>
-                                    </tr>
-                                </table>
-                            </div>
+                            <!-- Important Notice -->
+                            <table border="0" cellpadding="0" cellspacing="0" width="100%" style="margin: 0 0 24px 0; background-color: #FEF3C7; border-radius: 8px; border: 1px solid #FCD34D;">
+                                <tr>
+                                    <td style="padding: 16px 20px;">
+                                        <p style="color: #92400E; font-size: 14px; margin: 0; line-height: 1.6;">
+                                            <strong>⚠️ Important:</strong> This registration link is exclusive to you and expires on <strong>{{token_expiry}}</strong>. Please create your account before this date.
+                                        </p>
+                                    </td>
+                                </tr>
+                            </table>
                             
-                            <div style="background-color: #eff6ff; border-left: 4px solid #3b82f6; padding: 15px; margin: 20px 0;">
-                                <h4 style="color: #1e40af; margin: 0 0 10px 0; font-size: 16px;">2. Complete Your Onboarding</h4>
-                                <p style="color: #1e40af; margin: 0; font-size: 14px; line-height: 1.5;">
-                                    After creating your account, you'll complete a comprehensive 20-question onboarding questionnaire to help us understand your career goals and preferences.
-                                </p>
-                            </div>
+                            <!-- Next Steps -->
+                            <table border="0" cellpadding="0" cellspacing="0" width="100%" style="margin: 0 0 24px 0; background-color: #10B981; background: linear-gradient(135deg, #10B981 0%, #059669 100%); border-radius: 8px;">
+                                <tr>
+                                    <td style="padding: 20px 24px;">
+                                        <p style="color: #FFFFFF; font-size: 14px; font-weight: 600; margin: 0 0 12px 0;">NEXT STEPS:</p>
+                                        <p style="color: #F0FDF4; font-size: 14px; margin: 0 0 8px 0; line-height: 1.6;">
+                                            1️⃣ Click the button above to create your account
+                                        </p>
+                                        <p style="color: #F0FDF4; font-size: 14px; margin: 0 0 8px 0; line-height: 1.6;">
+                                            2️⃣ Complete your onboarding profile (20 questions)
+                                        </p>
+                                        <p style="color: #F0FDF4; font-size: 14px; margin: 0 0 8px 0; line-height: 1.6;">
+                                            3️⃣ Upload your resume and documents
+                                        </p>
+                                        <p style="color: #F0FDF4; font-size: 14px; margin: 0; line-height: 1.6;">
+                                            4️⃣ We'll review and unlock your dashboard
+                                        </p>
+                                    </td>
+                                </tr>
+                            </table>
                             
-                            <div style="background-color: #f3e8ff; border-left: 4px solid #8b5cf6; padding: 15px; margin: 20px 0;">
-                                <h4 style="color: #6b21a8; margin: 0 0 10px 0; font-size: 16px;">3. Profile Activation</h4>
-                                <p style="color: #6b21a8; margin: 0; font-size: 14px; line-height: 1.5;">
-                                    Our team will review your onboarding responses and activate your profile, unlocking your Application Tracker and full dashboard features.
-                                </p>
-                            </div>
-                            
-                            <h3 style="color: #1f2937; margin: 30px 0 15px 0; font-size: 18px;">What You'll Get Access To</h3>
-                            <ul style="color: #4b5563; font-size: 16px; line-height: 1.6; margin: 0 0 20px 0; padding-left: 20px;">
-                                <li><strong>Personal Application Tracker:</strong> Monitor all your job applications in one place</li>
-                                <li><strong>Weekly Application Goals:</strong> Stay on track with personalized targets</li>
-                                <li><strong>Strategy Calls:</strong> Regular check-ins to optimize your approach</li>
-                                <li><strong>Resume & Interview Support:</strong> Professional guidance when you need it</li>
-                                <li><strong>Real-time Notifications:</strong> Stay updated on your application progress</li>
-                            </ul>
-                            
-                            <div style="background-color: #fef2f2; border-left: 4px solid #ef4444; padding: 15px; margin: 20px 0;">
-                                <p style="color: #dc2626; margin: 0; font-size: 14px; line-height: 1.5;">
-                                    <strong>Important:</strong> Your registration link expires in 7 days ({{token_expiry}}). Please create your account as soon as possible to avoid any delays in starting your program.
-                                </p>
-                            </div>
-                            
-                            <p style="color: #4b5563; font-size: 16px; line-height: 1.6; margin: 20px 0;">
-                                We're here to support you every step of the way. If you have any questions or need assistance, don't hesitate to reach out.
+                            <!-- Additional Info -->
+                            <p style="color: #CBD5E1; font-size: 16px; line-height: 1.7; margin: 0 0 24px 0;">
+                                {{next_steps}}
                             </p>
                             
-                            <p style="color: #4b5563; font-size: 16px; line-height: 1.6; margin: 0;">
-                                Welcome aboard!<br>
-                                <strong>{{admin_name}}</strong><br>
-                                Apply Bureau Team
+                            <!-- Closing -->
+                            <p style="color: #CBD5E1; font-size: 16px; line-height: 1.7; margin: 0;">
+                                Best regards,<br>
+                                <strong style="color: #F1F5F9;">{{admin_name}}</strong><br>
+                                <span style="color: #94A3B8; font-size: 14px;">Apply Bureau Team</span>
                             </p>
+                            
                         </td>
                     </tr>
                     
                     <!-- Footer -->
                     <tr>
-                        <td style="background-color: #f9fafb; padding: 20px 30px; text-align: center; border-radius: 0 0 8px 8px; border-top: 1px solid #e5e7eb;">
-                            <p style="color: #6b7280; font-size: 14px; margin: 0;">
-                                Apply Bureau - Professional Career Consulting<br>
-                                Helping professionals achieve their career goals
+                        <td style="padding: 30px 40px; background-color: #0F172A; border-top: 1px solid #334155;">
+                            <p style="color: #64748B; font-size: 14px; line-height: 1.6; margin: 0 0 10px 0; text-align: center;">
+                                Questions? Contact us at <a href="mailto:support@applybureau.com" style="color: #10B981; text-decoration: none;">support@applybureau.com</a>
+                            </p>
+                            <p style="color: #475569; font-size: 12px; margin: 0; text-align: center;">
+                                &copy; 2026 Apply Bureau. All rights reserved.
                             </p>
                         </td>
                     </tr>
+                    
                 </table>
             </td>
         </tr>

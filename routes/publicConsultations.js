@@ -73,6 +73,10 @@ router.post('/', async (req, res) => {
     try {
       await sendEmail(email, 'consultation_request_received', {
         client_name: full_name,
+        role_targets: role_targets || 'Not specified',
+        package_interest: package_interest || 'Not specified',
+        country: country || 'Not specified',
+        employment_status: employment_status || 'Not specified',
         request_id: consultation.id,
         message: message || 'No message provided',
         preferred_slots: preferred_slots || [],

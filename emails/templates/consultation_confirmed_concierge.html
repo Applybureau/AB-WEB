@@ -1,102 +1,129 @@
+<!-- SUBJECT: Your Consultation is Confirmed! - Apply Bureau -->
 <!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Consultation Confirmed - Apply Bureau</title>
+    <title>Consultation Confirmed</title>
 </head>
-<body style="margin: 0; padding: 0; font-family: Arial, sans-serif; background-color: #f8fafc;">
-    <table width="100%" cellpadding="0" cellspacing="0" style="background-color: #f8fafc; padding: 20px;">
+<body style="margin: 0; padding: 0; font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif; background-color: #0F172A;">
+    <table border="0" cellpadding="0" cellspacing="0" width="100%" style="table-layout: fixed;">
         <tr>
-            <td align="center">
-                <table width="600" cellpadding="0" cellspacing="0" style="background-color: #ffffff; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.1);">
-                    <!-- Header -->
+            <td align="center" style="padding: 40px 20px;">
+                <table border="0" cellpadding="0" cellspacing="0" width="600" style="max-width: 600px; background-color: #1E293B; border-radius: 12px; overflow: hidden; box-shadow: 0 4px 6px rgba(0, 0, 0, 0.3);">
+                    
+                    <!-- Logo Header -->
                     <tr>
-                        <td style="background: linear-gradient(135deg, #10b981 0%, #06b6d4 100%); padding: 30px; text-align: center; border-radius: 8px 8px 0 0;">
-                            <h1 style="color: #ffffff; margin: 0; font-size: 28px; font-weight: bold;">Apply Bureau</h1>
-                            <p style="color: #ffffff; margin: 10px 0 0 0; font-size: 16px; opacity: 0.9;">Professional Career Consulting</p>
+                        <td align="center" style="padding: 40px 40px 30px 40px; background: linear-gradient(135deg, #1E293B 0%, #334155 100%);">
+                            <img src="https://res.cloudinary.com/dbehg8jsv/image/upload/v1767902182/AB_Logo-removebg-preview_mlji6p.png" alt="Apply Bureau" width="200" height="auto" style="display: block; border: 0; max-width: 100%;">
                         </td>
                     </tr>
                     
-                    <!-- Content -->
+                    <!-- Main Content -->
                     <tr>
-                        <td style="padding: 40px 30px;">
-                            <h2 style="color: #1f2937; margin: 0 0 20px 0; font-size: 24px;">Consultation Confirmed! 🎉</h2>
+                        <td style="padding: 40px; background-color: #1E293B;">
                             
-                            <p style="color: #4b5563; font-size: 16px; line-height: 1.6; margin: 0 0 20px 0;">
-                                Dear {{client_name}},
+                            <!-- Title -->
+                            <h1 style="color: #F1F5F9; font-size: 28px; font-weight: 700; margin: 0 0 24px 0; text-align: center; line-height: 1.3;">
+                                🎉 Your Consultation is Confirmed!
+                            </h1>
+                            
+                            <!-- Greeting -->
+                            <p style="color: #E2E8F0; font-size: 16px; line-height: 1.7; margin: 0 0 20px 0;">
+                                Hello {{client_name}},
                             </p>
                             
-                            <p style="color: #4b5563; font-size: 16px; line-height: 1.6; margin: 0 0 20px 0;">
-                                Great news! Your consultation has been confirmed for:
+                            <!-- Main Message -->
+                            <p style="color: #CBD5E1; font-size: 16px; line-height: 1.7; margin: 0 0 24px 0;">
+                                Great news! Your consultation has been confirmed. We're looking forward to speaking with you about your career goals and how we can help you land your dream job.
                             </p>
                             
-                            <!-- Confirmation Details -->
-                            <table width="100%" cellpadding="0" cellspacing="0" style="background-color: #f0fdf4; border: 2px solid #10b981; border-radius: 8px; margin: 20px 0;">
+                            <!-- Meeting Details Box -->
+                            <table border="0" cellpadding="0" cellspacing="0" width="100%" style="margin: 0 0 24px 0; background-color: #334155; border-radius: 8px; border: 1px solid #475569;">
                                 <tr>
-                                    <td style="padding: 20px;">
-                                        <h3 style="color: #10b981; margin: 0 0 15px 0; font-size: 18px;">📅 Consultation Details</h3>
-                                        <p style="color: #1f2937; margin: 5px 0; font-size: 16px;"><strong>Date:</strong> {{confirmed_date}}</p>
-                                        <p style="color: #1f2937; margin: 5px 0; font-size: 16px;"><strong>Time:</strong> {{confirmed_time}}</p>
-                                        <p style="color: #1f2937; margin: 5px 0; font-size: 16px;"><strong>Duration:</strong> 30-45 minutes</p>
-                                        {{#if meeting_link}}
-                                        <p style="color: #1f2937; margin: 15px 0 5px 0; font-size: 16px;"><strong>Meeting Link:</strong></p>
-                                        <a href="{{meeting_link}}" style="color: #10b981; text-decoration: none; font-weight: bold;">{{meeting_link}}</a>
-                                        {{/if}}
+                                    <td style="padding: 24px;">
+                                        <p style="color: #94A3B8; font-size: 12px; margin: 0 0 16px 0; text-transform: uppercase; letter-spacing: 1px; font-weight: 600;">MEETING DETAILS</p>
+                                        
+                                        <p style="color: #E2E8F0; font-size: 14px; margin: 0 0 12px 0; line-height: 1.6;">
+                                            <strong style="color: #F1F5F9;">📅 Date:</strong><br>
+                                            <span style="color: #CBD5E1;">{{confirmed_date}}</span>
+                                        </p>
+                                        
+                                        <p style="color: #E2E8F0; font-size: 14px; margin: 0 0 12px 0; line-height: 1.6;">
+                                            <strong style="color: #F1F5F9;">🕐 Time:</strong><br>
+                                            <span style="color: #CBD5E1;">{{confirmed_time}}</span>
+                                        </p>
+                                        
+                                        <p style="color: #E2E8F0; font-size: 14px; margin: 0; line-height: 1.6;">
+                                            <strong style="color: #F1F5F9;">💬 Details:</strong><br>
+                                            <span style="color: #CBD5E1;">{{meeting_details}}</span>
+                                        </p>
                                     </td>
                                 </tr>
                             </table>
                             
-                            {{#if meeting_details}}
-                            <div style="background-color: #fef3c7; border-left: 4px solid #f59e0b; padding: 15px; margin: 20px 0;">
-                                <h4 style="color: #92400e; margin: 0 0 10px 0; font-size: 16px;">📋 Meeting Details</h4>
-                                <p style="color: #92400e; margin: 0; font-size: 14px; line-height: 1.5;">{{meeting_details}}</p>
-                            </div>
-                            {{/if}}
+                            <!-- Meeting Link Button -->
+                            <table border="0" cellpadding="0" cellspacing="0" width="100%" style="margin: 0 0 24px 0;">
+                                <tr>
+                                    <td align="center">
+                                        <a href="{{meeting_link}}" style="display: inline-block; padding: 16px 40px; background: linear-gradient(135deg, #10B981 0%, #059669 100%); color: #FFFFFF; text-decoration: none; border-radius: 8px; font-weight: 600; font-size: 16px; box-shadow: 0 4px 6px rgba(16, 185, 129, 0.3);">
+                                            Join Meeting
+                                        </a>
+                                    </td>
+                                </tr>
+                            </table>
                             
-                            <h3 style="color: #1f2937; margin: 30px 0 15px 0; font-size: 18px;">What to Expect</h3>
-                            <ul style="color: #4b5563; font-size: 16px; line-height: 1.6; margin: 0 0 20px 0; padding-left: 20px;">
-                                <li>Discussion of your career goals and current situation</li>
-                                <li>Overview of Apply Bureau's services and approach</li>
-                                <li>Assessment of mutual fit for our programs</li>
-                                <li>Next steps if we decide to move forward together</li>
-                            </ul>
+                            <!-- Preparation Tips -->
+                            <table border="0" cellpadding="0" cellspacing="0" width="100%" style="margin: 0 0 24px 0; background-color: #10B981; background: linear-gradient(135deg, #10B981 0%, #059669 100%); border-radius: 8px;">
+                                <tr>
+                                    <td style="padding: 20px 24px;">
+                                        <p style="color: #FFFFFF; font-size: 14px; font-weight: 600; margin: 0 0 12px 0;">PREPARE FOR YOUR CONSULTATION:</p>
+                                        <p style="color: #F0FDF4; font-size: 14px; margin: 0 0 8px 0; line-height: 1.6;">
+                                            ✓ Have your resume ready to discuss
+                                        </p>
+                                        <p style="color: #F0FDF4; font-size: 14px; margin: 0 0 8px 0; line-height: 1.6;">
+                                            ✓ Prepare questions about your job search
+                                        </p>
+                                        <p style="color: #F0FDF4; font-size: 14px; margin: 0 0 8px 0; line-height: 1.6;">
+                                            ✓ Be ready to discuss your career goals
+                                        </p>
+                                        <p style="color: #F0FDF4; font-size: 14px; margin: 0; line-height: 1.6;">
+                                            ✓ Test your internet connection beforehand
+                                        </p>
+                                    </td>
+                                </tr>
+                            </table>
                             
-                            <h3 style="color: #1f2937; margin: 30px 0 15px 0; font-size: 18px;">How to Prepare</h3>
-                            <ul style="color: #4b5563; font-size: 16px; line-height: 1.6; margin: 0 0 20px 0; padding-left: 20px;">
-                                <li>Have your current resume ready (if available)</li>
-                                <li>Think about your target roles and companies</li>
-                                <li>Prepare questions about our services</li>
-                                <li>Ensure you have a quiet space for the call</li>
-                            </ul>
-                            
-                            <div style="background-color: #eff6ff; border-left: 4px solid #3b82f6; padding: 15px; margin: 20px 0;">
-                                <p style="color: #1e40af; margin: 0; font-size: 14px; line-height: 1.5;">
-                                    <strong>Need to reschedule?</strong> Please contact us at least 24 hours in advance. We understand that schedules can change!
-                                </p>
-                            </div>
-                            
-                            <p style="color: #4b5563; font-size: 16px; line-height: 1.6; margin: 20px 0;">
-                                We're looking forward to speaking with you and learning more about your career goals.
+                            <!-- Next Steps -->
+                            <p style="color: #CBD5E1; font-size: 16px; line-height: 1.7; margin: 0 0 16px 0;">
+                                <strong style="color: #F1F5F9;">What happens next:</strong>
+                            </p>
+                            <p style="color: #CBD5E1; font-size: 16px; line-height: 1.7; margin: 0 0 24px 0;">
+                                {{next_steps}}
                             </p>
                             
-                            <p style="color: #4b5563; font-size: 16px; line-height: 1.6; margin: 0;">
+                            <!-- Closing -->
+                            <p style="color: #CBD5E1; font-size: 16px; line-height: 1.7; margin: 0;">
                                 Best regards,<br>
-                                <strong>{{admin_name}}</strong><br>
-                                Apply Bureau Team
+                                <strong style="color: #F1F5F9;">{{admin_name}}</strong><br>
+                                <span style="color: #94A3B8; font-size: 14px;">Apply Bureau Team</span>
                             </p>
+                            
                         </td>
                     </tr>
                     
                     <!-- Footer -->
                     <tr>
-                        <td style="background-color: #f9fafb; padding: 20px 30px; text-align: center; border-radius: 0 0 8px 8px; border-top: 1px solid #e5e7eb;">
-                            <p style="color: #6b7280; font-size: 14px; margin: 0;">
-                                Apply Bureau - Professional Career Consulting<br>
-                                Helping professionals achieve their career goals
+                        <td style="padding: 30px 40px; background-color: #0F172A; border-top: 1px solid #334155;">
+                            <p style="color: #64748B; font-size: 14px; line-height: 1.6; margin: 0 0 10px 0; text-align: center;">
+                                Questions? Contact us at <a href="mailto:support@applybureau.com" style="color: #10B981; text-decoration: none;">support@applybureau.com</a>
+                            </p>
+                            <p style="color: #475569; font-size: 12px; margin: 0; text-align: center;">
+                                &copy; 2026 Apply Bureau. All rights reserved.
                             </p>
                         </td>
                     </tr>
+                    
                 </table>
             </td>
         </tr>
