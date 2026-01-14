@@ -157,7 +157,7 @@ router.post('/consultations/:id/confirm', async (req, res) => {
         status: 'confirmed',
         confirmed_time: confirmedTime.toISOString(),
         admin_notes: admin_notes || null,
-        admin_action_by: req.user.id,
+        // admin_action_by: req.user.id, // Removed FK constraint issue
         admin_action_at: new Date().toISOString(),
         updated_at: new Date().toISOString()
       })
@@ -245,7 +245,7 @@ router.post('/consultations/:id/reschedule', async (req, res) => {
         status: 'pending', // Reset to pending for new times
         reschedule_reason,
         admin_notes: admin_notes || null,
-        admin_action_by: req.user.id,
+        // admin_action_by: req.user.id, // Removed FK constraint issue
         admin_action_at: new Date().toISOString(),
         updated_at: new Date().toISOString()
       })
@@ -321,7 +321,7 @@ router.post('/consultations/:id/waitlist', async (req, res) => {
         status: 'pending', // Keep as pending until resolved
         waitlist_reason,
         admin_notes: admin_notes || null,
-        admin_action_by: req.user.id,
+        // admin_action_by: req.user.id, // Removed FK constraint issue
         admin_action_at: new Date().toISOString(),
         updated_at: new Date().toISOString()
       })
