@@ -105,6 +105,8 @@ router.post('/consultations/:id/confirm', async (req, res) => {
       admin_notes
     } = req.body;
 
+    console.log('🔍 Consultation confirmation request:', { id, selected_slot_index, meeting_link });
+
     // Validate selected_slot_index
     if (selected_slot_index === undefined || selected_slot_index < 0 || selected_slot_index > 2) {
       return res.status(400).json({ 
@@ -119,15 +121,30 @@ router.post('/consultations/:id/confirm', async (req, res) => {
       .eq('id', id)
       .single();
 
+    console.log('🔍 Consultation lookup:', { found: !!consultation, error: fetchError?.message });
+
     if (fetchError || !consultation) {
+      console.error('❌ Consultation not found:', fetchError);
       return res.status(404).json({ error: 'Consultation request not found' });
+    }
+
+    // Check if preferred_slots exists and is an array
+    if (!consultation.preferred_slots || !Array.isArray(consultation.preferred_slots)) {
+      console.error('❌ No preferred_slots found:', consultation.preferred_slots);
+      return res.status(400).json({ 
+        error: 'Consultation request does not have preferred time slots',
+        details: 'Please ensure the consultation request includes 3 preferred time slots'
+      });
     }
 
     // Get the selected time slot
     const selectedSlot = consultation.preferred_slots[selected_slot_index];
     if (!selectedSlot) {
+      console.error('❌ Invalid slot index:', { selected_slot_index, slots: consultation.preferred_slots });
       return res.status(400).json({ error: 'Invalid slot index' });
     }
+
+    console.log('✅ Selected slot:', selectedSlot);
 
     // Create confirmed datetime
     const confirmedTime = new Date(`${selectedSlot.date}T${selectedSlot.time}:00`);
@@ -149,9 +166,14 @@ router.post('/consultations/:id/confirm', async (req, res) => {
       .single();
 
     if (updateError) {
-      console.error('Error confirming consultation:', updateError);
-      return res.status(500).json({ error: 'Failed to confirm consultation' });
+      console.error('❌ Error confirming consultation:', updateError);
+      return res.status(500).json({ 
+        error: 'Failed to confirm consultation',
+        details: updateError.message 
+      });
     }
+
+    console.log('✅ Consultation confirmed in database');
 
     // Send confirmation email to client
     try {
@@ -164,15 +186,19 @@ router.post('/consultations/:id/confirm', async (req, res) => {
         admin_name: req.user.full_name || 'Apply Bureau Team',
         next_steps: 'Please mark this time in your calendar. We look forward to speaking with you!'
       });
+      console.log('✅ Confirmation email sent');
     } catch (emailError) {
-      console.error('Failed to send confirmation email:', emailError);
+      console.error('⚠️ Failed to send confirmation email:', emailError);
+      // Don't fail the request if email fails
     }
 
     // Create notification
     try {
       await NotificationHelpers.consultationConfirmedByAdmin(updatedConsultation, req.user);
+      console.log('✅ Notification created');
     } catch (notificationError) {
-      console.error('Failed to create notification:', notificationError);
+      console.error('⚠️ Failed to create notification:', notificationError);
+      // Don't fail the request if notification fails
     }
 
     res.json({
@@ -384,7 +410,7 @@ router.post('/payment/confirm-and-invite', async (req, res) => {
         .from('registered_users')
         .update({
           payment_confirmed: true,
-          payment_confirmed_by: req.user.id,
+          // payment_confirmed_by: req.user.id, // Removed FK constraint issue
           payment_confirmed_at: new Date().toISOString(),
           registration_token: token,
           token_expires_at: tokenExpiry.toISOString(),
@@ -412,7 +438,7 @@ router.post('/payment/confirm-and-invite', async (req, res) => {
           passcode_hash: passcodeHash, // Required field
           is_active: true,
           payment_confirmed: true,
-          payment_confirmed_by: req.user.id,
+          // payment_confirmed_by: req.user.id, // Removed FK constraint issue
           payment_confirmed_at: new Date().toISOString(),
           registration_token: token,
           token_expires_at: tokenExpiry.toISOString(),

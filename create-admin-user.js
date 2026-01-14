@@ -1,5 +1,6 @@
 #!/usr/bin/env node
 
+require('dotenv').config();
 const bcrypt = require('bcryptjs');
 const { supabaseAdmin } = require('./utils/supabase');
 
