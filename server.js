@@ -132,7 +132,7 @@ const corsOptions = {
       'https://localhost:5173'
     ].filter(Boolean);
     
-    // Allow requests with no origin (mobile apps, etc.)
+    // Allow requests with no origin (mobile apps, Postman, etc.)
     if (!origin) return callback(null, true);
     
     if (allowedOrigins.indexOf(origin) !== -1) {
@@ -145,10 +145,28 @@ const corsOptions = {
   credentials: true,
   methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
   allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With', 'Accept', 'Origin'],
-  optionsSuccessStatus: 200
+  exposedHeaders: ['Content-Type', 'Authorization', 'X-Total-Count', 'X-Page', 'X-Per-Page'],
+  optionsSuccessStatus: 200,
+  preflightContinue: false
 };
 
 app.use(cors(corsOptions));
+
+// Ensure CORS headers are always present
+app.use((req, res, next) => {
+  res.header('Access-Control-Allow-Origin', req.headers.origin || '*');
+  res.header('Access-Control-Allow-Credentials', 'true');
+  res.header('Access-Control-Allow-Methods', 'GET, POST, PUT, PATCH, DELETE, OPTIONS');
+  res.header('Access-Control-Allow-Headers', 'Content-Type, Authorization, X-Requested-With, Accept, Origin');
+  
+  // Handle preflight
+  if (req.method === 'OPTIONS') {
+    return res.status(200).end();
+  }
+  
+  next();
+});
+
 
 // Body parsing middleware
 app.use(bodyParser.json({ limit: '10mb' }));
@@ -320,17 +338,23 @@ app.post('/api/admin/cache/clear', require('./utils/auth').authenticateToken, re
   res.json({ message: 'Cache cleared successfully' });
 });
 
-// 404 handler
-app.use('*', (req, res) => {
+// 404 handler - must be BEFORE error handlers
+app.use('*', (req, res, next) => {
   logger.warning('Route not found', { path: req.path, method: req.method, ip: req.ip });
-  res.status(404).json({ error: 'Route not found' });
+  res.status(404).json({ 
+    error: 'Route not found',
+    path: req.path,
+    method: req.method
+  });
 });
 
-// Global error handler (must be last middleware)
-app.use(globalErrorHandler);
-
-// Enhanced error handler with detailed logging
+// Enhanced error handler with detailed logging (must be LAST)
 app.use((err, req, res, next) => {
+  // Skip if response already sent
+  if (res.headersSent) {
+    return next(err);
+  }
+
   const errorId = require('crypto').randomBytes(8).toString('hex');
   
   // Log error with context
@@ -402,11 +426,6 @@ app.use((err, req, res, next) => {
       details: err 
     })
   });
-  
-  // Call next to ensure proper error handling chain
-  if (res.headersSent) {
-    return next(err);
-  }
 });
 
 // Graceful shutdown
