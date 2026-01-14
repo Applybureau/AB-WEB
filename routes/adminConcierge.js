@@ -24,7 +24,7 @@ router.get('/consultations', async (req, res) => {
 
     let query = supabaseAdmin
       .from('consultation_requests')
-      .select('id, full_name, email, phone, message, preferred_slots, admin_status, status, confirmed_time, admin_notes, reschedule_reason, waitlist_reason, admin_action_by, admin_action_at, created_at, updated_at')
+      .select('id, name, email, phone, message, preferred_slots, admin_status, status, confirmed_time, admin_notes, reschedule_reason, waitlist_reason, admin_action_by, admin_action_at, created_at, updated_at')
       .order(sort_by, { ascending: sort_order === 'asc' })
       .range(offset, offset + limit - 1);
 
@@ -44,7 +44,7 @@ router.get('/consultations', async (req, res) => {
     const formattedConsultations = consultations.map(consultation => ({
       ...consultation,
       booking_details: {
-        name: consultation.full_name,
+        name: consultation.name, // Use 'name' instead of 'full_name'
         email: consultation.email,
         phone: consultation.phone,
         message: consultation.message || 'No message provided'
@@ -156,7 +156,7 @@ router.post('/consultations/:id/confirm', async (req, res) => {
     // Send confirmation email to client
     try {
       await sendEmail(consultation.email, 'consultation_confirmed_concierge', {
-        client_name: consultation.full_name,
+        client_name: consultation.name, // Use 'name' instead of 'full_name'
         confirmed_date: selectedSlot.date,
         confirmed_time: selectedSlot.time,
         meeting_details: meeting_details || 'Your consultation has been confirmed.',
@@ -235,7 +235,7 @@ router.post('/consultations/:id/reschedule', async (req, res) => {
     // Send reschedule email to client
     try {
       await sendEmail(consultation.email, 'consultation_reschedule_request', {
-        client_name: consultation.full_name,
+        client_name: consultation.name, // Use 'name' instead of 'full_name'
         reschedule_reason,
         admin_name: req.user.full_name || 'Apply Bureau Team',
         new_times_url: buildUrl(`/consultation/new-times/${consultation.id}`),
@@ -311,7 +311,7 @@ router.post('/consultations/:id/waitlist', async (req, res) => {
     // Send waitlist email to client
     try {
       await sendEmail(consultation.email, 'consultation_waitlisted', {
-        client_name: consultation.full_name,
+        client_name: consultation.name, // Use 'name' instead of 'full_name'
         waitlist_reason,
         admin_name: req.user.full_name || 'Apply Bureau Team',
         next_steps: 'We will contact you as soon as availability opens up. Thank you for your patience.'
@@ -398,24 +398,38 @@ router.post('/payment/confirm-and-invite', async (req, res) => {
       }
     } else {
       // Create new user record with payment confirmation
+      // Generate a temporary passcode hash (user will set password during registration)
+      const bcrypt = require('bcrypt');
+      const tempPasscode = Math.random().toString(36).substring(2, 15);
+      const passcodeHash = await bcrypt.hash(tempPasscode, 10);
+      
       const { error: createError } = await supabaseAdmin
         .from('registered_users')
         .insert({
           email: client_email,
           full_name: client_name,
           role: 'client',
+          passcode_hash: passcodeHash, // Required field
+          is_active: true,
           payment_confirmed: true,
           payment_confirmed_by: req.user.id,
           payment_confirmed_at: new Date().toISOString(),
           registration_token: token,
           token_expires_at: tokenExpiry.toISOString(),
           token_used: false,
-          profile_unlocked: false
+          profile_unlocked: false,
+          payment_received: true,
+          onboarding_completed: false
         });
 
       if (createError) {
         console.error('Error creating user record:', createError);
-        return res.status(500).json({ error: 'Failed to create user record' });
+        console.error('Full error details:', JSON.stringify(createError, null, 2));
+        return res.status(500).json({ 
+          error: 'Failed to create user record',
+          details: createError.message,
+          code: createError.code
+        });
       }
     }
 
@@ -435,7 +449,8 @@ router.post('/payment/confirm-and-invite', async (req, res) => {
       });
     } catch (emailError) {
       console.error('Failed to send welcome email:', emailError);
-      return res.status(500).json({ error: 'Failed to send welcome email' });
+      // Don't fail the entire operation if email fails
+      console.log('⚠️  Email sending failed, but payment confirmation succeeded');
     }
 
     // Create notification
@@ -448,6 +463,8 @@ router.post('/payment/confirm-and-invite', async (req, res) => {
       });
     } catch (notificationError) {
       console.error('Failed to create notification:', notificationError);
+      // Don't fail the entire operation if notification fails
+      console.log('⚠️  Notification creation failed, but payment confirmation succeeded');
     }
 
     res.json({

@@ -49,9 +49,17 @@ const requireAdmin = (req, res, next) => {
   next();
 };
 
+const requireClient = (req, res, next) => {
+  if (req.user.role !== 'client') {
+    return res.status(403).json({ error: 'Client access required' });
+  }
+  next();
+};
+
 module.exports = {
   generateToken,
   verifyToken,
   authenticateToken,
-  requireAdmin
+  requireAdmin,
+  requireClient
 };

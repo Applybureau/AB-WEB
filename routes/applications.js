@@ -21,7 +21,7 @@ const {
 
 const router = express.Router();
 
-// GET /api/client/applications - Get client's applications (CLIENT ONLY)
+// GET /api/applications - Get client's applications (CLIENT ONLY)
 router.get('/', 
   authenticateToken, 
   requireClient,

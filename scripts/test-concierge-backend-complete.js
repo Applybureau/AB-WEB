@@ -128,6 +128,12 @@ async function testPublicConsultationSubmission() {
     console.log(`   Admin Status: ${result.data.admin_status}`);
     console.log(`   Message: ${result.data.message}`);
     console.log(`   Booking Details:`, result.data.booking_details);
+    if (result.data.booking_details) {
+      console.log(`   Name: ${result.data.booking_details.name}`);
+      console.log(`   Email: ${result.data.booking_details.email}`);
+      console.log(`   Phone: ${result.data.booking_details.phone}`);
+      console.log(`   Message: ${result.data.booking_details.message}`);
+    }
     return true;
   } else {
     console.log('❌ Consultation submission failed');

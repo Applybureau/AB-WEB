@@ -52,7 +52,7 @@ router.post('/', async (req, res) => {
     const { data: consultation, error } = await supabaseAdmin
       .from('consultation_requests')
       .insert({
-        full_name,
+        name: full_name, // Use 'name' column instead of 'full_name'
         email,
         phone,
         message: message || null, // Store the brief message
