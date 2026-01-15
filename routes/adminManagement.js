@@ -260,7 +260,7 @@ router.post('/admins', authenticateToken, requireAdmin, upload.single('profile_p
         phone,
         role: 'admin',
         profile_picture_url: profilePictureUrl,
-        onboarding_complete: true,
+        status: 'active',
         is_active: true,
         created_by_admin_id: currentAdminId
       })
