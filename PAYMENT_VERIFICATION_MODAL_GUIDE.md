@@ -104,7 +104,11 @@ Content-Type: application/json
 |-------|------|----------|-------------|
 | `client_email` | string | ✅ Yes | Client's email address |
 | `client_name` | string | ✅ Yes | Client's full name |
-| `payment_amount` | number | ✅ Yes | Amount paid (e.g., 500.00) |
+| `payment_amount` | string/number | ✅ Yes | Amount paid (e.g., "299") |
+| `payment_date` | string | ❌ No | Payment date (YYYY-MM-DD format) |
+| `package_tier` | string | ❌ No | Package name (e.g., "Tier 2") |
+| `package_type` | string | ❌ No | Package type (e.g., "tier") |
+| `selected_services` | array | ❌ No | Array of selected services (default: []) |
 | `payment_method` | string | ❌ No | Payment method (default: "interac_etransfer") |
 | `payment_reference` | string | ❌ No | Transaction reference/ID |
 | `admin_notes` | string | ❌ No | Internal notes about payment |
@@ -112,12 +116,13 @@ Content-Type: application/json
 ### Request Example
 ```json
 {
-  "client_email": "john.doe@example.com",
+  "client_email": "client@example.com",
   "client_name": "John Doe",
-  "payment_amount": 500.00,
-  "payment_method": "interac_etransfer",
-  "payment_reference": "ET-2026-01-15-12345",
-  "admin_notes": "Payment received via Interac e-Transfer on Jan 15, 2026"
+  "payment_amount": "299",
+  "payment_date": "2026-01-15",
+  "package_tier": "Tier 2",
+  "package_type": "tier",
+  "selected_services": []
 }
 ```
 
@@ -125,9 +130,13 @@ Content-Type: application/json
 ```json
 {
   "message": "Payment confirmed and registration invite sent successfully",
-  "client_email": "john.doe@example.com",
+  "client_email": "client@example.com",
   "client_name": "John Doe",
-  "payment_amount": 500.00,
+  "payment_amount": "299",
+  "payment_date": "2026-01-15",
+  "package_tier": "Tier 2",
+  "package_type": "tier",
+  "selected_services": [],
   "registration_token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...",
   "token_expires_at": "2026-01-22T10:00:00Z",
   "registration_url": "http://localhost:5173/register?token=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."

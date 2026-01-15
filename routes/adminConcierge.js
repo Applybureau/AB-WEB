@@ -371,6 +371,10 @@ router.post('/payment/confirm-and-invite', async (req, res) => {
       client_email,
       client_name,
       payment_amount,
+      payment_date,
+      package_tier,
+      package_type,
+      selected_services = [],
       payment_method = 'interac_etransfer',
       payment_reference,
       admin_notes
@@ -466,11 +470,15 @@ router.post('/payment/confirm-and-invite', async (req, res) => {
       await sendEmail(client_email, 'payment_confirmed_welcome_concierge', {
         client_name,
         payment_amount,
+        payment_date: payment_date || new Date().toISOString().split('T')[0],
+        package_tier: package_tier || 'Standard Package',
+        package_type: package_type || 'tier',
+        selected_services: selected_services.length > 0 ? selected_services.join(', ') : 'Full service package',
         payment_method,
         payment_reference: payment_reference || 'Manual confirmation',
         registration_url,
         token_expiry: tokenExpiry.toLocaleDateString(),
-        admin_name: req.user.full_name || 'Apply Bureau Team',
+        admin_name: req.user?.full_name || 'Apply Bureau Team',
         next_steps: 'Click the registration link to create your account and begin your onboarding process.'
       });
     } catch (emailError) {
@@ -498,6 +506,10 @@ router.post('/payment/confirm-and-invite', async (req, res) => {
       client_email,
       client_name,
       payment_amount,
+      payment_date: payment_date || new Date().toISOString().split('T')[0],
+      package_tier,
+      package_type,
+      selected_services,
       registration_token: token,
       token_expires_at: tokenExpiry.toISOString(),
       registration_url: registrationUrl
