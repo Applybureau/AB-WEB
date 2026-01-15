@@ -105,16 +105,19 @@ class AdminController {
     try {
       const { status, search, limit = 50, offset = 0, sort = 'created_at', order = 'desc' } = req.query;
 
+      // Query clients table directly instead of non-existent view
       let query = supabaseAdmin
-        .from('admin_client_overview')
-        .select('*')
+        .from('clients')
+        .select('id, email, full_name, phone, status, role, created_at, last_login_at, profile_picture_url, current_job_title, current_company')
         .order(sort, { ascending: order === 'asc' })
         .range(parseInt(offset), parseInt(offset) + parseInt(limit) - 1);
 
+      // Filter by status if provided
       if (status) {
         query = query.eq('status', status);
       }
 
+      // Search by name or email if provided
       if (search) {
         query = query.or(`full_name.ilike.%${search}%,email.ilike.%${search}%`);
       }
@@ -123,23 +126,37 @@ class AdminController {
 
       if (error) {
         logger.error('Error fetching clients for admin', error);
-        return res.status(500).json({ error: 'Failed to fetch clients' });
+        return res.status(500).json({ error: 'Failed to fetch clients', details: error.message });
       }
 
       // Get total count for pagination
-      const { count, error: countError } = await supabaseAdmin
+      let countQuery = supabaseAdmin
         .from('clients')
         .select('*', { count: 'exact', head: true });
 
+      if (status) {
+        countQuery = countQuery.eq('status', status);
+      }
+
+      if (search) {
+        countQuery = countQuery.or(`full_name.ilike.%${search}%,email.ilike.%${search}%`);
+      }
+
+      const { count, error: countError } = await countQuery;
+
+      if (countError) {
+        logger.error('Error counting clients', countError);
+      }
+
       res.json({
-        clients,
+        clients: clients || [],
         total: count || 0,
         offset: parseInt(offset),
         limit: parseInt(limit)
       });
     } catch (error) {
       logger.error('Get all clients error', error);
-      res.status(500).json({ error: 'Failed to fetch clients' });
+      res.status(500).json({ error: 'Failed to fetch clients', details: error.message });
     }
   }
 

@@ -364,6 +364,206 @@ router.post('/consultations/:id/waitlist', async (req, res) => {
   }
 });
 
+// POST /api/admin/concierge/payment-confirmation - Confirm payment and update consultation status
+// This is the endpoint the frontend calls when clicking "Verify & Invite"
+router.post('/payment-confirmation', async (req, res) => {
+  try {
+    const {
+      consultation_id, // ID of the consultation request
+      client_email,
+      client_name,
+      payment_amount,
+      payment_date,
+      package_tier,
+      package_type,
+      selected_services = [],
+      payment_method = 'interac_etransfer',
+      payment_reference,
+      admin_notes
+    } = req.body;
+
+    console.log('💰 Payment confirmation request:', { consultation_id, client_email, client_name, payment_amount, package_tier });
+
+    if (!client_email || !client_name || !payment_amount) {
+      return res.status(400).json({ 
+        error: 'Missing required fields: client_email, client_name, payment_amount' 
+      });
+    }
+
+    // Step 1: Update consultation_requests status to 'onboarding'
+    if (consultation_id) {
+      const { data: consultation, error: consultationError } = await supabaseAdmin
+        .from('consultation_requests')
+        .update({
+          admin_status: 'onboarding',
+          status: 'onboarding',
+          payment_verified: true,
+          payment_amount: payment_amount,
+          payment_date: payment_date || new Date().toISOString().split('T')[0],
+          package_tier: package_tier,
+          package_type: package_type,
+          admin_notes: admin_notes || null,
+          admin_action_at: new Date().toISOString(),
+          updated_at: new Date().toISOString()
+        })
+        .eq('id', consultation_id)
+        .select()
+        .single();
+
+      if (consultationError) {
+        console.error('❌ Error updating consultation status:', consultationError);
+        return res.status(500).json({ 
+          error: 'Failed to update consultation status',
+          details: consultationError.message 
+        });
+      }
+
+      console.log('✅ Consultation status updated to onboarding');
+    }
+
+    // Step 2: Generate registration token (7-day expiry)
+    const token = jwt.sign(
+      { 
+        email: client_email,
+        name: client_name,
+        type: 'registration',
+        payment_confirmed: true,
+        consultation_id: consultation_id
+      },
+      process.env.JWT_SECRET,
+      { expiresIn: '7d' }
+    );
+
+    const tokenExpiry = new Date();
+    tokenExpiry.setDate(tokenExpiry.getDate() + 7);
+
+    // Step 3: Check if user already exists in registered_users
+    const { data: existingUser } = await supabaseAdmin
+      .from('registered_users')
+      .select('id, email')
+      .eq('email', client_email)
+      .single();
+
+    if (existingUser) {
+      // Update existing user with payment confirmation
+      const { error: updateError } = await supabaseAdmin
+        .from('registered_users')
+        .update({
+          payment_confirmed: true,
+          payment_confirmed_at: new Date().toISOString(),
+          registration_token: token,
+          token_expires_at: tokenExpiry.toISOString(),
+          token_used: false
+        })
+        .eq('id', existingUser.id);
+
+      if (updateError) {
+        console.error('⚠️ Error updating user payment status:', updateError);
+        // Don't fail - consultation status is already updated
+      } else {
+        console.log('✅ User payment status updated');
+      }
+    } else {
+      // Create new user record with payment confirmation
+      const bcrypt = require('bcrypt');
+      const tempPasscode = Math.random().toString(36).substring(2, 15);
+      const passcodeHash = await bcrypt.hash(tempPasscode, 10);
+      
+      const { error: createError } = await supabaseAdmin
+        .from('registered_users')
+        .insert({
+          email: client_email,
+          full_name: client_name,
+          role: 'client',
+          passcode_hash: passcodeHash,
+          is_active: true,
+          payment_confirmed: true,
+          payment_confirmed_at: new Date().toISOString(),
+          registration_token: token,
+          token_expires_at: tokenExpiry.toISOString(),
+          token_used: false,
+          profile_unlocked: false,
+          payment_received: true,
+          onboarding_completed: false
+        });
+
+      if (createError) {
+        console.error('⚠️ Error creating user record:', createError);
+        // Don't fail - consultation status is already updated
+      } else {
+        console.log('✅ User record created');
+      }
+    }
+
+    // Step 4: Send welcome email with registration link
+    const registrationUrl = buildUrl(`/register?token=${token}`);
+    
+    try {
+      await sendEmail(client_email, 'payment_confirmed_welcome_concierge', {
+        client_name,
+        payment_amount,
+        payment_date: payment_date || new Date().toISOString().split('T')[0],
+        package_tier: package_tier || 'Standard Package',
+        package_type: package_type || 'tier',
+        selected_services: selected_services.length > 0 ? selected_services.map(s => s.name || s).join(', ') : 'Full service package',
+        payment_method,
+        payment_reference: payment_reference || 'Manual confirmation',
+        registration_url,
+        token_expiry: tokenExpiry.toLocaleDateString(),
+        admin_name: req.user?.full_name || 'Apply Bureau Team',
+        next_steps: 'Click the registration link to create your account and begin your onboarding process.'
+      });
+      console.log('✅ Registration email sent to:', client_email);
+    } catch (emailError) {
+      console.error('❌ Failed to send welcome email:', emailError);
+      // Don't fail the entire operation if email fails
+      console.log('⚠️  Email sending failed, but payment confirmation succeeded');
+    }
+
+    // Step 5: Create notification
+    try {
+      await NotificationHelpers.paymentConfirmedAndInviteSent({
+        client_email,
+        client_name,
+        payment_amount,
+        admin_user: req.user
+      });
+      console.log('✅ Notification created');
+    } catch (notificationError) {
+      console.error('⚠️ Failed to create notification:', notificationError);
+    }
+
+    // Step 6: Return success response
+    res.json({
+      success: true,
+      message: 'Payment confirmed and registration invite sent successfully',
+      data: {
+        consultation_id,
+        client_email,
+        client_name,
+        payment_amount,
+        payment_date: payment_date || new Date().toISOString().split('T')[0],
+        package_tier,
+        package_type,
+        selected_services,
+        status: 'onboarding',
+        admin_status: 'onboarding',
+        registration_token: token,
+        token_expires_at: tokenExpiry.toISOString(),
+        registration_url: registrationUrl,
+        email_sent: true
+      }
+    });
+  } catch (error) {
+    console.error('❌ Confirm payment error:', error);
+    res.status(500).json({ 
+      success: false,
+      error: 'Failed to confirm payment and send invite',
+      details: error.message 
+    });
+  }
+});
+
 // POST /api/admin/concierge/payment/confirm-and-invite - Confirm payment and send registration invite
 router.post('/payment/confirm-and-invite', async (req, res) => {
   try {
