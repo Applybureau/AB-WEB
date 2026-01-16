@@ -1,816 +1,1181 @@
-# Apply Bureau Backend
+# Apply Bureau Backend API Documentation
 
-A comprehensive, enterprise-grade backend system for managing business consultations, client applications, and administrative workflows. Built with Node.js, Express, and Supabase.
+## 🎯 Overview
 
-## 🚀 Features
+This is the complete backend API for Apply Bureau - a consultation and client management system. This document explains EVERY endpoint in simple terms, like talking to a 5-year-old, so the frontend never gets confused.
 
-### Core System
-- **Advanced Authentication** - JWT-based auth with multi-role support (admin, super_admin, consultant, manager)
-- **User Profile Management** - Comprehensive client profiles with business information and onboarding workflow
-- **Application System** - Complete application lifecycle with priority levels, cost tracking, and satisfaction ratings
-- **Consultation Management** - Advanced meeting scheduling with recordings, transcripts, and billing
-- **Real-time Notifications** - Multi-channel notification system with email/SMS delivery
-- **Lead Management** - Lead scoring, qualification, and conversion tracking
-- **File Storage** - Secure document management with role-based access control
+**Base URL (Production):** `https://apply-bureau-backend.vercel.app`  
+**Frontend URL:** `https://apply-bureau.vercel.app`
 
-### Advanced Features
-- **Lead Scoring & Qualification** - Automated lead assessment and prioritization
-- **Satisfaction Ratings** - Client feedback collection and analysis
-- **Cost Tracking & Billing** - Comprehensive financial tracking with hourly rates
-- **Meeting Recordings** - Video/audio recording storage and management
-- **UTM Tracking** - Marketing attribution and campaign tracking
-- **Two-Factor Authentication** - Enhanced security with 2FA support
-- **Account Security** - Login attempt monitoring and account lockout protection
-- **Audit Logging** - Complete activity tracking and audit trails
+---
 
-## 🛠️ Tech Stack
+## 📋 Table of Contents
 
-- **Backend**: Node.js with Express.js
-- **Database**: PostgreSQL with Supabase
-- **Authentication**: Supabase Auth with JWT tokens
-- **Storage**: Supabase Storage with RLS policies
-- **Email**: Nodemailer with SMTP integration
-- **Real-time**: Supabase real-time subscriptions
-- **Testing**: Jest with comprehensive test coverage
+1. [Authentication System](#authentication-system)
+2. [Registration Token System (15-Day Expiry)](#registration-token-system)
+3. [Public Endpoints (No Auth Required)](#public-endpoints)
+4. [Client Endpoints (Client Auth Required)](#client-endpoints)
+5. [Admin Endpoints (Admin Auth Required)](#admin-endpoints)
+6. [Complete Endpoint List](#complete-endpoint-list)
+7. [Data Formats & Examples](#data-formats--examples)
+8. [Error Handling](#error-handling)
 
-## 📋 Quick Start
+---
 
-### Prerequisites
-- Node.js 18+
-- Supabase account
-- SMTP email service (Gmail, SendGrid, etc.)
+## 🔐 Authentication System
 
-### Installation
+### How Authentication Works
 
-```bash
-# Clone the repository
-git clone <your-repo-url>
-cd backend
+1. **Login** → Get a token
+2. **Use token** → Include in all requests as `Authorization: Bearer YOUR_TOKEN`
+3. **Token expires** → Login again
 
-# Install dependencies
-npm install
-
-# Set up environment variables
-cp .env.example .env
-# Edit .env with your configuration
-```
-
-### Database Setup
-
-**Run this in your Supabase SQL Editor:**
-```sql
--- Copy and paste the entire content of MASTER_SCHEMA.sql
--- This creates the complete database with all features
-```
-
-### Environment Variables
-
-```env
-# Database
-SUPABASE_URL=your_supabase_url
-SUPABASE_ANON_KEY=your_supabase_anon_key
-SUPABASE_SERVICE_ROLE_KEY=your_supabase_service_role_key
-
-# JWT
-JWT_SECRET=your_jwt_secret
-
-# Email
-SMTP_HOST=smtp.gmail.com
-SMTP_PORT=587
-SMTP_USER=your_email@gmail.com
-SMTP_PASS=your_app_password
-
-# Application
-PORT=3000
-NODE_ENV=production
-FRONTEND_URL=https://your-frontend-domain.com
-
-# Optional: Google Meet Integration
-GOOGLE_CLIENT_ID=your_google_client_id
-GOOGLE_CLIENT_SECRET=your_google_client_secret
-```
-
-### Start the Server
-
-```bash
-# Create your first admin user
-npm run create-first-admin
-
-# Start development server
-npm run dev
-
-# Start production server
-npm start
-```
-
-## 📊 Database Schema
-
-### Core Tables
-
-#### **profiles** - User Profiles
-Extended user profiles with comprehensive business information:
-- Personal details (name, email, phone, company, position)
-- Business information (industry, stage, revenue, team size)
-- Goals and challenges
-- Onboarding and approval status
-- Marketing preferences and consent
-- Activity tracking
-
-#### **admin_users** - Administrative Users
-Multi-role admin system with advanced features:
-- Role hierarchy (admin, super_admin, consultant, manager)
-- Department and specialization tracking
-- Hourly rates and availability schedules
-- Security features (2FA, account lockout, login tracking)
-- Permission management
-
-#### **applications** - Client Applications
-Comprehensive application management:
-- Multiple types (consultation, strategy_call, onboarding, follow_up, emergency)
-- Priority levels (low, medium, high, urgent, critical)
-- Cost estimation and tracking
-- Document attachments
-- Satisfaction ratings and feedback
-- Tag-based organization
-
-#### **consultations** - Meeting Management
-Advanced consultation system:
-- Multiple meeting types and formats
-- Recording and transcript storage
-- Billing and time tracking
-- Action items and follow-up management
-- Satisfaction ratings
-- Meeting preparation and notes
-
-#### **notifications** - Notification System
-Multi-channel notification delivery:
-- Various notification types and categories
-- Priority levels and expiration
-- Email and SMS delivery tracking
-- Action buttons and URLs
-- Read status and timestamps
-
-#### **contact_submissions** - Lead Management
-Public contact form with lead tracking:
-- Lead scoring and qualification
-- UTM tracking for marketing attribution
-- Response time monitoring
-- Conversion value tracking
-- Tag-based organization
-
-#### **consultation_requests** - Public Booking
-Public consultation booking system:
-- Detailed business information collection
-- Preferred time scheduling
-- Lead scoring and qualification
-- Approval workflow
-- Estimated value tracking
-
-### Storage Buckets
-
-- **documents** - User-uploaded documents
-- **profiles** - Profile images and files
-- **consultations** - Meeting materials
-- **recordings** - Video/audio recordings
-- **transcripts** - Meeting transcripts
-- **admin-files** - Administrative documents
-- **templates** - Document templates
-
-## 🔌 API Endpoints
-
-### Authentication (`/api/auth`)
-
-#### POST `/api/auth/register`
-Register a new user account
-```json
+### Token Format
+```javascript
 {
+  "userId": "uuid",
+  "id": "uuid",
   "email": "user@example.com",
-  "password": "password123",
-  "full_name": "John Doe"
+  "role": "client" or "admin",
+  "full_name": "John Doe",
+  "exp": 1234567890 // Expiry timestamp
 }
 ```
 
-#### POST `/api/auth/login`
-User login
+
+
+---
+
+## 🎫 Registration Token System (15-Day Expiry)
+
+### How It Works (Step by Step)
+
+**Step 1: Admin Confirms Payment**
+- Admin clicks "Verify & Invite" button in dashboard
+- Calls: `POST /api/admin/concierge/payment-confirmation`
+
+**Step 2: System Generates Token**
+- Token is valid for **15 DAYS** (not 7 days!)
+- Token contains: email, name, payment confirmation
+- Token is stored in database with expiry date
+
+**Step 3: Client Receives Email**
+- Email contains registration link: `https://apply-bureau.vercel.app/register?token=XXXXX`
+- Link is valid for 15 days
+
+**Step 4: Client Registers**
+- Client clicks link → Frontend validates token
+- Client creates password → Account is activated
+- Token is marked as "used" (can't be reused)
+
+### Token Generation Code Location
+- **File:** `backend/routes/adminConcierge.js`
+- **Lines:** ~434 and ~598
+- **Expiry:** `{ expiresIn: '15d' }` (15 days)
+
+### Token Validation Endpoint
+```
+GET /api/client-registration/validate-token/:token
+```
+
+**Response (Valid Token):**
+```json
+{
+  "valid": true,
+  "client": {
+    "full_name": "John Doe",
+    "email": "john@example.com",
+    "expires_at": "2026-01-31T12:00:00Z"
+  }
+}
+```
+
+**Response (Invalid Token):**
+```json
+{
+  "valid": false,
+  "error": "Token expired" // or "Token already used" or "Invalid token"
+}
+```
+
+
+
+---
+
+## 🌐 Public Endpoints (No Auth Required)
+
+### 1. Health Check
+```
+GET /health
+GET /api/health
+```
+**Purpose:** Check if server is running  
+**Response:**
+```json
+{
+  "status": "healthy",
+  "timestamp": "2026-01-16T12:00:00Z",
+  "service": "Apply Bureau Backend"
+}
+```
+
+---
+
+### 2. Contact Form Submission
+```
+POST /api/contact
+```
+**Purpose:** Public contact form on website  
+**Request Body:**
+```json
+{
+  "full_name": "John Doe",
+  "email": "john@example.com",
+  "phone": "+1234567890",
+  "message": "I want to learn more about your services"
+}
+```
+**Response:**
+```json
+{
+  "message": "Contact request submitted successfully",
+  "id": "uuid"
+}
+```
+
+---
+
+### 3. Public Consultation Request
+```
+POST /api/public-consultations
+```
+**Purpose:** Book a consultation (public form)  
+**Request Body:**
+```json
+{
+  "name": "John Doe",
+  "email": "john@example.com",
+  "phone": "+1234567890",
+  "message": "I need help with job applications",
+  "preferred_slots": [
+    { "date": "2026-01-20", "time": "10:00" },
+    { "date": "2026-01-21", "time": "14:00" },
+    { "date": "2026-01-22", "time": "16:00" }
+  ]
+}
+```
+**Important:** Must provide exactly 3 preferred time slots!
+
+**Response:**
+```json
+{
+  "message": "Consultation request submitted successfully",
+  "id": "uuid",
+  "status": "pending"
+}
+```
+
+---
+
+### 4. Validate Registration Token
+```
+GET /api/client-registration/validate-token/:token
+```
+**Purpose:** Check if registration token is valid  
+**See:** [Registration Token System](#registration-token-system) above
+
+---
+
+### 5. Client Registration (Using Token)
+```
+POST /api/client-registration/register
+```
+**Purpose:** Create account using registration token  
+**Request Body:**
+```json
+{
+  "token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...",
+  "password": "SecurePassword123!",
+  "confirm_password": "SecurePassword123!"
+}
+```
+**Response:**
+```json
+{
+  "message": "Account created successfully",
+  "token": "auth_token_here",
+  "user": {
+    "id": "uuid",
+    "email": "john@example.com",
+    "full_name": "John Doe",
+    "role": "client",
+    "profile_unlocked": false,
+    "payment_confirmed": true,
+    "onboarding_completed": false
+  },
+  "next_steps": "Complete your onboarding questionnaire to unlock your Application Tracker."
+}
+```
+
+
+
+---
+
+## 🔑 Authentication Endpoints
+
+### 1. Login
+```
+POST /api/auth/login
+```
+**Purpose:** Login for both clients and admins  
+**Request Body:**
 ```json
 {
   "email": "user@example.com",
   "password": "password123"
 }
 ```
-
-#### POST `/api/auth/logout`
-User logout (requires authentication)
-
-#### GET `/api/auth/me`
-Get current user profile (requires authentication)
-
-#### POST `/api/auth/forgot-password`
-Request password reset
+**Response:**
 ```json
 {
-  "email": "user@example.com"
-}
-```
-
-#### POST `/api/auth/reset-password`
-Reset password with token
-```json
-{
-  "token": "reset_token",
-  "password": "new_password"
-}
-```
-
-### Profile Management (`/api/client`)
-
-#### GET `/api/client/profile`
-Get user profile (requires authentication)
-
-#### PUT `/api/client/profile`
-Update user profile (requires authentication)
-```json
-{
-  "full_name": "John Doe",
-  "phone": "+1234567890",
-  "company": "Example Corp",
-  "position": "CEO",
-  "country": "United States",
-  "current_country": "United States",
-  "industry": "Technology",
-  "business_stage": "Growth",
-  "annual_revenue": "$1M-$5M",
-  "team_size": "10-50",
-  "primary_challenge": "Scaling operations",
-  "goals": "Expand internationally",
-  "timeline": "6-12 months",
-  "budget_range": "$50K-$100K",
-  "previous_experience": "Some consulting experience",
-  "referral_source": "Google search",
-  "additional_info": "Looking for strategic guidance",
-  "preferred_contact_method": "email",
-  "timezone": "America/New_York",
-  "language_preference": "en",
-  "marketing_consent": true
-}
-```
-
-#### POST `/api/client/complete-profile`
-Mark profile as completed (requires authentication)
-
-#### POST `/api/client/upload-avatar`
-Upload profile avatar (requires authentication)
-
-### Application Management (`/api/applications`)
-
-#### GET `/api/applications`
-Get user applications with filtering and pagination
-Query parameters:
-- `status` - Filter by status
-- `type` - Filter by type
-- `priority` - Filter by priority
-- `page` - Page number
-- `limit` - Items per page
-
-#### POST `/api/applications`
-Create new application (requires authentication)
-```json
-{
-  "type": "consultation",
-  "title": "Business Strategy Consultation",
-  "description": "Need help with expansion strategy",
-  "priority": "high",
-  "requirements": {
-    "urgency": "high",
-    "preferred_date": "2024-02-15",
-    "duration": 90
-  },
-  "estimated_duration": 90,
-  "deadline": "2024-02-20T00:00:00Z",
-  "tags": ["strategy", "expansion"]
-}
-```
-
-#### GET `/api/applications/:id`
-Get specific application (requires authentication)
-
-#### PUT `/api/applications/:id`
-Update application (requires authentication)
-
-#### DELETE `/api/applications/:id`
-Delete application (requires authentication)
-
-#### POST `/api/applications/:id/rate`
-Rate completed application (requires authentication)
-```json
-{
-  "satisfaction_rating": 5,
-  "feedback": "Excellent service and valuable insights"
-}
-```
-
-### Consultation Management (`/api/consultations`)
-
-#### GET `/api/consultations`
-Get user consultations with filtering
-Query parameters:
-- `status` - Filter by status
-- `type` - Filter by type
-- `upcoming` - Show only upcoming consultations
-- `past` - Show only past consultations
-
-#### POST `/api/consultations`
-Create consultation (requires authentication)
-```json
-{
-  "type": "initial",
-  "title": "Initial Strategy Consultation",
-  "description": "Discuss business expansion plans",
-  "scheduled_at": "2024-02-15T10:00:00Z",
-  "duration_minutes": 60,
-  "timezone": "America/New_York",
-  "meeting_preference": "video",
-  "preparation_notes": "Please prepare financial statements",
-  "agenda": [
-    "Current business overview",
-    "Expansion goals",
-    "Resource requirements"
-  ]
-}
-```
-
-#### GET `/api/consultations/:id`
-Get specific consultation (requires authentication)
-
-#### PUT `/api/consultations/:id`
-Update consultation (requires authentication)
-
-#### POST `/api/consultations/:id/reschedule`
-Reschedule consultation (requires authentication)
-```json
-{
-  "scheduled_at": "2024-02-16T14:00:00Z",
-  "reason": "Schedule conflict"
-}
-```
-
-#### POST `/api/consultations/:id/complete`
-Mark consultation as completed (requires authentication)
-```json
-{
-  "notes": "Great discussion about expansion strategy",
-  "action_items": [
-    "Prepare market analysis",
-    "Review financial projections"
-  ],
-  "follow_up_required": true,
-  "follow_up_notes": "Schedule follow-up in 2 weeks",
-  "satisfaction_rating": 5,
-  "client_feedback": "Very helpful session"
-}
-```
-
-#### POST `/api/consultations/:id/cancel`
-Cancel consultation (requires authentication)
-```json
-{
-  "reason": "Emergency came up"
-}
-```
-
-### Notification Management (`/api/notifications`)
-
-#### GET `/api/notifications`
-Get user notifications with filtering
-Query parameters:
-- `read` - Filter by read status
-- `type` - Filter by notification type
-- `priority` - Filter by priority
-- `category` - Filter by category
-
-#### PUT `/api/notifications/:id/read`
-Mark notification as read (requires authentication)
-
-#### PUT `/api/notifications/mark-all-read`
-Mark all notifications as read (requires authentication)
-
-#### DELETE `/api/notifications/:id`
-Delete notification (requires authentication)
-
-#### GET `/api/notifications/unread-count`
-Get unread notification count (requires authentication)
-
-### File Upload (`/api/upload`)
-
-#### POST `/api/upload/document`
-Upload document (requires authentication)
-- Multipart form data with file
-- Supports PDF, DOC, DOCX, TXT files
-- Max size: 10MB
-
-#### POST `/api/upload/profile-image`
-Upload profile image (requires authentication)
-- Multipart form data with image file
-- Supports JPG, PNG, GIF files
-- Max size: 5MB
-
-#### GET `/api/upload/file/:bucket/:path`
-Download file (requires authentication and ownership)
-
-#### DELETE `/api/upload/file/:bucket/:path`
-Delete file (requires authentication and ownership)
-
-### Public Endpoints (`/api/public`)
-
-#### POST `/api/public/contact`
-Submit contact form (no authentication required)
-```json
-{
-  "name": "John Doe",
-  "email": "john@example.com",
-  "phone": "+1234567890",
-  "company": "Example Corp",
-  "position": "CEO",
-  "country": "United States",
-  "subject": "Business Inquiry",
-  "message": "Interested in your consulting services",
-  "source": "website",
-  "utm_source": "google",
-  "utm_medium": "cpc",
-  "utm_campaign": "consulting"
-}
-```
-
-#### POST `/api/public/consultation-request`
-Request consultation (no authentication required)
-```json
-{
-  "name": "John Doe",
-  "email": "john@example.com",
-  "phone": "+1234567890",
-  "company": "Example Corp",
-  "position": "CEO",
-  "country": "United States",
-  "current_country": "United States",
-  "business_stage": "Growth",
-  "industry": "Technology",
-  "annual_revenue": "$1M-$5M",
-  "team_size": "10-50",
-  "primary_challenge": "Scaling operations",
-  "goals": "Expand internationally",
-  "urgency": "high",
-  "budget_range": "$50K-$100K",
-  "consultation_type": "initial",
-  "preferred_times": [
-    "2024-02-15T10:00:00Z",
-    "2024-02-15T14:00:00Z",
-    "2024-02-16T10:00:00Z"
-  ],
-  "timezone": "America/New_York",
-  "duration_preference": 90,
-  "meeting_preference": "video",
-  "message": "Looking for strategic guidance on international expansion",
-  "source": "website",
-  "utm_source": "linkedin",
-  "utm_medium": "social",
-  "utm_campaign": "expansion"
-}
-```
-
-## 🔐 Admin Endpoints
-
-### Admin Authentication (`/api/admin`)
-
-#### POST `/api/admin/login`
-Admin login
-```json
-{
-  "email": "admin@example.com",
-  "password": "admin_password"
-}
-```
-
-#### GET `/api/admin/me`
-Get admin profile (requires admin authentication)
-
-#### POST `/api/admin/logout`
-Admin logout (requires admin authentication)
-
-### Admin Dashboard (`/api/admin/dashboard`)
-
-#### GET `/api/admin/dashboard/stats`
-Get comprehensive dashboard statistics
-- User counts and growth metrics
-- Application statistics by status/type
-- Consultation metrics and revenue
-- Lead conversion rates
-- Recent activity summary
-
-#### GET `/api/admin/dashboard/recent-activity`
-Get recent system activity
-
-#### GET `/api/admin/dashboard/pending-approvals`
-Get items pending approval
-
-#### GET `/api/admin/dashboard/revenue-analytics`
-Get revenue and billing analytics
-
-### User Management (`/api/admin/users`)
-
-#### GET `/api/admin/users`
-Get all users with advanced filtering
-Query parameters:
-- `status` - Filter by profile status
-- `search` - Search by name/email
-- `country` - Filter by country
-- `business_stage` - Filter by business stage
-- `created_after` - Filter by creation date
-- `page` - Page number
-- `limit` - Items per page
-
-#### GET `/api/admin/users/:id`
-Get specific user details
-
-#### PUT `/api/admin/users/:id`
-Update user information
-
-#### PUT `/api/admin/users/:id/approve`
-Approve user profile
-```json
-{
-  "notes": "Profile approved - all requirements met"
-}
-```
-
-#### PUT `/api/admin/users/:id/reject`
-Reject user profile
-```json
-{
-  "reason": "Incomplete business information",
-  "notes": "Please provide detailed business plan"
-}
-```
-
-#### DELETE `/api/admin/users/:id`
-Delete user account
-
-#### GET `/api/admin/users/:id/activity`
-Get user activity log
-
-### Application Management (`/api/admin/applications`)
-
-#### GET `/api/admin/applications`
-Get all applications with filtering
-
-#### GET `/api/admin/applications/:id`
-Get specific application
-
-#### PUT `/api/admin/applications/:id`
-Update application
-
-#### PUT `/api/admin/applications/:id/approve`
-Approve application
-```json
-{
-  "estimated_cost": 5000,
-  "assigned_to": "consultant_user_id",
-  "notes": "Approved for strategy consultation"
-}
-```
-
-#### PUT `/api/admin/applications/:id/reject`
-Reject application
-```json
-{
-  "reason": "Does not meet minimum requirements",
-  "notes": "Company too small for our services"
-}
-```
-
-#### PUT `/api/admin/applications/:id/assign`
-Assign application to consultant
-```json
-{
-  "assigned_to": "consultant_user_id",
-  "notes": "Assigned to senior consultant"
-}
-```
-
-### Consultation Management (`/api/admin/consultations`)
-
-#### GET `/api/admin/consultations`
-Get all consultations with filtering
-
-#### POST `/api/admin/consultations`
-Create consultation for user
-
-#### PUT `/api/admin/consultations/:id`
-Update consultation
-
-#### POST `/api/admin/consultations/:id/generate-meeting-link`
-Generate Google Meet link
-
-#### PUT `/api/admin/consultations/:id/complete`
-Mark consultation as completed
-```json
-{
-  "notes": "Excellent consultation session",
-  "action_items": ["Follow up on market research"],
-  "billable_hours": 1.5,
-  "hourly_rate": 200,
-  "internal_rating": 5,
-  "internal_notes": "Client very engaged"
-}
-```
-
-### Lead Management (`/api/admin/leads`)
-
-#### GET `/api/admin/leads/contacts`
-Get all contact submissions with lead scoring
-
-#### GET `/api/admin/leads/consultation-requests`
-Get all consultation requests with qualification status
-
-#### PUT `/api/admin/leads/contacts/:id/qualify`
-Qualify contact lead
-```json
-{
-  "lead_score": 85,
-  "qualification_notes": "High-value prospect",
-  "estimated_value": 25000,
-  "priority": "high"
-}
-```
-
-#### PUT `/api/admin/leads/consultation-requests/:id/approve`
-Approve consultation request
-```json
-{
-  "estimated_value": 15000,
-  "assigned_to": "consultant_user_id",
-  "notes": "Approved for initial consultation"
-}
-```
-
-### Analytics & Reporting (`/api/admin/analytics`)
-
-#### GET `/api/admin/analytics/revenue`
-Get revenue analytics and trends
-
-#### GET `/api/admin/analytics/conversions`
-Get lead conversion analytics
-
-#### GET `/api/admin/analytics/satisfaction`
-Get satisfaction rating analytics
-
-#### GET `/api/admin/analytics/performance`
-Get consultant performance metrics
-
-### Admin User Management (`/api/admin/admin-users`)
-
-#### GET `/api/admin/admin-users`
-Get all admin users (requires super admin)
-
-#### POST `/api/admin/admin-users`
-Create new admin user (requires super admin)
-```json
-{
-  "email": "newadmin@example.com",
-  "full_name": "New Admin",
-  "role": "consultant",
-  "department": "Strategy",
-  "specializations": ["Business Strategy", "Market Analysis"],
-  "hourly_rate": 150,
-  "permissions": {
-    "users": ["read", "write"],
-    "applications": ["read", "write"],
-    "consultations": ["read", "write"]
+  "token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...",
+  "user": {
+    "id": "uuid",
+    "email": "user@example.com",
+    "full_name": "John Doe",
+    "role": "client",
+    "profile_unlocked": true,
+    "onboarding_completed": true
   }
 }
 ```
 
-#### PUT `/api/admin/admin-users/:id`
-Update admin user (requires super admin)
+---
 
-#### PUT `/api/admin/admin-users/:id/deactivate`
-Deactivate admin user (requires super admin)
-
-#### PUT `/api/admin/admin-users/:id/activate`
-Activate admin user (requires super admin)
-
-## 🔒 Security Features
-
-### Authentication & Authorization
-- **JWT Token Validation** for all protected endpoints
-- **Role-based Access Control** (RBAC) for admin functions
-- **Row Level Security (RLS)** on all database tables
-- **Multi-role Support** (admin, super_admin, consultant, manager)
-
-### Account Security
-- **Password Strength Requirements**
-- **Failed Login Attempt Tracking**
-- **Account Lockout Protection**
-- **Two-Factor Authentication Support**
-- **Session Management**
-
-### Data Protection
-- **Input Validation** using Joi schemas
-- **SQL Injection Prevention**
-- **XSS Protection** with helmet.js
-- **Rate Limiting** on all endpoints
-- **File Upload Validation** with type and size limits
-
-### Audit & Monitoring
-- **Activity Logging** for all user actions
-- **Login Monitoring** and suspicious activity detection
-- **Data Change Tracking** with timestamps
-- **Performance Monitoring** with slow query detection
-
-## 📈 Performance Features
-
-### Database Optimization
-- **20+ Performance Indexes** including GIN indexes for arrays
-- **Query Optimization** with proper joins and filtering
-- **Connection Pooling** for database connections
-- **Caching Strategies** for frequently accessed data
-
-### API Performance
-- **Pagination** for large data sets
-- **Filtering and Search** capabilities
-- **Response Compression** with gzip
-- **Request Rate Limiting** to prevent abuse
-
-## 🧪 Testing
-
-```bash
-# Run all tests
-npm test
-
-# Run tests with coverage
-npm run test:coverage
-
-# Run specific test suite
-npm test -- auth.test.js
-
-# Run integration tests
-npm run test:integration
-
-# Run health check
-npm run health-check
-
-# Verify setup
-npm run verify-setup
+### 2. Get Current User
 ```
-
-## 🚀 Deployment
-
-### Prerequisites
-1. Supabase project with PostgreSQL database
-2. SMTP email service (Gmail, SendGrid, etc.)
-3. Node.js 18+ hosting platform
-
-### Deployment Steps
-1. **Database Setup**: Run `MASTER_SCHEMA.sql` in Supabase SQL Editor
-2. **Environment**: Configure all environment variables
-3. **Admin User**: Create first admin user with `npm run create-first-admin`
-4. **Deploy**: Deploy to your hosting platform
-5. **Verify**: Test all endpoints with `npm run health-check`
-
-### Recommended Platforms
-- **Render**: Easy deployment with automatic builds
-- **Railway**: Simple setup with database integration
-- **Vercel**: Serverless deployment option
-- **DigitalOcean**: Full control with App Platform
-
-## 📊 Monitoring & Analytics
-
-### Built-in Analytics
-- **User Growth Metrics** - Registration and activation rates
-- **Lead Conversion Tracking** - From contact to client conversion
-- **Revenue Analytics** - Consultation revenue and trends
-- **Satisfaction Metrics** - Client satisfaction ratings and feedback
-- **Performance Metrics** - Consultant performance and utilization
-
-### Health Monitoring
-- **Database Connectivity** monitoring
-- **Email Service Status** checking
-- **Storage Availability** verification
-- **API Response Times** tracking
-- **Error Rate Monitoring**
-
-## 🤝 Support
-
-For issues or questions:
-1. Check the API documentation above
-2. Review the database schema in `MASTER_SCHEMA.sql`
-3. Run health checks with `npm run health-check`
-4. Check logs for error details
-5. Verify environment configuration
-
-## 📄 License
-
-MIT License
+GET /api/auth/me
+```
+**Headers:** `Authorization: Bearer YOUR_TOKEN`  
+**Response:**
+```json
+{
+  "id": "uuid",
+  "email": "user@example.com",
+  "full_name": "John Doe",
+  "role": "client",
+  "profile_unlocked": true,
+  "onboarding_completed": true
+}
+```
 
 ---
 
-**Built for professional consulting businesses that need enterprise-grade features and scalability.**
+### 3. Logout
+```
+POST /api/auth/logout
+```
+**Headers:** `Authorization: Bearer YOUR_TOKEN`  
+**Response:**
+```json
+{
+  "message": "Logged out successfully"
+}
+```
+
+
+
+---
+
+## 👤 Client Endpoints (Client Auth Required)
+
+All these endpoints require: `Authorization: Bearer YOUR_TOKEN`
+
+### 1. Client Dashboard
+```
+GET /api/client/dashboard
+```
+**Purpose:** Get client's dashboard data  
+**Response:**
+```json
+{
+  "user": {
+    "id": "uuid",
+    "full_name": "John Doe",
+    "email": "john@example.com",
+    "profile_unlocked": true,
+    "onboarding_completed": true
+  },
+  "status": {
+    "consultation_completed": true,
+    "payment_confirmed": true,
+    "onboarding_completed": true,
+    "profile_unlocked": true
+  },
+  "applications": [],
+  "upcoming_meetings": [],
+  "notifications": []
+}
+```
+
+---
+
+### 2. Submit Onboarding (20 Questions)
+```
+POST /api/client/onboarding-20q
+```
+**Purpose:** Submit 20-question onboarding form  
+**Request Body:**
+```json
+{
+  "full_name": "John Doe",
+  "email": "john@example.com",
+  "phone": "+1234567890",
+  "current_location": "Toronto, Canada",
+  "target_countries": ["Canada", "USA"],
+  "education_level": "Bachelor's Degree",
+  "field_of_study": "Computer Science",
+  "years_of_experience": 5,
+  "current_job_title": "Software Developer",
+  "target_job_titles": ["Senior Developer", "Tech Lead"],
+  "industries_of_interest": ["Technology", "Finance"],
+  "work_authorization": "Canadian Citizen",
+  "resume_uploaded": true,
+  "linkedin_profile": "https://linkedin.com/in/johndoe",
+  "portfolio_url": "https://johndoe.com",
+  "job_search_timeline": "3-6 months",
+  "application_support_needed": ["Resume Review", "Interview Prep"],
+  "budget_range": "$1000-$2000",
+  "additional_notes": "Looking for remote opportunities"
+}
+```
+**Response:**
+```json
+{
+  "message": "Onboarding submitted successfully",
+  "id": "uuid",
+  "status": "pending",
+  "next_steps": "Your submission is under review. You'll be notified once approved."
+}
+```
+
+---
+
+### 3. Get Onboarding Status
+```
+GET /api/client/onboarding-20q/status
+```
+**Response:**
+```json
+{
+  "status": "pending",
+  "submitted_at": "2026-01-16T12:00:00Z",
+  "approved": false,
+  "profile_unlocked": false
+}
+```
+
+---
+
+### 4. Upload Files
+```
+POST /api/client/uploads
+```
+**Purpose:** Upload resume, LinkedIn PDF, portfolio  
+**Content-Type:** `multipart/form-data`  
+**Form Fields:**
+- `file`: The file to upload
+- `file_type`: "resume" | "linkedin" | "portfolio"
+
+**Response:**
+```json
+{
+  "message": "File uploaded successfully",
+  "file_url": "https://storage.url/file.pdf",
+  "file_type": "resume"
+}
+```
+
+---
+
+### 5. Get Notifications
+```
+GET /api/notifications
+```
+**Response:**
+```json
+{
+  "notifications": [
+    {
+      "id": "uuid",
+      "type": "profile_unlocked",
+      "title": "Profile Unlocked!",
+      "message": "Your Application Tracker is now active",
+      "read": false,
+      "created_at": "2026-01-16T12:00:00Z"
+    }
+  ],
+  "unread_count": 1
+}
+```
+
+---
+
+### 6. Mark Notification as Read
+```
+PATCH /api/notifications/:id/read
+```
+**Response:**
+```json
+{
+  "message": "Notification marked as read"
+}
+```
+
+---
+
+### 7. Get Unread Notification Count
+```
+GET /api/notifications/unread/count
+```
+**Response:**
+```json
+{
+  "count": 5
+}
+```
+
+
+
+---
+
+## 👨‍💼 Admin Endpoints (Admin Auth Required)
+
+All these endpoints require: `Authorization: Bearer YOUR_TOKEN` (with admin role)
+
+### 1. Admin Dashboard Overview
+```
+GET /api/admin-dashboard/overview
+```
+**Purpose:** Get admin dashboard statistics  
+**Response:**
+```json
+{
+  "stats": {
+    "total_consultations": 45,
+    "pending_consultations": 12,
+    "confirmed_consultations": 20,
+    "total_clients": 30,
+    "active_clients": 25,
+    "pending_onboarding": 8,
+    "revenue_this_month": 15000
+  },
+  "recent_activity": [],
+  "pending_actions": []
+}
+```
+
+---
+
+### 2. Get All Consultation Requests
+```
+GET /api/admin/concierge/consultations
+```
+**Query Parameters:**
+- `admin_status`: "all" | "pending" | "confirmed" | "rescheduled" | "waitlisted"
+- `limit`: Number (default: 50)
+- `offset`: Number (default: 0)
+- `sort_by`: "created_at" | "name" | "email"
+- `sort_order`: "asc" | "desc"
+
+**Response:**
+```json
+{
+  "consultations": [
+    {
+      "id": "uuid",
+      "name": "John Doe",
+      "email": "john@example.com",
+      "phone": "+1234567890",
+      "message": "Need help with applications",
+      "preferred_slots": [
+        { "date": "2026-01-20", "time": "10:00" },
+        { "date": "2026-01-21", "time": "14:00" },
+        { "date": "2026-01-22", "time": "16:00" }
+      ],
+      "admin_status": "pending",
+      "status": "pending",
+      "created_at": "2026-01-16T12:00:00Z"
+    }
+  ],
+  "total": 45,
+  "offset": 0,
+  "limit": 50,
+  "status_counts": {
+    "pending": 12,
+    "confirmed": 20,
+    "rescheduled": 3,
+    "waitlisted": 10
+  }
+}
+```
+
+---
+
+### 3. Confirm Consultation (GATEKEEPER ACTION)
+```
+POST /api/admin/concierge/consultations/:id/confirm
+```
+**Purpose:** Confirm one of the 3 time slots  
+**Request Body:**
+```json
+{
+  "selected_slot_index": 0,
+  "meeting_details": "We'll discuss your job search strategy",
+  "meeting_link": "https://meet.google.com/abc-defg-hij",
+  "admin_notes": "Client is interested in tech roles"
+}
+```
+**Important:** `selected_slot_index` must be 0, 1, or 2 (which of the 3 slots to confirm)
+
+**Response:**
+```json
+{
+  "message": "Consultation confirmed successfully",
+  "consultation": {
+    "id": "uuid",
+    "admin_status": "confirmed",
+    "status": "confirmed",
+    "confirmed_time": "2026-01-20T10:00:00Z"
+  },
+  "confirmed_slot": {
+    "date": "2026-01-20",
+    "time": "10:00"
+  }
+}
+```
+
+---
+
+### 4. Request Reschedule
+```
+POST /api/admin/concierge/consultations/:id/reschedule
+```
+**Request Body:**
+```json
+{
+  "reschedule_reason": "No availability at requested times",
+  "admin_notes": "Will follow up next week"
+}
+```
+**Response:**
+```json
+{
+  "message": "Reschedule request sent successfully",
+  "consultation": {
+    "id": "uuid",
+    "admin_status": "rescheduled"
+  }
+}
+```
+
+---
+
+### 5. Add to Waitlist
+```
+POST /api/admin/concierge/consultations/:id/waitlist
+```
+**Request Body:**
+```json
+{
+  "waitlist_reason": "Fully booked this month",
+  "admin_notes": "High priority client"
+}
+```
+**Response:**
+```json
+{
+  "message": "Consultation added to waitlist successfully",
+  "consultation": {
+    "id": "uuid",
+    "admin_status": "waitlisted"
+  }
+}
+```
+
+
+
+---
+
+### 6. Confirm Payment & Send Registration Invite (MOST IMPORTANT!)
+```
+POST /api/admin/concierge/payment-confirmation
+```
+**Purpose:** This is the "Verify & Invite" button - confirms payment and sends 15-day registration link  
+**Request Body:**
+```json
+{
+  "consultation_id": "uuid",
+  "client_email": "john@example.com",
+  "client_name": "John Doe",
+  "payment_amount": 1500,
+  "payment_date": "2026-01-16",
+  "package_tier": "Premium Package",
+  "package_type": "tier",
+  "selected_services": ["Resume Review", "Interview Prep", "Application Support"],
+  "payment_method": "interac_etransfer",
+  "payment_reference": "REF123456",
+  "admin_notes": "Payment verified via Interac"
+}
+```
+
+**What This Does:**
+1. Updates consultation status to "onboarding"
+2. Generates 15-day registration token
+3. Creates/updates user in database
+4. Sends email with registration link
+5. Registration link: `https://apply-bureau.vercel.app/register?token=XXXXX`
+
+**Response:**
+```json
+{
+  "success": true,
+  "message": "Payment confirmed and registration invite sent successfully",
+  "data": {
+    "consultation_id": "uuid",
+    "client_email": "john@example.com",
+    "client_name": "John Doe",
+    "payment_amount": 1500,
+    "status": "onboarding",
+    "registration_token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...",
+    "token_expires_at": "2026-01-31T12:00:00Z",
+    "registration_url": "https://apply-bureau.vercel.app/register?token=...",
+    "email_sent": true
+  }
+}
+```
+
+---
+
+### 7. Get All Onboarding Submissions
+```
+GET /api/admin/concierge/onboarding
+```
+**Query Parameters:**
+- `status`: "all" | "pending" | "active" | "completed"
+- `limit`: Number (default: 50)
+- `offset`: Number (default: 0)
+
+**Response:**
+```json
+{
+  "submissions": [
+    {
+      "id": "uuid",
+      "user_id": "uuid",
+      "full_name": "John Doe",
+      "email": "john@example.com",
+      "execution_status": "pending",
+      "submitted_at": "2026-01-16T12:00:00Z",
+      "registered_users": {
+        "id": "uuid",
+        "email": "john@example.com",
+        "full_name": "John Doe",
+        "profile_unlocked": false,
+        "onboarding_completed": true
+      }
+    }
+  ],
+  "total": 8,
+  "status_counts": {
+    "pending": 5,
+    "active": 2,
+    "completed": 1
+  }
+}
+```
+
+---
+
+### 8. Approve Onboarding & Unlock Profile
+```
+POST /api/admin/concierge/onboarding/:id/approve
+```
+**Purpose:** Approve onboarding and unlock Application Tracker  
+**Request Body:**
+```json
+{
+  "admin_notes": "Great profile, approved for full access"
+}
+```
+
+**What This Does:**
+1. Changes onboarding status to "active"
+2. Sets `profile_unlocked = true` in database
+3. Sets `onboarding_completed = true`
+4. Sends "Profile Unlocked" email to client
+5. Client can now access Application Tracker
+
+**Response:**
+```json
+{
+  "message": "Onboarding approved and profile unlocked successfully",
+  "client_name": "John Doe",
+  "client_email": "john@example.com",
+  "execution_status": "active",
+  "profile_unlocked": true,
+  "approved_by": "Admin Name",
+  "approved_at": "2026-01-16T12:00:00Z"
+}
+```
+
+---
+
+### 9. Get Contact Requests
+```
+GET /api/contact-requests
+```
+**Response:**
+```json
+{
+  "contacts": [
+    {
+      "id": "uuid",
+      "full_name": "Jane Smith",
+      "email": "jane@example.com",
+      "phone": "+1234567890",
+      "message": "Interested in your services",
+      "status": "new",
+      "created_at": "2026-01-16T12:00:00Z"
+    }
+  ],
+  "total": 25
+}
+```
+
+---
+
+### 10. Get Activity Logs
+```
+GET /api/admin/activity-logs
+```
+**Response:**
+```json
+{
+  "logs": [
+    {
+      "id": "uuid",
+      "action": "consultation_confirmed",
+      "admin_name": "Admin User",
+      "details": "Confirmed consultation for John Doe",
+      "timestamp": "2026-01-16T12:00:00Z"
+    }
+  ]
+}
+```
+
+---
+
+### 11. Enhanced Dashboard
+```
+GET /api/enhanced-dashboard
+```
+**Purpose:** Real-time dashboard with all metrics  
+**Response:**
+```json
+{
+  "overview": {
+    "total_consultations": 45,
+    "pending_consultations": 12,
+    "total_clients": 30,
+    "revenue_this_month": 15000
+  },
+  "recent_consultations": [],
+  "pending_onboarding": [],
+  "recent_activity": []
+}
+```
+
+
+
+---
+
+## 📊 Complete Endpoint List
+
+### Public Endpoints (No Auth)
+| Method | Endpoint | Purpose |
+|--------|----------|---------|
+| GET | `/health` | Health check |
+| GET | `/api/health` | API health check |
+| POST | `/api/contact` | Submit contact form |
+| POST | `/api/public-consultations` | Book consultation |
+| GET | `/api/client-registration/validate-token/:token` | Validate registration token |
+| POST | `/api/client-registration/register` | Register using token |
+| GET | `/api/public/info` | Get public info |
+
+### Authentication Endpoints
+| Method | Endpoint | Purpose |
+|--------|----------|---------|
+| POST | `/api/auth/login` | Login |
+| GET | `/api/auth/me` | Get current user |
+| POST | `/api/auth/logout` | Logout |
+
+### Client Endpoints (Client Auth Required)
+| Method | Endpoint | Purpose |
+|--------|----------|---------|
+| GET | `/api/client/dashboard` | Get dashboard |
+| POST | `/api/client/onboarding-20q` | Submit onboarding |
+| GET | `/api/client/onboarding-20q/status` | Get onboarding status |
+| POST | `/api/client/uploads` | Upload files |
+| GET | `/api/notifications` | Get notifications |
+| GET | `/api/notifications/unread/count` | Get unread count |
+| PATCH | `/api/notifications/:id/read` | Mark as read |
+| GET | `/api/applications` | Get applications |
+| POST | `/api/applications` | Create application |
+| GET | `/api/strategy-calls` | Get strategy calls |
+| POST | `/api/strategy-calls` | Book strategy call |
+
+### Admin Endpoints (Admin Auth Required)
+| Method | Endpoint | Purpose |
+|--------|----------|---------|
+| GET | `/api/admin-dashboard/overview` | Dashboard stats |
+| GET | `/api/admin/concierge/consultations` | List consultations |
+| POST | `/api/admin/concierge/consultations/:id/confirm` | Confirm consultation |
+| POST | `/api/admin/concierge/consultations/:id/reschedule` | Request reschedule |
+| POST | `/api/admin/concierge/consultations/:id/waitlist` | Add to waitlist |
+| POST | `/api/admin/concierge/payment-confirmation` | **Verify & Invite (15-day token)** |
+| GET | `/api/admin/concierge/onboarding` | List onboarding submissions |
+| POST | `/api/admin/concierge/onboarding/:id/approve` | Approve & unlock profile |
+| GET | `/api/contact-requests` | Get contact requests |
+| GET | `/api/enhanced-dashboard` | Real-time dashboard |
+| GET | `/api/admin/activity-logs` | Get activity logs |
+| POST | `/api/webhooks/test` | Test webhook |
+
+
+
+---
+
+## 📝 Data Formats & Examples
+
+### Consultation Request Format
+```json
+{
+  "name": "John Doe",
+  "email": "john@example.com",
+  "phone": "+1234567890",
+  "message": "I need help with job applications",
+  "preferred_slots": [
+    { "date": "2026-01-20", "time": "10:00" },
+    { "date": "2026-01-21", "time": "14:00" },
+    { "date": "2026-01-22", "time": "16:00" }
+  ]
+}
+```
+**Important:** 
+- Must have exactly 3 preferred_slots
+- Date format: "YYYY-MM-DD"
+- Time format: "HH:MM" (24-hour)
+
+---
+
+### Contact Form Format
+```json
+{
+  "full_name": "John Doe",
+  "email": "john@example.com",
+  "phone": "+1234567890",
+  "message": "Your message here"
+}
+```
+**Note:** Use `full_name` (not `firstName` and `lastName`)
+
+---
+
+### Onboarding Submission Format
+```json
+{
+  "full_name": "John Doe",
+  "email": "john@example.com",
+  "phone": "+1234567890",
+  "current_location": "Toronto, Canada",
+  "target_countries": ["Canada", "USA", "UK"],
+  "education_level": "Bachelor's Degree",
+  "field_of_study": "Computer Science",
+  "years_of_experience": 5,
+  "current_job_title": "Software Developer",
+  "target_job_titles": ["Senior Developer", "Tech Lead"],
+  "industries_of_interest": ["Technology", "Finance"],
+  "work_authorization": "Canadian Citizen",
+  "resume_uploaded": true,
+  "linkedin_profile": "https://linkedin.com/in/johndoe",
+  "portfolio_url": "https://johndoe.com",
+  "job_search_timeline": "3-6 months",
+  "application_support_needed": ["Resume Review", "Interview Prep"],
+  "budget_range": "$1000-$2000",
+  "additional_notes": "Looking for remote opportunities"
+}
+```
+
+---
+
+### Payment Confirmation Format
+```json
+{
+  "consultation_id": "uuid",
+  "client_email": "john@example.com",
+  "client_name": "John Doe",
+  "payment_amount": 1500,
+  "payment_date": "2026-01-16",
+  "package_tier": "Premium Package",
+  "package_type": "tier",
+  "selected_services": ["Resume Review", "Interview Prep"],
+  "payment_method": "interac_etransfer",
+  "payment_reference": "REF123456",
+  "admin_notes": "Payment verified"
+}
+```
+
+---
+
+### User Object Format
+```json
+{
+  "id": "uuid",
+  "email": "john@example.com",
+  "full_name": "John Doe",
+  "role": "client",
+  "profile_unlocked": true,
+  "payment_confirmed": true,
+  "onboarding_completed": true,
+  "is_active": true,
+  "created_at": "2026-01-16T12:00:00Z"
+}
+```
+
+---
+
+### Notification Format
+```json
+{
+  "id": "uuid",
+  "user_id": "uuid",
+  "type": "profile_unlocked",
+  "title": "Profile Unlocked!",
+  "message": "Your Application Tracker is now active",
+  "read": false,
+  "created_at": "2026-01-16T12:00:00Z"
+}
+```
+
+
+
+---
+
+## ⚠️ Error Handling
+
+### Standard Error Response Format
+```json
+{
+  "error": "Error message here",
+  "details": "More specific details (optional)",
+  "errorId": "abc123def456"
+}
+```
+
+### Common HTTP Status Codes
+| Code | Meaning | When It Happens |
+|------|---------|-----------------|
+| 200 | Success | Request completed successfully |
+| 201 | Created | New resource created |
+| 400 | Bad Request | Missing or invalid data |
+| 401 | Unauthorized | No token or invalid token |
+| 403 | Forbidden | Don't have permission |
+| 404 | Not Found | Resource doesn't exist |
+| 429 | Too Many Requests | Rate limit exceeded |
+| 500 | Server Error | Something broke on server |
+
+### Common Error Messages
+
+**Authentication Errors:**
+```json
+{ "error": "Invalid or expired token" }
+{ "error": "Authentication required" }
+{ "error": "Admin access required" }
+```
+
+**Validation Errors:**
+```json
+{ "error": "Missing required fields: email, password" }
+{ "error": "Invalid email format" }
+{ "error": "Password must be at least 8 characters" }
+```
+
+**Token Errors:**
+```json
+{ "error": "Token expired" }
+{ "error": "Token already used" }
+{ "error": "Invalid token type" }
+```
+
+**Rate Limit Errors:**
+```json
+{
+  "error": "Too many login attempts",
+  "retryAfter": 900
+}
+```
+
+
+
+---
+
+## 🔄 Complete User Flow (Step by Step)
+
+### Flow 1: Public User → Consultation → Payment → Registration → Onboarding → Active Client
+
+**Step 1: User Books Consultation**
+```
+POST /api/public-consultations
+Body: { name, email, phone, message, preferred_slots (3 slots) }
+→ Status: "pending"
+```
+
+**Step 2: Admin Confirms Consultation**
+```
+POST /api/admin/concierge/consultations/:id/confirm
+Body: { selected_slot_index: 0, meeting_details, meeting_link }
+→ Status: "confirmed"
+→ Email sent to client with meeting details
+```
+
+**Step 3: Consultation Happens**
+- Client and admin meet
+- Admin discusses services and pricing
+
+**Step 4: Admin Confirms Payment & Sends Invite**
+```
+POST /api/admin/concierge/payment-confirmation
+Body: { 
+  consultation_id, 
+  client_email, 
+  client_name, 
+  payment_amount, 
+  package_tier 
+}
+→ Generates 15-day registration token
+→ Sends email with registration link
+→ Status: "onboarding"
+```
+
+**Step 5: Client Registers**
+```
+GET /api/client-registration/validate-token/:token
+→ Check if token is valid
+
+POST /api/client-registration/register
+Body: { token, password, confirm_password }
+→ Account created
+→ Returns auth token
+→ profile_unlocked: false
+→ onboarding_completed: false
+```
+
+**Step 6: Client Submits Onboarding**
+```
+POST /api/client/onboarding-20q
+Headers: Authorization: Bearer TOKEN
+Body: { 20 questions answered }
+→ Status: "pending"
+→ Waiting for admin approval
+```
+
+**Step 7: Admin Approves Onboarding**
+```
+POST /api/admin/concierge/onboarding/:id/approve
+Body: { admin_notes }
+→ profile_unlocked: true
+→ onboarding_completed: true
+→ Email sent: "Profile Unlocked!"
+→ Client can now access Application Tracker
+```
+
+**Step 8: Client Uses Application Tracker**
+```
+GET /api/client/dashboard
+→ Full access to all features
+→ Can track applications
+→ Can book strategy calls
+→ Can upload documents
+```
+
+---
+
+## 🎯 Key Points for Frontend
+
+### 1. Registration Token is 15 DAYS (not 7!)
+- Token expires in 15 days
+- Generated at: `backend/routes/adminConcierge.js` lines ~434 and ~598
+- Code: `{ expiresIn: '15d' }`
+
+### 2. Contact Form Uses `full_name` (not firstName/lastName)
+```javascript
+// ✅ CORRECT
+{ full_name: "John Doe", email: "...", phone: "...", message: "..." }
+
+// ❌ WRONG
+{ firstName: "John", lastName: "Doe", ... }
+```
+
+### 3. Consultation Requires Exactly 3 Time Slots
+```javascript
+preferred_slots: [
+  { date: "2026-01-20", time: "10:00" },
+  { date: "2026-01-21", time: "14:00" },
+  { date: "2026-01-22", time: "16:00" }
+]
+```
+
+### 4. Frontend URL is Production URL
+- Use: `https://apply-bureau.vercel.app`
+- NOT: `http://localhost:5173`
+
+### 5. Always Include Authorization Header
+```javascript
+headers: {
+  'Authorization': `Bearer ${token}`,
+  'Content-Type': 'application/json'
+}
+```
+
+### 6. Profile Unlocked = Application Tracker Access
+- `profile_unlocked: false` → No tracker access
+- `profile_unlocked: true` → Full tracker access
+- Only admin can unlock via onboarding approval
+
+---
+
+## 🚀 Deployment Info
+
+**Backend URL:** `https://apply-bureau-backend.vercel.app`  
+**Frontend URL:** `https://apply-bureau.vercel.app`  
+**Platform:** Vercel  
+**Database:** Supabase (PostgreSQL)  
+**Email Service:** Custom email service  
+
+---
+
+## 📞 Support
+
+If you encounter any errors:
+1. Check the error message and `errorId`
+2. Verify request format matches examples above
+3. Ensure token is valid and not expired
+4. Check that all required fields are included
+5. Verify you're using the correct endpoint URL
+
+---
+
+**Last Updated:** January 16, 2026  
+**Version:** 1.0.0  
+**Maintained by:** Apply Bureau Development Team
+
