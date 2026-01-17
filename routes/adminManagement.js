@@ -272,8 +272,7 @@ router.post('/admins', authenticateToken, requireAdmin, upload.single('profile_p
         role: 'admin',
         profile_picture_url: profilePictureUrl,
         status: 'active',
-        is_active: true,
-        created_by_admin_id: currentAdminId
+        is_active: true
       })
       .select('id, full_name, email, role, profile_picture_url, phone, is_active, created_at')
       .single();
