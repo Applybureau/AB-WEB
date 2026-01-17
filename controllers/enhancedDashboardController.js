@@ -1,103 +1,166 @@
 const { supabaseAdmin } = require('../utils/supabase');
 const logger = require('../utils/logger');
-const realtimeManager = require('../utils/realtime');
 
-// GET /api/dashboard/admin/stats - Enhanced admin dashboard stats
+// GET /api/enhanced-dashboard - Enhanced admin dashboard stats with error handling
 const getAdminDashboardStats = async (req, res) => {
   try {
-    const adminId = req.user.id;
+    console.log('🔍 Fetching enhanced dashboard stats');
 
-    // Get comprehensive stats
-    const [
-      clientsResult,
-      consultationsResult,
-      applicationsResult,
-      messagesResult,
-      recentActivities
-    ] = await Promise.all([
-      // Clients stats
-      supabaseAdmin
-        .from('clients')
-        .select('id, full_name, status, created_at, last_active_at')
-        .order('created_at', { ascending: false }),
-      
-      // Consultations stats
-      supabaseAdmin
-        .from('consultations')
-        .select(`
-          id, scheduled_at, status, consultation_type, prospect_name, prospect_email,
-          client:client_id(id, full_name, email)
-        `)
-        .order('scheduled_at', { ascending: false }),
-      
-      // Applications stats
-      supabaseAdmin
-        .from('applications')
-        .select('id, status, created_at, client_id')
-        .order('created_at', { ascending: false }),
-      
-      // Messages stats
-      supabaseAdmin
-        .from('messages')
-        .select('id, is_read, created_at, sender_type, recipient_type')
-        .order('created_at', { ascending: false })
-        .limit(50),
-      
-      // Recent activities
-      supabaseAdmin
-        .from('dashboard_activities')
-        .select('*')
-        .order('created_at', { ascending: false })
-        .limit(20)
-    ]);
-
-    const clients = clientsResult.data || [];
-    const consultations = consultationsResult.data || [];
-    const applications = applicationsResult.data || [];
-    const messages = messagesResult.data || [];
-
-    // Calculate stats
+    // Initialize stats with defaults
     const stats = {
       clients: {
-        total: clients.length,
-        active: clients.filter(c => c.status === 'active').length,
-        new_this_week: clients.filter(c => 
-          new Date(c.created_at) > new Date(Date.now() - 7 * 24 * 60 * 60 * 1000)
-        ).length,
-        online: realtimeManager.getConnectedUsers().filter(u => u.role === 'client').length
+        total: 0,
+        active: 0,
+        new_this_week: 0,
+        online: 0
       },
       consultations: {
-        total: consultations.length,
-        scheduled: consultations.filter(c => c.status === 'scheduled').length,
-        completed: consultations.filter(c => c.status === 'completed').length,
-        upcoming: consultations.filter(c => 
-          c.status === 'scheduled' && new Date(c.scheduled_at) > new Date()
-        ).length,
-        today: consultations.filter(c => {
-          const today = new Date();
-          const consultationDate = new Date(c.scheduled_at);
-          return consultationDate.toDateString() === today.toDateString();
-        }).length
+        total: 0,
+        scheduled: 0,
+        completed: 0,
+        upcoming: 0,
+        today: 0
       },
       applications: {
-        total: applications.length,
-        this_month: applications.filter(a => 
-          new Date(a.created_at) > new Date(Date.now() - 30 * 24 * 60 * 60 * 1000)
-        ).length,
-        by_status: applications.reduce((acc, app) => {
-          acc[app.status] = (acc[app.status] || 0) + 1;
-          return acc;
-        }, {})
+        total: 0,
+        this_month: 0,
+        by_status: {}
       },
       messages: {
-        total: messages.length,
-        unread_from_clients: messages.filter(m => 
-          m.recipient_type === 'admin' && !m.is_read
-        ).length,
-        sent_today: messages.filter(m => {
-          const today = new Date();
-          const messageDate = new Date(m.created_at);
-          return messageDate.toDateString() === today.toDateString();
+        total: 0,
+        unread_from_clients: 0,
+        sent_today: 0
+      },
+      recent_activities: []
+    };
+
+    const sevenDaysAgo = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000);
+    const thirtyDaysAgo = new Date(Date.now() - 30 * 24 * 60 * 60 * 1000);
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+
+    // Get clients stats with error handling
+    try {
+      const { data: clients, error } = await supabaseAdmin
+        .from('registered_users')
+        .select('id, full_name, is_active, created_at, last_login_at')
+        .eq('role', 'client')
+        .order('created_at', { ascending: false });
+
+      if (!error && clients) {
+        stats.clients.total = clients.length;
+        stats.clients.active = clients.filter(c => c.is_active).length;
+        stats.clients.new_this_week = clients.filter(c => 
+          new Date(c.created_at) > sevenDaysAgo
+        ).length;
+      }
+    } catch (error) {
+      console.error('Error fetching clients:', error);
+    }
+
+    // Get consultations stats with error handling
+    try {
+      const { data: consultations, error } = await supabaseAdmin
+        .from('consultation_requests')
+        .select('id, admin_status, status, created_at, confirmed_time')
+        .order('created_at', { ascending: false });
+
+      if (!error && consultations) {
+        stats.consultations.total = consultations.length;
+        stats.consultations.scheduled = consultations.filter(c => c.admin_status === 'confirmed').length;
+        stats.consultations.completed = consultations.filter(c => c.status === 'completed').length;
+        stats.consultations.upcoming = consultations.filter(c => 
+          c.admin_status === 'confirmed' && c.confirmed_time && new Date(c.confirmed_time) > new Date()
+        ).length;
+        stats.consultations.today = consultations.filter(c => {
+          if (!c.confirmed_time) return false;
+          const consultationDate = new Date(c.confirmed_time);
+          return consultationDate.toDateString() === new Date().toDateString();
+        }).length;
+      }
+    } catch (error) {
+      console.error('Error fetching consultations:', error);
+    }
+
+    // Get applications stats with error handling
+    try {
+      const { data: applications, error } = await supabaseAdmin
+        .from('applications')
+        .select('id, status, created_at, client_id')
+        .order('created_at', { ascending: false });
+
+      if (!error && applications) {
+        stats.applications.total = applications.length;
+        stats.applications.this_month = applications.filter(a => 
+          new Date(a.created_at) > thirtyDaysAgo
+        ).length;
+        stats.applications.by_status = applications.reduce((acc, app) => {
+          acc[app.status] = (acc[app.status] || 0) + 1;
+          return acc;
+        }, {});
+      }
+    } catch (error) {
+      console.error('Error fetching applications:', error);
+    }
+
+    // Get notifications/messages stats with error handling
+    try {
+      const { data: notifications, error } = await supabaseAdmin
+        .from('notifications')
+        .select('id, is_read, created_at, user_id')
+        .order('created_at', { ascending: false })
+        .limit(50);
+
+      if (!error && notifications) {
+        stats.messages.total = notifications.length;
+        stats.messages.unread_from_clients = notifications.filter(n => !n.is_read).length;
+        stats.messages.sent_today = notifications.filter(n => {
+          const notificationDate = new Date(n.created_at);
+          return notificationDate >= today;
+        }).length;
+      }
+    } catch (error) {
+      console.error('Error fetching notifications:', error);
+    }
+
+    // Get recent activities (simplified)
+    try {
+      const { data: recentClients } = await supabaseAdmin
+        .from('registered_users')
+        .select('id, full_name, email, created_at')
+        .eq('role', 'client')
+        .order('created_at', { ascending: false })
+        .limit(5);
+
+      if (recentClients) {
+        stats.recent_activities = recentClients.map(client => ({
+          type: 'new_client',
+          description: `New client registered: ${client.full_name}`,
+          timestamp: client.created_at,
+          user: client
+        }));
+      }
+    } catch (error) {
+      console.error('Error fetching recent activities:', error);
+    }
+
+    console.log('✅ Enhanced dashboard stats fetched successfully');
+
+    res.json({
+      success: true,
+      stats,
+      timestamp: new Date().toISOString(),
+      realtime_enabled: false // Simplified for now
+    });
+  } catch (error) {
+    console.error('❌ Enhanced dashboard error:', error);
+    logger.error('Enhanced dashboard error', error);
+    res.status(500).json({ 
+      error: 'Failed to fetch enhanced dashboard data',
+      details: error.message 
+    });
+  }
+};
         }).length
       },
       system: {

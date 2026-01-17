@@ -189,6 +189,29 @@ router.get('/unread-count', authenticateToken, async (req, res) => {
   }
 });
 
+// GET /api/notifications/unread/count - Alternative endpoint for unread count
+router.get('/unread/count', authenticateToken, async (req, res) => {
+  try {
+    const clientId = req.user.userId || req.user.id;
+
+    const { count, error } = await supabaseAdmin
+      .from('notifications')
+      .select('*', { count: 'exact', head: true })
+      .eq('user_id', clientId)
+      .eq('is_read', false);
+
+    if (error) {
+      console.error('Error counting unread notifications:', error);
+      return res.status(500).json({ error: 'Failed to count unread notifications' });
+    }
+
+    res.json({ unread_count: count || 0 });
+  } catch (error) {
+    console.error('Unread count error:', error);
+    res.status(500).json({ error: 'Failed to get unread count' });
+  }
+});
+
 // GET /api/notifications/recent - Get recent notifications for real-time updates
 router.get('/recent', authenticateToken, async (req, res) => {
   try {

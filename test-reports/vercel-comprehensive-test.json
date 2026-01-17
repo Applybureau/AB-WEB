@@ -1,0 +1,166 @@
+{
+  "timestamp": "2026-01-16T20:07:12.566Z",
+  "baseUrl": "https://apply-bureau-backend.vercel.app",
+  "summary": {
+    "passed": 17,
+    "failed": 11,
+    "warnings": 9,
+    "total": 37
+  },
+  "results": {
+    "passed": [
+      {
+        "name": "Health Check",
+        "details": "Status: 200"
+      },
+      {
+        "name": "API Health Check",
+        "details": "Status: 200"
+      },
+      {
+        "name": "Submit Public Consultation",
+        "details": "Status: 201"
+      },
+      {
+        "name": "Submit Contact Form",
+        "details": "Status: 201"
+      },
+      {
+        "name": "Admin Login",
+        "details": "Status: 200"
+      },
+      {
+        "name": "Admin Token Retrieved",
+        "details": "Token stored for subsequent tests"
+      },
+      {
+        "name": "Get Current User (/api/auth/me)",
+        "details": "Status: 200"
+      },
+      {
+        "name": "Admin Dashboard Stats",
+        "details": "Status: 200"
+      },
+      {
+        "name": "Regular Dashboard",
+        "details": "Status: 200"
+      },
+      {
+        "name": "Get All Contact Requests",
+        "details": "Status: 200"
+      },
+      {
+        "name": "Get Contact Submissions",
+        "details": "Status: 200"
+      },
+      {
+        "name": "Get All Consultations",
+        "details": "Status: 200"
+      },
+      {
+        "name": "Get All Clients",
+        "details": "Status: 200"
+      },
+      {
+        "name": "Get Notifications",
+        "details": "Status: 200"
+      },
+      {
+        "name": "Get Files",
+        "details": "Status: 200"
+      },
+      {
+        "name": "Get Meetings",
+        "details": "Status: 200"
+      },
+      {
+        "name": "Get Leads",
+        "details": "Status: 200"
+      }
+    ],
+    "failed": [
+      {
+        "name": "Submit Contact Request",
+        "details": "Status: 400 - {\"error\":\"Missing required fields: firstName, lastName, email, subject, message\"}"
+      },
+      {
+        "name": "Admin Dashboard Overview",
+        "details": "Status: 500 - {\"error\":\"Internal server error\",\"errorId\":\"e7dbf1c5dbb870f2\"}"
+      },
+      {
+        "name": "Enhanced Dashboard",
+        "details": "Status: 500 - {\"error\":\"Internal server error\",\"errorId\":\"64cdcf809978d53e\"}"
+      },
+      {
+        "name": "Get Onboarding Submissions",
+        "details": "Status: 500 - {\"error\":\"Internal server error\",\"errorId\":\"a021dd61fb2a2ee2\"}"
+      },
+      {
+        "name": "Get All Admins",
+        "details": "Status: 403 - {\"error\":\"Super admin access required\"}"
+      },
+      {
+        "name": "Get Admin Activity Logs",
+        "details": "Status: 500 - {\"error\":\"Internal server error\",\"errorId\":\"7516f8b112e662ed\"}"
+      },
+      {
+        "name": "Get Unread Notifications Count",
+        "details": "Status: 500 - {\"error\":\"Internal server error\",\"errorId\":\"d1403323eecd0131\"}"
+      },
+      {
+        "name": "Get Strategy Calls",
+        "details": "Status: 500 - {\"error\":\"Internal server error\",\"errorId\":\"79298222a0ad5de7\"}"
+      },
+      {
+        "name": "Get Consultation Requests",
+        "details": "Status: 500 - {\"success\":false,\"error\":\"Failed to fetch consultation requests\",\"code\":\"DATABASE_ERROR\",\"details\":[],\"timestamp\":\"2026-01-16T11:08:56.574Z\",\"path\":\"/\",\"status\":500}"
+      },
+      {
+        "name": "Webhook Endpoint",
+        "details": "Status: 500 - {\"error\":\"Internal server error\",\"errorId\":\"b57a2079c9c5a89d\"}"
+      },
+      {
+        "name": "Public Info",
+        "details": "Status: 500 - {\"error\":\"Internal server error\",\"errorId\":\"6b0b8aac52d71b7a\"}"
+      }
+    ],
+    "warnings": [
+      {
+        "name": "Client Dashboard Tests",
+        "details": "Requires valid client token - skipping for now"
+      },
+      {
+        "name": "Client Uploads Tests",
+        "details": "Requires valid client token - skipping for now"
+      },
+      {
+        "name": "Client Onboarding Tests",
+        "details": "Requires valid client token - skipping for now"
+      },
+      {
+        "name": "Client Applications Tests",
+        "details": "Requires valid client token - skipping for now"
+      },
+      {
+        "name": "Email on Consultation Submission",
+        "details": "Tested via public consultation endpoint"
+      },
+      {
+        "name": "Email on Contact Form",
+        "details": "Tested via contact endpoint"
+      },
+      {
+        "name": "Email on Payment Confirmation",
+        "details": "Tested via payment confirmation endpoint"
+      },
+      {
+        "name": "Email on Onboarding Approval",
+        "details": "Tested via onboarding approval endpoint"
+      },
+      {
+        "name": "Email on Application Status Update",
+        "details": "Tested via application update endpoint"
+      }
+    ]
+  }
+}

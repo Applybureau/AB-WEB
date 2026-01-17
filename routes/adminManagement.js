@@ -40,8 +40,21 @@ const upload = multer({
 
 // Helper function to check if user is super admin
 async function isSuperAdmin(userId) {
-  // Check if user is the super admin by email
-  const { data: admin } = await supabaseAdmin
+  // Check if user is the super admin by email in admins table first
+  const { data: adminFromAdminsTable } = await supabaseAdmin
+    .from('admins')
+    .select('email, role')
+    .eq('id', userId)
+    .eq('email', SUPER_ADMIN_EMAIL)
+    .eq('role', 'admin')
+    .single();
+
+  if (adminFromAdminsTable) {
+    return true;
+  }
+
+  // Fallback: Check clients table for legacy admin accounts
+  const { data: adminFromClientsTable } = await supabaseAdmin
     .from('clients')
     .select('email, role')
     .eq('id', userId)
@@ -49,7 +62,7 @@ async function isSuperAdmin(userId) {
     .eq('role', 'admin')
     .single();
 
-  return !!admin;
+  return !!adminFromClientsTable;
 }
 
 // Helper function to send admin action notification emails
@@ -622,6 +635,82 @@ router.get('/settings', authenticateToken, requireAdmin, async (req, res) => {
   } catch (error) {
     console.error('Get settings error:', error);
     res.status(500).json({ error: 'Failed to get settings' });
+  }
+});
+
+// GET /api/admin-management/activity-logs - Get admin activity logs
+router.get('/activity-logs', authenticateToken, requireAdmin, async (req, res) => {
+  try {
+    console.log('🔍 Fetching activity logs');
+
+    const { 
+      limit = 50, 
+      offset = 0,
+      admin_id,
+      action_type,
+      start_date,
+      end_date
+    } = req.query;
+
+    // Build query for activity logs
+    let query = supabaseAdmin
+      .from('admin_activity_logs')
+      .select('*')
+      .order('created_at', { ascending: false })
+      .range(parseInt(offset), parseInt(offset) + parseInt(limit) - 1);
+
+    // Apply filters
+    if (admin_id) {
+      query = query.eq('admin_id', admin_id);
+    }
+
+    if (action_type) {
+      query = query.eq('action_type', action_type);
+    }
+
+    if (start_date) {
+      query = query.gte('created_at', start_date);
+    }
+
+    if (end_date) {
+      query = query.lte('created_at', end_date);
+    }
+
+    const { data: activityLogs, error } = await query;
+
+    if (error) {
+      console.error('❌ Error fetching activity logs:', error);
+      
+      // If table doesn't exist, return empty array with message
+      if (error.code === '42P01') {
+        return res.json({
+          activity_logs: [],
+          total: 0,
+          message: 'Activity logs table not yet created',
+          note: 'Activity logging will be available once the table is set up'
+        });
+      }
+
+      return res.status(500).json({ 
+        error: 'Failed to fetch activity logs',
+        details: error.message 
+      });
+    }
+
+    console.log(`✅ Found ${activityLogs?.length || 0} activity logs`);
+
+    res.json({
+      activity_logs: activityLogs || [],
+      total: activityLogs?.length || 0,
+      offset: parseInt(offset),
+      limit: parseInt(limit)
+    });
+  } catch (error) {
+    console.error('❌ Get activity logs error:', error);
+    res.status(500).json({ 
+      error: 'Failed to fetch activity logs',
+      details: error.message 
+    });
   }
 });
 

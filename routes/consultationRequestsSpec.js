@@ -133,6 +133,8 @@ router.post('/', async (req, res) => {
 // GET /api/consultation-requests - Return consultation requests for admin (PROTECTED)
 router.get('/', authenticateToken, requireAdmin, async (req, res) => {
   try {
+    console.log('🔍 Fetching consultation requests');
+
     const { 
       status,
       pipeline_status,
@@ -145,9 +147,9 @@ router.get('/', authenticateToken, requireAdmin, async (req, res) => {
 
     let query = supabaseAdmin
       .from('consultation_requests')
-      .select('id, full_name, email, phone, message, preferred_slots, status, pipeline_status, admin_status, created_at, updated_at, admin_notes, confirmed_slot, scheduled_datetime, google_meet_link')
+      .select('*')
       .order(sort_by, { ascending: sort_order === 'asc' })
-      .range(offset, offset + limit - 1);
+      .range(parseInt(offset), parseInt(offset) + parseInt(limit) - 1);
 
     // Apply filters
     if (status && status !== 'all') {
@@ -159,24 +161,30 @@ router.get('/', authenticateToken, requireAdmin, async (req, res) => {
     }
 
     if (search) {
-      query = query.or(`full_name.ilike.%${search}%,email.ilike.%${search}%,message.ilike.%${search}%`);
+      query = query.or(`name.ilike.%${search}%,email.ilike.%${search}%,message.ilike.%${search}%`);
     }
 
     const { data: consultations, error } = await query;
 
     if (error) {
-      console.error('Error fetching consultation requests:', error);
+      console.error('❌ Error fetching consultation requests:', error);
       return res.status(500).json({ 
         success: false,
         error: 'Failed to fetch consultation requests',
-        code: 'DATABASE_ERROR'
+        code: 'DATABASE_ERROR',
+        details: error.message,
+        timestamp: new Date().toISOString(),
+        path: req.path,
+        status: 500
       });
     }
+
+    console.log(`✅ Found ${consultations?.length || 0} consultation requests`);
 
     // Format consultations according to spec
     const formattedConsultations = consultations?.map(consultation => ({
       id: consultation.id,
-      fullName: consultation.full_name,
+      fullName: consultation.name || consultation.full_name,
       email: consultation.email,
       phone: consultation.phone,
       message: consultation.message,
@@ -188,7 +196,7 @@ router.get('/', authenticateToken, requireAdmin, async (req, res) => {
       updated_at: consultation.updated_at,
       admin_notes: consultation.admin_notes,
       confirmedSlot: consultation.confirmed_slot,
-      scheduled_datetime: consultation.scheduled_datetime,
+      scheduled_datetime: consultation.scheduled_datetime || consultation.confirmed_time,
       google_meet_link: consultation.google_meet_link
     })) || [];
 
@@ -197,7 +205,9 @@ router.get('/', authenticateToken, requireAdmin, async (req, res) => {
       consultations: formattedConsultations,
       total: consultations?.length || 0,
       offset: parseInt(offset),
-      limit: parseInt(limit)
+      limit: parseInt(limit),
+      timestamp: new Date().toISOString()
+    });
     });
   } catch (error) {
     console.error('Fetch consultation requests error:', error);

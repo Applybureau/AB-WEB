@@ -421,7 +421,7 @@ router.post('/payment-confirmation', async (req, res) => {
       console.log('✅ Consultation status updated to onboarding');
     }
 
-    // Step 2: Generate registration token (7-day expiry)
+    // Step 2: Generate registration token (15-day expiry)
     const token = jwt.sign(
       { 
         email: client_email,
@@ -431,11 +431,11 @@ router.post('/payment-confirmation', async (req, res) => {
         consultation_id: consultation_id
       },
       process.env.JWT_SECRET,
-      { expiresIn: '7d' }
+      { expiresIn: '15d' }
     );
 
     const tokenExpiry = new Date();
-    tokenExpiry.setDate(tokenExpiry.getDate() + 7);
+    tokenExpiry.setDate(tokenExpiry.getDate() + 15);
 
     // Step 3: Check if user already exists in registered_users
     const { data: existingUser } = await supabaseAdmin
@@ -586,7 +586,7 @@ router.post('/payment/confirm-and-invite', async (req, res) => {
       });
     }
 
-    // Generate registration token (7-day expiry)
+    // Generate registration token (15-day expiry)
     const token = jwt.sign(
       { 
         email: client_email,
@@ -595,11 +595,11 @@ router.post('/payment/confirm-and-invite', async (req, res) => {
         payment_confirmed: true
       },
       process.env.JWT_SECRET,
-      { expiresIn: '7d' }
+      { expiresIn: '15d' }
     );
 
     const tokenExpiry = new Date();
-    tokenExpiry.setDate(tokenExpiry.getDate() + 7);
+    tokenExpiry.setDate(tokenExpiry.getDate() + 15);
 
     // Check if user already exists
     const { data: existingUser } = await supabaseAdmin
@@ -717,6 +717,87 @@ router.post('/payment/confirm-and-invite', async (req, res) => {
   } catch (error) {
     console.error('Confirm payment and invite error:', error);
     res.status(500).json({ error: 'Failed to confirm payment and send invite' });
+  }
+});
+
+// GET /api/admin/concierge/onboarding - Get all onboarding submissions
+router.get('/onboarding', async (req, res) => {
+  try {
+    const { 
+      status = 'all',
+      limit = 50,
+      offset = 0,
+      sort_by = 'created_at',
+      sort_order = 'desc'
+    } = req.query;
+
+    console.log('🔍 Fetching onboarding submissions:', { status, limit, offset });
+
+    // Build query for onboarding submissions
+    let query = supabaseAdmin
+      .from('client_onboarding_20q')
+      .select(`
+        *,
+        registered_users!client_onboarding_20q_user_id_fkey (
+          id,
+          email,
+          full_name,
+          profile_unlocked,
+          onboarding_completed
+        )
+      `)
+      .order(sort_by, { ascending: sort_order === 'asc' })
+      .range(parseInt(offset), parseInt(offset) + parseInt(limit) - 1);
+
+    // Filter by status if specified
+    if (status !== 'all') {
+      query = query.eq('execution_status', status);
+    }
+
+    const { data: onboardingSubmissions, error, count } = await query;
+
+    if (error) {
+      console.error('❌ Error fetching onboarding submissions:', error);
+      return res.status(500).json({ 
+        error: 'Failed to fetch onboarding submissions',
+        details: error.message 
+      });
+    }
+
+    console.log(`✅ Found ${onboardingSubmissions?.length || 0} onboarding submissions`);
+
+    // Get status counts
+    const { data: allSubmissions } = await supabaseAdmin
+      .from('client_onboarding_20q')
+      .select('execution_status');
+
+    const statusCounts = {
+      pending: 0,
+      active: 0,
+      completed: 0
+    };
+
+    if (allSubmissions) {
+      allSubmissions.forEach(item => {
+        if (statusCounts.hasOwnProperty(item.execution_status)) {
+          statusCounts[item.execution_status]++;
+        }
+      });
+    }
+
+    res.json({
+      submissions: onboardingSubmissions || [],
+      total: onboardingSubmissions?.length || 0,
+      offset: parseInt(offset),
+      limit: parseInt(limit),
+      status_counts: statusCounts
+    });
+  } catch (error) {
+    console.error('❌ Get onboarding submissions error:', error);
+    res.status(500).json({ 
+      error: 'Failed to fetch onboarding submissions',
+      details: error.message 
+    });
   }
 });
 

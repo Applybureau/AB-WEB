@@ -6,6 +6,49 @@ const { NotificationHelpers } = require('../utils/notifications');
 
 const router = express.Router();
 
+// GET /api/strategy-calls - Get strategy calls (ADMIN or CLIENT)
+router.get('/', authenticateToken, async (req, res) => {
+  try {
+    const userId = req.user.id || req.user.userId;
+    const userRole = req.user.role;
+
+    console.log('🔍 Fetching strategy calls:', { userId, userRole });
+
+    let query = supabaseAdmin
+      .from('strategy_calls')
+      .select('*')
+      .order('created_at', { ascending: false });
+
+    // If client, only show their own strategy calls
+    if (userRole === 'client') {
+      query = query.eq('client_id', userId);
+    }
+
+    const { data: strategyCalls, error } = await query;
+
+    if (error) {
+      console.error('❌ Error fetching strategy calls:', error);
+      return res.status(500).json({ 
+        error: 'Failed to fetch strategy calls',
+        details: error.message 
+      });
+    }
+
+    console.log(`✅ Found ${strategyCalls?.length || 0} strategy calls`);
+
+    res.json({
+      strategy_calls: strategyCalls || [],
+      total: strategyCalls?.length || 0
+    });
+  } catch (error) {
+    console.error('❌ Get strategy calls error:', error);
+    res.status(500).json({ 
+      error: 'Failed to fetch strategy calls',
+      details: error.message 
+    });
+  }
+});
+
 // POST /api/strategy-calls - Book a strategy call (CLIENT)
 router.post('/', authenticateToken, requireClient, async (req, res) => {
   try {
