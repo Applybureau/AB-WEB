@@ -14,30 +14,20 @@ class ContactRequestController {
         lastName,
         first_name,
         last_name,
-        full_name,
         email,
         phone,
         subject,
         message
       } = req.body;
 
-      // Support multiple formats: full_name, firstName/lastName, or first_name/last_name
-      let fName, lName;
-      
-      if (full_name) {
-        // Split full_name into first and last
-        const nameParts = full_name.trim().split(' ');
-        fName = nameParts[0];
-        lName = nameParts.slice(1).join(' ') || nameParts[0]; // Use first name as last if only one name
-      } else {
-        fName = firstName || first_name;
-        lName = lastName || last_name;
-      }
+      // Support both camelCase and snake_case formats
+      const fName = firstName || first_name;
+      const lName = lastName || last_name;
 
-      // Validate required fields (subject is optional for simple contact forms)
-      if (!fName || !email || !message) {
+      // Validate required fields
+      if (!fName || !lName || !email || !subject || !message) {
         return res.status(400).json({ 
-          error: 'Missing required fields: full_name (or firstName/lastName), email, message' 
+          error: 'Missing required fields: firstName, lastName, email, subject, message' 
         });
       }
 
@@ -52,10 +42,10 @@ class ContactRequestController {
         .from('contact_requests')
         .insert({
           first_name: fName,
-          last_name: lName || fName, // Use first name as last if not provided
+          last_name: lName,
           email,
           phone: phone || null,
-          subject: subject || 'General Inquiry', // Default subject if not provided
+          subject,
           message,
           status: 'new'
         })

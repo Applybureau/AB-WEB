@@ -214,30 +214,4 @@ router.get('/consultation-slots', async (req, res) => {
   }
 });
 
-// GET /api/public/info - Get public API information
-router.get('/info', (req, res) => {
-  try {
-    res.json({
-      success: true,
-      service: 'Apply Bureau Backend API',
-      version: '2.0.0',
-      status: 'operational',
-      endpoints: {
-        consultation_booking: 'POST /api/public/consultation-booking',
-        packages: 'GET /api/public/packages',
-        consultation_slots: 'GET /api/public/consultation-slots',
-        info: 'GET /api/public/info'
-      },
-      documentation: 'https://apply-bureau-backend.vercel.app/health',
-      timestamp: new Date().toISOString()
-    });
-  } catch (error) {
-    logger.error('Error fetching public info', error);
-    res.status(500).json({ 
-      error: 'Failed to fetch public info',
-      details: error.message 
-    });
-  }
-});
-
 module.exports = router;
