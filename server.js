@@ -241,7 +241,7 @@ app.get('/api/health', (req, res) => {
 // Detailed system info endpoint (admin only in production)
 app.get('/system-info', (req, res) => {
   if (process.env.NODE_ENV === 'production') {
-    logger.warning('Unauthorized system info access attempt', { ip: req.ip, userAgent: req.get('User-Agent') });
+    logger.warn('Unauthorized system info access attempt', { ip: req.ip, userAgent: req.get('User-Agent') });
     return res.status(403).json({ error: 'Access denied' });
   }
   
@@ -295,6 +295,10 @@ app.use('/api/workflow', onboardingWorkflowRoutes); // 20-field onboarding, prof
 app.use('/api/client/profile', clientProfileRoutes); // Client profile management
 app.use('/api/client/dashboard', clientDashboardRoutes); // Client dashboard
 
+// Email action routes (for email button clicks)
+const emailActionsRoutes = require('./routes/emailActions');
+app.use('/api/email-actions', emailActionsRoutes);
+
 // Remove conflicting route registrations - keep only the main ones above
 // API Specification routes are integrated into main routes
 
@@ -340,7 +344,7 @@ app.post('/api/admin/cache/clear', require('./utils/auth').authenticateToken, re
 
 // 404 handler - must be BEFORE error handlers
 app.use('*', (req, res, next) => {
-  logger.warning('Route not found', { path: req.path, method: req.method, ip: req.ip });
+  logger.warn('Route not found', { path: req.path, method: req.method, ip: req.ip });
   res.status(404).json({ 
     error: 'Route not found',
     path: req.path,

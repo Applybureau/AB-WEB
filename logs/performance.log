@@ -126,3 +126,5 @@
 {"timestamp":"2026-01-14T08:02:14.034Z","level":"PERFORMANCE","message":"slow_request","meta":{"operation":"slow_request","duration":"2614ms","method":"POST","path":"/login"},"pid":6364,"memory":56934400,"uptime":6350.6277991}
 {"timestamp":"2026-01-14T08:04:26.297Z","level":"PERFORMANCE","message":"slow_request","meta":{"operation":"slow_request","duration":"3170ms","method":"POST","path":"/login"},"pid":6364,"memory":57671680,"uptime":6482.891995}
 {"timestamp":"2026-01-14T08:06:45.553Z","level":"PERFORMANCE","message":"slow_request","meta":{"operation":"slow_request","duration":"2147ms","method":"POST","path":"/login"},"pid":6364,"memory":68587520,"uptime":6622.1467311}
+{"timestamp":"2026-01-17T19:17:29.167Z","level":"PERFORMANCE","message":"slow_request","meta":{"operation":"slow_request","duration":"1021ms","method":"POST","path":"/login"},"pid":17820,"memory":70041600,"uptime":147.8556968}
+{"timestamp":"2026-01-17T19:45:04.209Z","level":"PERFORMANCE","message":"slow_request","meta":{"operation":"slow_request","duration":"1113ms","method":"POST","path":"/login"},"pid":17820,"memory":73142272,"uptime":1802.8973253}

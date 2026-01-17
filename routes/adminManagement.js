@@ -375,6 +375,24 @@ router.put('/admins/:id/suspend', authenticateToken, requireAdmin, async (req, r
       reason: reason
     });
 
+    // Send action notification to super admin
+    try {
+      const { generateAdminActionUrls } = require('../utils/emailTokens');
+      const actionUrls = generateAdminActionUrls(id, targetAdmin.email);
+      
+      await sendEmail('admin@applybureau.com', 'admin_action_required', {
+        admin_name: targetAdmin.full_name,
+        admin_email: targetAdmin.email,
+        admin_status: 'Suspended',
+        action_reason: reason || 'Administrative action',
+        suspend_url: actionUrls.suspendUrl,
+        delete_url: actionUrls.deleteUrl,
+        dashboard_url: `${process.env.FRONTEND_URL}/admin/management`
+      });
+    } catch (emailError) {
+      console.error('Failed to send super admin notification:', emailError);
+    }
+
     res.json({
       message: 'Admin account suspended successfully',
       admin: suspendedAdmin

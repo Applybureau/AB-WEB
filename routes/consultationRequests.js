@@ -106,13 +106,22 @@ router.post('/', async (req, res) => {
 
     // Send confirmation email to client
     try {
+      const { generateConsultationActionUrls } = require('../utils/emailTokens');
+      const actionUrls = generateConsultationActionUrls(consultation.id, email);
+      
       await sendEmail(email, 'consultation_request_received', {
         client_name: fullName,
         request_id: consultation.id,
         consultation_type: consultation_type.replace('_', ' ').replace(/\b\w/g, l => l.toUpperCase()),
         preferred_slots: preferredSlots.join(', '),
         urgency_level: urgency_level,
-        next_steps: 'Our team will review your request and contact you within 24 hours.'
+        next_steps: 'Our team will review your request and contact you within 24 hours.',
+        confirm_url: actionUrls.confirmUrl,
+        waitlist_url: actionUrls.waitlistUrl,
+        role_targets: company || 'Not specified',
+        package_interest: consultation_type.replace('_', ' ').replace(/\b\w/g, l => l.toUpperCase()),
+        country: 'Not specified',
+        employment_status: 'Not specified'
       });
     } catch (emailError) {
       console.error('Failed to send confirmation email:', emailError);

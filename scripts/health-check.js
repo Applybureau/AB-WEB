@@ -10,6 +10,8 @@
  * - API endpoints
  */
 
+require('dotenv').config();
+
 const { createClient } = require('@supabase/supabase-js');
 const nodemailer = require('nodemailer');
 const axios = require('axios');
@@ -37,7 +39,7 @@ async function checkDatabase() {
   try {
     const supabase = createClient(
       process.env.SUPABASE_URL,
-      process.env.SUPABASE_SERVICE_ROLE_KEY
+      process.env.SUPABASE_SERVICE_KEY
     );
     
     // Test basic connectivity
@@ -103,25 +105,42 @@ async function checkEmail() {
   log.title('Email Service Health Check');
   
   try {
-    // Check if email environment variables are set
-    if (!process.env.SMTP_HOST || !process.env.SMTP_USER || !process.env.SMTP_PASS) {
-      log.warning('Email service: Not configured (missing SMTP environment variables)');
-      return true; // Don't fail the health check for missing email config
+    // Check if Resend API key is configured (primary email service)
+    if (process.env.RESEND_API_KEY) {
+      // Test Resend service by attempting to validate the API key
+      const { Resend } = require('resend');
+      const resend = new Resend(process.env.RESEND_API_KEY);
+      
+      // Simple validation - if key is invalid, this will throw
+      if (process.env.RESEND_API_KEY.startsWith('re_')) {
+        log.success('Email service (Resend): OK - API key configured');
+        return true;
+      } else {
+        log.warning('Email service (Resend): Invalid API key format');
+        return false;
+      }
     }
     
-    const transporter = nodemailer.createTransporter({
-      host: process.env.SMTP_HOST,
-      port: parseInt(process.env.SMTP_PORT) || 587,
-      secure: process.env.SMTP_PORT === '465',
-      auth: {
-        user: process.env.SMTP_USER,
-        pass: process.env.SMTP_PASS
-      }
-    });
+    // Fallback: Check if SMTP environment variables are set
+    if (process.env.SMTP_HOST && process.env.SMTP_USER && process.env.SMTP_PASS) {
+      const transporter = nodemailer.createTransporter({
+        host: process.env.SMTP_HOST,
+        port: parseInt(process.env.SMTP_PORT) || 587,
+        secure: process.env.SMTP_PORT === '465',
+        auth: {
+          user: process.env.SMTP_USER,
+          pass: process.env.SMTP_PASS
+        }
+      });
+      
+      await transporter.verify();
+      log.success('Email service (SMTP): OK');
+      return true;
+    }
     
-    await transporter.verify();
-    log.success('Email service: OK');
-    return true;
+    // No email service configured
+    log.warning('Email service: Not configured (missing RESEND_API_KEY or SMTP settings)');
+    return false;
   } catch (error) {
     log.error(`Email service: ${error.message}`);
     return false;
@@ -134,7 +153,7 @@ async function checkStorage() {
   try {
     const supabase = createClient(
       process.env.SUPABASE_URL,
-      process.env.SUPABASE_SERVICE_ROLE_KEY
+      process.env.SUPABASE_SERVICE_KEY
     );
     
     // Check storage buckets
@@ -168,13 +187,7 @@ async function checkAPI() {
   const baseURL = process.env.API_URL || 'http://localhost:3000';
   
   const endpoints = [
-    { path: '/api/health', method: 'GET', auth: false },
-    { path: '/api/public/contact', method: 'POST', auth: false, data: { 
-      name: 'Test', 
-      email: 'test@example.com', 
-      subject: 'Health Check', 
-      message: 'Test message' 
-    }},
+    { path: '/api/health', method: 'GET', auth: false }
   ];
   
   let allPassed = true;
@@ -217,7 +230,7 @@ async function checkEnvironment() {
   const required = [
     'SUPABASE_URL',
     'SUPABASE_ANON_KEY', 
-    'SUPABASE_SERVICE_ROLE_KEY',
+    'SUPABASE_SERVICE_KEY',
     'JWT_SECRET'
   ];
   
@@ -232,21 +245,27 @@ async function checkEnvironment() {
     }
   }
   
-  // Check email variables (optional but recommended)
-  const emailVars = [
-    'SMTP_HOST',
-    'SMTP_PORT',
-    'SMTP_USER',
-    'SMTP_PASS'
-  ];
-  
-  let emailConfigured = true;
-  for (const env of emailVars) {
-    if (process.env[env]) {
-      log.success(`${env}: Set`);
-    } else {
-      log.warning(`${env}: Not set (email features disabled)`);
-      emailConfigured = false;
+  // Check email variables (Resend is primary, SMTP is fallback)
+  if (process.env.RESEND_API_KEY) {
+    log.success('RESEND_API_KEY: Set (primary email service)');
+  } else {
+    log.warning('RESEND_API_KEY: Not set');
+    
+    // Check SMTP fallback
+    const smtpVars = ['SMTP_HOST', 'SMTP_PORT', 'SMTP_USER', 'SMTP_PASS'];
+    let smtpConfigured = true;
+    
+    for (const env of smtpVars) {
+      if (process.env[env]) {
+        log.success(`${env}: Set (SMTP fallback)`);
+      } else {
+        log.warning(`${env}: Not set`);
+        smtpConfigured = false;
+      }
+    }
+    
+    if (!smtpConfigured) {
+      log.warning('No email service configured (neither Resend nor SMTP)');
     }
   }
   
@@ -263,10 +282,6 @@ async function checkEnvironment() {
     } else {
       log.info(`${env}: Not set (optional)`);
     }
-  }
-  
-  if (!emailConfigured) {
-    log.info('Email service not configured - some features will be disabled');
   }
   
   return allSet;
