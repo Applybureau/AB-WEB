@@ -40,29 +40,39 @@ const upload = multer({
 
 // Helper function to check if user is super admin
 async function isSuperAdmin(userId) {
-  // Check if user is the super admin by email in admins table first
-  const { data: adminFromAdminsTable } = await supabaseAdmin
-    .from('admins')
-    .select('email, role')
-    .eq('id', userId)
-    .eq('email', SUPER_ADMIN_EMAIL)
-    .eq('role', 'admin')
-    .single();
+  try {
+    // Check if user is the super admin by email in admins table first
+    const { data: adminFromAdminsTable, error: adminsError } = await supabaseAdmin
+      .from('admins')
+      .select('email, role')
+      .eq('id', userId)
+      .eq('email', SUPER_ADMIN_EMAIL)
+      .eq('role', 'admin')
+      .single();
 
-  if (adminFromAdminsTable) {
-    return true;
+    if (adminFromAdminsTable) {
+      return true;
+    }
+  } catch (error) {
+    // Admins table might not exist, continue to check clients table
+    console.log('Admins table check failed, checking clients table:', error.message);
   }
 
-  // Fallback: Check clients table for legacy admin accounts
-  const { data: adminFromClientsTable } = await supabaseAdmin
-    .from('clients')
-    .select('email, role')
-    .eq('id', userId)
-    .eq('email', SUPER_ADMIN_EMAIL)
-    .eq('role', 'admin')
-    .single();
+  try {
+    // Fallback: Check clients table for legacy admin accounts
+    const { data: adminFromClientsTable } = await supabaseAdmin
+      .from('clients')
+      .select('email, role')
+      .eq('id', userId)
+      .eq('email', SUPER_ADMIN_EMAIL)
+      .eq('role', 'admin')
+      .single();
 
-  return !!adminFromClientsTable;
+    return !!adminFromClientsTable;
+  } catch (error) {
+    console.error('Error checking super admin status:', error.message);
+    return false;
+  }
 }
 
 // Helper function to send admin action notification emails
