@@ -40,16 +40,27 @@ const upload = multer({
 
 // Helper function to check if user is super admin
 async function isSuperAdmin(userId) {
-  // Check if user is the super admin by email
-  const { data: admin } = await supabaseAdmin
-    .from('clients')
-    .select('email, role')
+  // Check admins table first (new admin system)
+  const { data: adminFromAdminsTable } = await supabaseAdmin
+    .from('admins')
+    .select('email')
     .eq('id', userId)
     .eq('email', SUPER_ADMIN_EMAIL)
-    .eq('role', 'admin')
-    .single();
+    .maybeSingle();
 
-  return !!admin;
+  if (adminFromAdminsTable) {
+    return true;
+  }
+
+  // Fallback to clients table (legacy admin system)
+  const { data: adminFromClientsTable } = await supabaseAdmin
+    .from('clients')
+    .select('email')
+    .eq('id', userId)
+    .eq('email', SUPER_ADMIN_EMAIL)
+    .maybeSingle();
+
+  return !!adminFromClientsTable;
 }
 
 // Helper function to send admin action notification emails
