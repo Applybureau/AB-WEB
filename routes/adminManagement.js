@@ -41,36 +41,27 @@ const upload = multer({
 // Helper function to check if user is super admin
 async function isSuperAdmin(userId) {
   try {
-    // Check if user is the super admin by email in admins table first
-    const { data: adminFromAdminsTable, error: adminsError } = await supabaseAdmin
+    // First try admins table
+    const { data: adminCheck } = await supabaseAdmin
       .from('admins')
-      .select('email, role')
+      .select('email')
       .eq('id', userId)
       .eq('email', SUPER_ADMIN_EMAIL)
-      .eq('role', 'admin')
-      .single();
+      .maybeSingle();
+    
+    if (adminCheck) return true;
 
-    if (adminFromAdminsTable) {
-      return true;
-    }
-  } catch (error) {
-    // Admins table might not exist, continue to check clients table
-    console.log('Admins table check failed, checking clients table:', error.message);
-  }
-
-  try {
-    // Fallback: Check clients table for legacy admin accounts
-    const { data: adminFromClientsTable } = await supabaseAdmin
+    // Then try clients table
+    const { data: clientCheck } = await supabaseAdmin
       .from('clients')
-      .select('email, role')
+      .select('email')
       .eq('id', userId)
       .eq('email', SUPER_ADMIN_EMAIL)
-      .eq('role', 'admin')
-      .single();
-
-    return !!adminFromClientsTable;
+      .maybeSingle();
+    
+    return !!clientCheck;
   } catch (error) {
-    console.error('Error checking super admin status:', error.message);
+    console.error('isSuperAdmin error:', error);
     return false;
   }
 }
