@@ -352,8 +352,6 @@ router.patch('/consultation-requests/:id/verify-payment', authenticateToken, asy
     const updateData = {
       status: 'confirmed', // Use existing valid status
       admin_notes: `Payment verified: ${payment_method} - ${payment_amount} (Ref: ${payment_reference}) - Package: ${package_tier}${admin_notes ? ' - ' + admin_notes : ''}`,
-      admin_action_by: adminId,
-      admin_action_at: new Date().toISOString(),
       updated_at: new Date().toISOString()
     };
 
