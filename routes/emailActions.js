@@ -67,8 +67,8 @@ router.get('/consultation/:id/confirm/:token', async (req, res) => {
       .from('consultation_requests')
       .update({ 
         status: 'confirmed',
-        confirmed_at: new Date().toISOString(),
-        pipeline_status: 'confirmed'
+        admin_notes: `Confirmed via email action at ${new Date().toISOString()}`,
+        updated_at: new Date().toISOString()
       })
       .eq('id', id);
 
@@ -151,13 +151,13 @@ router.get('/consultation/:id/waitlist/:token', async (req, res) => {
       `);
     }
 
-    // Update consultation status to waitlisted
+    // Update consultation status to pending (since waitlisted is not allowed)
     const { error: updateError } = await supabaseAdmin
       .from('consultation_requests')
       .update({ 
-        status: 'waitlisted',
-        waitlisted_at: new Date().toISOString(),
-        pipeline_status: 'waitlisted'
+        status: 'pending',
+        admin_notes: `Added to waitlist via email action at ${new Date().toISOString()}`,
+        updated_at: new Date().toISOString()
       })
       .eq('id', id);
 
@@ -208,10 +208,9 @@ router.get('/admin/:adminId/suspend/:token', async (req, res) => {
 
     // Verify admin exists
     const { data: admin, error } = await supabaseAdmin
-      .from('clients')
+      .from('admins')
       .select('*')
       .eq('id', adminId)
-      .eq('role', 'admin')
       .single();
 
     if (error || !admin) {
@@ -256,12 +255,10 @@ router.get('/admin/:adminId/suspend/:token', async (req, res) => {
 
     // Suspend the admin
     const { error: updateError } = await supabaseAdmin
-      .from('clients')
+      .from('admins')
       .update({ 
         is_active: false,
-        suspended_at: new Date().toISOString(),
-        suspended_by: 'email_action',
-        suspension_reason: 'Suspended via email action'
+        updated_at: new Date().toISOString()
       })
       .eq('id', adminId);
 
@@ -277,7 +274,7 @@ router.get('/admin/:adminId/suspend/:token', async (req, res) => {
         <body style="font-family: Arial, sans-serif; text-align: center; padding: 50px;">
           <div style="max-width: 600px; margin: 0 auto;">
             <h2 style="color: #dc3545;">⚠️ Admin Account Suspended</h2>
-            <p>The admin account for <strong>${admin.full_name}</strong> (${admin.email}) has been suspended.</p>
+            <p>The admin account for <strong>${admin.full_name || admin.name}</strong> (${admin.email}) has been suspended.</p>
             <p><strong>Actions taken:</strong></p>
             <ul style="text-align: left; display: inline-block;">
               <li>Account access has been disabled</li>
@@ -311,10 +308,9 @@ router.get('/admin/:adminId/delete/:token', async (req, res) => {
 
     // Verify admin exists
     const { data: admin, error } = await supabaseAdmin
-      .from('clients')
+      .from('admins')
       .select('*')
       .eq('id', adminId)
-      .eq('role', 'admin')
       .single();
 
     if (error || !admin) {
@@ -357,15 +353,12 @@ router.get('/admin/:adminId/delete/:token', async (req, res) => {
       `);
     }
 
-    // Soft delete the admin (change role instead of hard delete)
+    // Soft delete the admin (deactivate instead of hard delete)
     const { error: updateError } = await supabaseAdmin
-      .from('clients')
+      .from('admins')
       .update({ 
-        role: 'deleted_admin',
         is_active: false,
-        deleted_at: new Date().toISOString(),
-        deleted_by: 'email_action',
-        deletion_reason: 'Deleted via email action'
+        updated_at: new Date().toISOString()
       })
       .eq('id', adminId);
 
@@ -381,7 +374,7 @@ router.get('/admin/:adminId/delete/:token', async (req, res) => {
         <body style="font-family: Arial, sans-serif; text-align: center; padding: 50px;">
           <div style="max-width: 600px; margin: 0 auto;">
             <h2 style="color: #dc3545;">🗑️ Admin Account Deleted</h2>
-            <p>The admin account for <strong>${admin.full_name}</strong> (${admin.email}) has been permanently deleted.</p>
+            <p>The admin account for <strong>${admin.full_name || admin.name}</strong> (${admin.email}) has been permanently deleted.</p>
             <p><strong>Actions taken:</strong></p>
             <ul style="text-align: left; display: inline-block;">
               <li>Account has been permanently disabled</li>
