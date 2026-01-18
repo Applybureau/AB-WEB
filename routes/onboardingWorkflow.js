@@ -348,38 +348,12 @@ router.patch('/consultation-requests/:id/verify-payment', authenticateToken, asy
       });
     }
 
-    // Generate registration token if payment is verified
-    let registrationToken = null;
-    let tokenExpiresAt = null;
-
-    if (payment_verified) {
-      const jwt = require('jsonwebtoken');
-      registrationToken = jwt.sign({
-        consultationId: id,
-        email: consultation.email,
-        name: consultation.full_name,
-        type: 'client_registration',
-        package_tier: package_tier,
-        exp: Math.floor(Date.now() / 1000) + (7 * 24 * 60 * 60) // 7 days
-      }, process.env.JWT_SECRET);
-
-      tokenExpiresAt = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString();
-    }
-
-    // Update consultation request with payment verification
+    // Update consultation request with simplified payment verification
     const updateData = {
-      payment_verified,
-      payment_method,
-      payment_amount,
-      payment_reference,
-      package_tier,
-      payment_verification_date: payment_verified ? new Date().toISOString() : null,
-      registration_token: registrationToken,
-      token_expires_at: tokenExpiresAt,
-      token_used: false,
-      status: payment_verified ? 'payment_verified' : consultation.status,
-      verified_by: adminId,
-      admin_notes: admin_notes,
+      status: 'confirmed', // Use existing valid status
+      admin_notes: `Payment verified: ${payment_method} - ${payment_amount} (Ref: ${payment_reference}) - Package: ${package_tier}${admin_notes ? ' - ' + admin_notes : ''}`,
+      admin_action_by: adminId,
+      admin_action_at: new Date().toISOString(),
       updated_at: new Date().toISOString()
     };
 
@@ -399,12 +373,26 @@ router.patch('/consultation-requests/:id/verify-payment', authenticateToken, asy
       });
     }
 
+    // Generate registration token if payment is verified
+    let registrationToken = null;
+    if (payment_verified) {
+      const jwt = require('jsonwebtoken');
+      registrationToken = jwt.sign({
+        consultationId: id,
+        email: consultation.email,
+        name: consultation.name,
+        type: 'client_registration',
+        package_tier: package_tier,
+        exp: Math.floor(Date.now() / 1000) + (7 * 24 * 60 * 60) // 7 days
+      }, process.env.JWT_SECRET);
+    }
+
     // Send payment verification email to client
     if (payment_verified && registrationToken) {
       try {
         const registrationUrl = `${process.env.FRONTEND_URL}/register?token=${registrationToken}`;
         await sendEmail(consultation.email, 'payment_verified_registration', {
-          client_name: consultation.full_name,
+          client_name: consultation.name,
           payment_amount: payment_amount,
           payment_method: payment_method,
           package_tier: package_tier,
@@ -424,9 +412,10 @@ router.patch('/consultation-requests/:id/verify-payment', authenticateToken, asy
       consultation_request: {
         id: updatedConsultation.id,
         status: updatedConsultation.status,
-        payment_verified: updatedConsultation.payment_verified,
-        payment_verification_date: updatedConsultation.payment_verification_date,
-        registration_token: registrationToken ? 'Generated' : null
+        payment_verified: payment_verified,
+        payment_verification_date: new Date().toISOString(),
+        registration_token: registrationToken ? 'Generated' : null,
+        admin_notes: updatedConsultation.admin_notes
       }
     });
   } catch (error) {
