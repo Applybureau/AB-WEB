@@ -119,17 +119,19 @@ app.use('/api/auth/invite', createRateLimiter(60 * 60 * 1000, 10, 'Too many invi
 app.use('/api/upload', createRateLimiter(60 * 60 * 1000, 20, 'Too many file uploads'));
 app.use('/api/', createRateLimiter(15 * 60 * 1000, 100, 'Too many requests from this IP'));
 
-// CORS configuration
+// Enhanced CORS configuration
 const corsOptions = {
   origin: function (origin, callback) {
     const allowedOrigins = [
       process.env.FRONTEND_URL,
       'https://apply-bureau.vercel.app',
-      'https://apply-bureau.vercel.app/',
-      'http://localhost:5173',
-      'http://localhost:5173/',
+      'https://apply-bureau-frontend.vercel.app',
+      'https://applybureau.com',
+      'https://www.applybureau.com',
       'http://localhost:3000',
       'http://localhost:3001',
+      'http://localhost:5173',
+      'http://localhost:5174',
       'http://127.0.0.1:3000',
       'http://127.0.0.1:5173',
       'https://localhost:5173'
@@ -138,32 +140,68 @@ const corsOptions = {
     // Allow requests with no origin (mobile apps, Postman, etc.)
     if (!origin) return callback(null, true);
     
-    if (allowedOrigins.indexOf(origin) !== -1) {
+    // Check if origin is allowed
+    if (allowedOrigins.some(allowedOrigin => {
+      if (allowedOrigin.endsWith('*')) {
+        return origin.startsWith(allowedOrigin.slice(0, -1));
+      }
+      return origin === allowedOrigin;
+    })) {
       callback(null, true);
     } else {
       console.log('CORS blocked origin:', origin);
-      callback(null, true); // Allow all origins for now to fix frontend issues
+      console.log('Allowed origins:', allowedOrigins);
+      // Allow all origins for now to fix frontend issues
+      callback(null, true);
     }
   },
   credentials: true,
-  methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
-  allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With', 'Accept', 'Origin'],
-  exposedHeaders: ['Content-Type', 'Authorization', 'X-Total-Count', 'X-Page', 'X-Per-Page'],
+  methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS', 'HEAD'],
+  allowedHeaders: [
+    'Content-Type', 
+    'Authorization', 
+    'X-Requested-With', 
+    'Accept', 
+    'Origin',
+    'Access-Control-Allow-Origin',
+    'Access-Control-Allow-Headers',
+    'Access-Control-Allow-Methods',
+    'Access-Control-Allow-Credentials'
+  ],
+  exposedHeaders: [
+    'Content-Type', 
+    'Authorization', 
+    'X-Total-Count', 
+    'X-Page', 
+    'X-Per-Page',
+    'Access-Control-Allow-Origin',
+    'Access-Control-Allow-Credentials'
+  ],
   optionsSuccessStatus: 200,
   preflightContinue: false
 };
 
 app.use(cors(corsOptions));
 
-// Ensure CORS headers are always present
+// Enhanced CORS headers middleware
 app.use((req, res, next) => {
-  res.header('Access-Control-Allow-Origin', req.headers.origin || '*');
-  res.header('Access-Control-Allow-Credentials', 'true');
-  res.header('Access-Control-Allow-Methods', 'GET, POST, PUT, PATCH, DELETE, OPTIONS');
-  res.header('Access-Control-Allow-Headers', 'Content-Type, Authorization, X-Requested-With, Accept, Origin');
+  const origin = req.headers.origin;
   
-  // Handle preflight
+  // Set CORS headers
+  if (origin) {
+    res.header('Access-Control-Allow-Origin', origin);
+  } else {
+    res.header('Access-Control-Allow-Origin', '*');
+  }
+  
+  res.header('Access-Control-Allow-Credentials', 'true');
+  res.header('Access-Control-Allow-Methods', 'GET, POST, PUT, PATCH, DELETE, OPTIONS, HEAD');
+  res.header('Access-Control-Allow-Headers', 'Content-Type, Authorization, X-Requested-With, Accept, Origin, Access-Control-Allow-Origin, Access-Control-Allow-Headers, Access-Control-Allow-Methods, Access-Control-Allow-Credentials');
+  res.header('Access-Control-Expose-Headers', 'Content-Type, Authorization, X-Total-Count, X-Page, X-Per-Page, Access-Control-Allow-Origin, Access-Control-Allow-Credentials');
+  
+  // Handle preflight requests
   if (req.method === 'OPTIONS') {
+    console.log('Preflight request from:', origin);
     return res.status(200).end();
   }
   
