@@ -190,9 +190,9 @@ router.patch('/admin/clients/:client_id/unlock', authenticateToken, async (req, 
     const { profile_unlocked, admin_notes } = req.body;
     const adminId = req.user.userId || req.user.id;
 
-    // Verify admin permissions - check clients table where admin is stored
+    // Verify admin permissions - check admins table where admin is stored
     const { data: admin, error: adminError } = await supabaseAdmin
-      .from('clients')
+      .from('admins')
       .select('id, role, full_name')
       .eq('id', adminId)
       .eq('role', 'admin')
@@ -317,9 +317,9 @@ router.patch('/consultation-requests/:id/verify-payment', authenticateToken, asy
     } = req.body;
     const adminId = req.user.userId || req.user.id;
 
-    // Verify admin permissions - check clients table where admin is stored
+    // Verify admin permissions - check admins table where admin is stored
     const { data: admin, error: adminError } = await supabaseAdmin
-      .from('clients')
+      .from('admins')
       .select('id, role, full_name')
       .eq('id', adminId)
       .eq('role', 'admin')
@@ -445,9 +445,9 @@ router.get('/admin/clients/:id', authenticateToken, async (req, res) => {
     const { id } = req.params;
     const adminId = req.user.userId || req.user.id;
 
-    // Verify admin permissions - check clients table where admin is stored
+    // Verify admin permissions - check admins table where admin is stored
     const { data: admin, error: adminError } = await supabaseAdmin
-      .from('clients')
+      .from('admins')
       .select('id, role')
       .eq('id', adminId)
       .eq('role', 'admin')
