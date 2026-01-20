@@ -256,7 +256,7 @@ router.post('/', authenticateToken, requireAdmin, async (req, res) => {
       .from('applications')
       .insert({
         client_id,
-        applied_by_admin_id: adminId,
+        // applied_by_admin_id: adminId, // Column doesn't exist - remove this
         company: finalCompany,
         role: finalRole,
         job_description,
@@ -266,7 +266,7 @@ router.post('/', authenticateToken, requireAdmin, async (req, res) => {
         job_type,
         application_method,
         application_strategy,
-        admin_notes: admin_notes || notes,
+        notes: admin_notes || notes,
         status: 'applied',
         applied_date: new Date().toISOString(),
         created_at: new Date().toISOString()

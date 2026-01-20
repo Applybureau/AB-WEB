@@ -437,73 +437,160 @@ class AdminController {
       const periodDays = parseInt(period);
       const periodStart = new Date(Date.now() - periodDays * 24 * 60 * 60 * 1000);
 
-      // Get comprehensive statistics
-      const [clientsResult, applicationsResult, consultationsResult, messagesResult] = await Promise.all([
-        supabaseAdmin
-          .from('clients')
-          .select('id, status, created_at, onboarding_complete'),
-        
-        supabaseAdmin
-          .from('applications')
-          .select('id, status, created_at, client_id, company'),
-        
-        supabaseAdmin
-          .from('consultations')
-          .select('id, status, scheduled_at, created_at'),
-        
-        supabaseAdmin
-          .from('messages')
-          .select('id, type, is_read, created_at')
-          .eq('type', 'client_to_admin')
-          .eq('is_read', false)
-      ]);
-
-      const clients = clientsResult.data || [];
-      const applications = applicationsResult.data || [];
-      const consultations = consultationsResult.data || [];
-      const unreadMessages = messagesResult.data || [];
-
-      // Calculate statistics
-      const stats = {
+      // Initialize default stats
+      let stats = {
         clients: {
-          total: clients.length,
-          active: clients.filter(c => c.status === 'active').length,
-          onboarding: clients.filter(c => c.status === 'onboarding').length,
-          invited: clients.filter(c => c.status === 'invited').length,
-          new_this_period: clients.filter(c => new Date(c.created_at) >= periodStart).length
+          total: 0,
+          active: 0,
+          onboarding: 0,
+          invited: 0,
+          new_this_period: 0
         },
-        
         applications: {
-          total: applications.length,
-          applied: applications.filter(a => a.status === 'applied').length,
-          interview: applications.filter(a => a.status === 'interview_scheduled').length,
-          offers: applications.filter(a => a.status === 'offer_received').length,
-          rejected: applications.filter(a => a.status === 'rejected').length,
-          new_this_period: applications.filter(a => new Date(a.created_at) >= periodStart).length,
-          success_rate: applications.length > 0 
-            ? ((applications.filter(a => a.status === 'offer_received').length / applications.length) * 100).toFixed(1)
-            : 0
+          total: 0,
+          applied: 0,
+          interview: 0,
+          offers: 0,
+          rejected: 0,
+          new_this_period: 0,
+          success_rate: 0
         },
-        
         consultations: {
-          total: consultations.length,
-          scheduled: consultations.filter(c => c.status === 'scheduled').length,
-          completed: consultations.filter(c => c.status === 'completed').length,
-          upcoming: consultations.filter(c => 
-            c.status === 'scheduled' && new Date(c.scheduled_at) > new Date()
-          ).length
+          total: 0,
+          scheduled: 0,
+          completed: 0,
+          upcoming: 0
         },
-        
         communication: {
-          unread_messages: unreadMessages.length,
-          pending_responses: unreadMessages.filter(m => 
-            new Date(m.created_at) < new Date(Date.now() - 24 * 60 * 60 * 1000)
-          ).length
+          unread_messages: 0,
+          pending_responses: 0
         },
-        
-        top_companies: this.getTopCompanies(applications),
-        recent_activity: this.getRecentActivity(applications, consultations, clients, 10)
+        top_companies: [],
+        recent_activity: []
       };
+
+      try {
+        // Try to get clients data (try multiple table names)
+        let clients = [];
+        try {
+          const { data: clientsData } = await supabaseAdmin
+            .from('clients')
+            .select('id, status, created_at, onboarding_complete');
+          clients = clientsData || [];
+        } catch (clientsError) {
+          console.log('Clients table not found, trying registered_users');
+          try {
+            const { data: usersData } = await supabaseAdmin
+              .from('registered_users')
+              .select('id, role, created_at, onboarding_completed')
+              .neq('role', 'admin');
+            clients = (usersData || []).map(user => ({
+              id: user.id,
+              status: user.role === 'client' ? 'active' : 'invited',
+              created_at: user.created_at,
+              onboarding_complete: user.onboarding_completed
+            }));
+          } catch (usersError) {
+            console.log('No user tables found');
+          }
+        }
+
+        // Try to get applications data
+        let applications = [];
+        try {
+          const { data: applicationsData } = await supabaseAdmin
+            .from('applications')
+            .select('id, status, created_at, client_id, company');
+          applications = applicationsData || [];
+        } catch (applicationsError) {
+          console.log('Applications table not found');
+        }
+
+        // Try to get consultations data
+        let consultations = [];
+        try {
+          const { data: consultationsData } = await supabaseAdmin
+            .from('consultations')
+            .select('id, status, scheduled_at, created_at');
+          consultations = consultationsData || [];
+        } catch (consultationsError) {
+          console.log('Consultations table not found, trying consultation_requests');
+          try {
+            const { data: requestsData } = await supabaseAdmin
+              .from('consultation_requests')
+              .select('id, admin_status, created_at, confirmed_time');
+            consultations = (requestsData || []).map(req => ({
+              id: req.id,
+              status: req.admin_status || 'pending',
+              scheduled_at: req.confirmed_time,
+              created_at: req.created_at
+            }));
+          } catch (requestsError) {
+            console.log('No consultation tables found');
+          }
+        }
+
+        // Try to get messages data
+        let unreadMessages = [];
+        try {
+          const { data: messagesData } = await supabaseAdmin
+            .from('messages')
+            .select('id, type, is_read, created_at')
+            .eq('type', 'client_to_admin')
+            .eq('is_read', false);
+          unreadMessages = messagesData || [];
+        } catch (messagesError) {
+          console.log('Messages table not found');
+        }
+
+        // Calculate statistics with the data we have
+        stats = {
+          clients: {
+            total: clients.length,
+            active: clients.filter(c => c.status === 'active').length,
+            onboarding: clients.filter(c => c.status === 'onboarding').length,
+            invited: clients.filter(c => c.status === 'invited').length,
+            new_this_period: clients.filter(c => new Date(c.created_at) >= periodStart).length
+          },
+          
+          applications: {
+            total: applications.length,
+            applied: applications.filter(a => a.status === 'applied').length,
+            interview: applications.filter(a => a.status === 'interview_scheduled' || a.status === 'interviewing').length,
+            offers: applications.filter(a => a.status === 'offer_received' || a.status === 'offer').length,
+            rejected: applications.filter(a => a.status === 'rejected').length,
+            new_this_period: applications.filter(a => new Date(a.created_at) >= periodStart).length,
+            success_rate: applications.length > 0 
+              ? ((applications.filter(a => a.status === 'offer_received' || a.status === 'offer').length / applications.length) * 100).toFixed(1)
+              : 0
+          },
+          
+          consultations: {
+            total: consultations.length,
+            scheduled: consultations.filter(c => c.status === 'scheduled' || c.status === 'confirmed').length,
+            completed: consultations.filter(c => c.status === 'completed').length,
+            upcoming: consultations.filter(c => 
+              (c.status === 'scheduled' || c.status === 'confirmed') && 
+              c.scheduled_at && 
+              new Date(c.scheduled_at) > new Date()
+            ).length
+          },
+          
+          communication: {
+            unread_messages: unreadMessages.length,
+            pending_responses: unreadMessages.filter(m => 
+              new Date(m.created_at) < new Date(Date.now() - 24 * 60 * 60 * 1000)
+            ).length
+          },
+          
+          top_companies: AdminController.getTopCompanies(applications),
+          recent_activity: AdminController.getRecentActivity(applications, consultations, clients, 10)
+        };
+
+      } catch (dataError) {
+        console.error('Error fetching dashboard data:', dataError);
+        // Return default stats if data fetching fails
+      }
 
       res.json(stats);
     } catch (error) {
