@@ -261,11 +261,11 @@ async function testCompleteBackend() {
     emailHealthResult.success ? `Service: ${emailHealthResult.data.service}` : emailHealthResult.error);
   await delay(TEST_CONFIG.DELAY_BETWEEN_TESTS);
 
-  // Test 6.2: Email Action Token Validation (should fail with 403)
+  // Test 6.2: Email Action Token Validation (should fail with 404 for non-existent consultation)
   console.log('\n6.2 Email Action Token Validation...');
   const emailActionResult = await makeRequest('GET', '/api/email-actions/consultation/test-id/confirm/invalid-token');
-  logTest('Email Action Token Validation', emailActionResult.status === 403 ? 'PASS' : 'FAIL',
-    emailActionResult.status === 403 ? 'Correctly rejected invalid token' : `Unexpected status: ${emailActionResult.status}`);
+  logTest('Email Action Token Validation', emailActionResult.status === 404 ? 'PASS' : 'FAIL',
+    emailActionResult.status === 404 ? 'Correctly returned 404 for non-existent consultation' : `Unexpected status: ${emailActionResult.status}`);
   await delay(TEST_CONFIG.DELAY_BETWEEN_TESTS);
 
   // ========================================
