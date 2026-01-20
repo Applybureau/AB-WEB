@@ -38,24 +38,29 @@ router.get('/',
           .from('applications')
           .select(`
             id,
-            client_id,
-            company,
-            role,
+            user_id,
+            type,
+            title,
+            description,
             status,
-            applied_date,
-            job_link,
-            salary_range,
-            location,
-            application_method,
-            notes,
-            interview_date,
-            interview_type,
-            interviewer,
-            meeting_link,
-            offer_amount,
-            offer_currency,
-            preparation_notes,
-            week_number,
+            priority,
+            requirements,
+            documents,
+            estimated_duration,
+            estimated_cost,
+            actual_duration,
+            actual_cost,
+            admin_notes,
+            rejection_reason,
+            internal_notes,
+            tags,
+            deadline,
+            approved_by,
+            assigned_to,
+            approved_at,
+            completed_at,
+            cancelled_at,
+            cancellation_reason,
             created_at,
             updated_at
           `)
@@ -63,7 +68,7 @@ router.get('/',
           .range(parseInt(offset), parseInt(offset) + parseInt(limit) - 1);
 
         if (client_id) {
-          query = query.eq('client_id', client_id);
+          query = query.eq('user_id', client_id);
         }
 
         const { data: applications, error } = await query;
@@ -86,27 +91,33 @@ router.get('/',
           .from('applications')
           .select(`
             id,
-            company,
-            role,
+            user_id,
+            type,
+            title,
+            description,
             status,
-            applied_date,
-            job_link,
-            salary_range,
-            location,
-            application_method,
-            notes,
-            interview_date,
-            interview_type,
-            interviewer,
-            meeting_link,
-            offer_amount,
-            offer_currency,
-            preparation_notes,
-            week_number,
+            priority,
+            requirements,
+            documents,
+            estimated_duration,
+            estimated_cost,
+            actual_duration,
+            actual_cost,
+            admin_notes,
+            rejection_reason,
+            internal_notes,
+            tags,
+            deadline,
+            approved_by,
+            assigned_to,
+            approved_at,
+            completed_at,
+            cancelled_at,
+            cancellation_reason,
             created_at,
             updated_at
           `)
-          .eq('client_id', userId)
+          .eq('user_id', userId)
           .order('created_at', { ascending: false });
 
         const { data: applications, error } = await baseQuery;
@@ -255,11 +266,12 @@ router.post('/', authenticateToken, requireAdmin, async (req, res) => {
     const { data: application, error } = await supabaseAdmin
       .from('applications')
       .insert({
-        client_id,
-        company: finalCompany,
-        role: finalRole,
-        status: 'applied',
-        notes: admin_notes || notes || `Application created by admin for ${finalCompany} - ${finalRole}`,
+        user_id: client_id, // Use user_id instead of client_id
+        type: 'consultation', // Required field
+        title: `${finalCompany} - ${finalRole}`,
+        description: job_description || `Application for ${finalRole} position at ${finalCompany}`,
+        status: 'pending',
+        admin_notes: admin_notes || notes || `Application created by admin for ${finalCompany} - ${finalRole}`,
         created_at: new Date().toISOString()
       })
       .select()
