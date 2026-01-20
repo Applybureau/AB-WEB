@@ -43,13 +43,12 @@ async function isSuperAdmin(userId) {
   // Check admins table first (new admin system)
   const { data: adminFromAdminsTable } = await supabaseAdmin
     .from('admins')
-    .select('email')
+    .select('email, is_super_admin')
     .eq('id', userId)
-    .eq('email', SUPER_ADMIN_EMAIL)
-    .maybeSingle();
+    .single();
 
   if (adminFromAdminsTable) {
-    return true;
+    return adminFromAdminsTable.email === SUPER_ADMIN_EMAIL || adminFromAdminsTable.is_super_admin === true;
   }
 
   // Fallback to clients table (legacy admin system)
@@ -58,7 +57,7 @@ async function isSuperAdmin(userId) {
     .select('email')
     .eq('id', userId)
     .eq('email', SUPER_ADMIN_EMAIL)
-    .maybeSingle();
+    .single();
 
   return !!adminFromClientsTable;
 }
@@ -170,21 +169,37 @@ router.get('/', authenticateToken, requireAdmin, async (req, res) => {
 router.get('/profile', authenticateToken, requireAdmin, async (req, res) => {
   try {
     const adminId = req.user.id;
+    let adminData = null;
+    let isSuper = false;
 
-    // Get admin details from clients table (main admin system)
-    const { data: adminData, error } = await supabaseAdmin
-      .from('clients')
+    // First try admins table (new admin system)
+    const { data: adminFromAdminsTable } = await supabaseAdmin
+      .from('admins')
       .select('*')
       .eq('id', adminId)
-      .eq('role', 'admin')
       .single();
 
-    if (error || !adminData) {
-      return res.status(404).json({ error: 'Admin profile not found' });
+    if (adminFromAdminsTable) {
+      adminData = adminFromAdminsTable;
+      isSuper = adminFromAdminsTable.email === SUPER_ADMIN_EMAIL || adminFromAdminsTable.is_super_admin === true;
+    } else {
+      // Fallback to clients table (legacy admin system)
+      const { data: adminFromClientsTable } = await supabaseAdmin
+        .from('clients')
+        .select('*')
+        .eq('id', adminId)
+        .eq('role', 'admin')
+        .single();
+
+      if (adminFromClientsTable) {
+        adminData = adminFromClientsTable;
+        isSuper = adminFromClientsTable.email === SUPER_ADMIN_EMAIL;
+      }
     }
 
-    // Check if this is the super admin
-    const isSuper = await isSuperAdmin(adminId);
+    if (!adminData) {
+      return res.status(404).json({ error: 'Admin profile not found' });
+    }
 
     // Get recent activity from notifications or create mock data
     const { data: recentActivity } = await supabaseAdmin
@@ -203,7 +218,7 @@ router.get('/profile', authenticateToken, requireAdmin, async (req, res) => {
         profile_picture_url: adminData.profile_picture_url,
         phone: adminData.phone,
         is_super_admin: isSuper,
-        permissions: {
+        permissions: adminData.permissions || {
           can_create_admins: isSuper,
           can_delete_admins: isSuper,
           can_suspend_admins: isSuper,
