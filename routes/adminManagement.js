@@ -255,25 +255,52 @@ router.get('/admins', authenticateToken, requireAdmin, async (req, res) => {
       return res.status(403).json({ error: 'Super admin access required' });
     }
 
-    const { data: admins, error } = await supabaseAdmin
+    // Get admins from both tables
+    const { data: adminsFromAdminsTable } = await supabaseAdmin
+      .from('admins')
+      .select('id, full_name, email, role, profile_picture_url, phone, is_active, last_login_at, created_at, is_super_admin')
+      .order('created_at', { ascending: false });
+
+    const { data: adminsFromClientsTable } = await supabaseAdmin
       .from('clients')
       .select('id, full_name, email, role, profile_picture_url, phone, is_active, last_login_at, created_at')
       .eq('role', 'admin')
       .order('created_at', { ascending: false });
 
-    if (error) {
-      console.error('Error fetching admins:', error);
-      return res.status(500).json({ error: 'Failed to fetch admins' });
-    }
+    // Combine results and mark super admin
+    const allAdmins = [
+      ...(adminsFromAdminsTable || []).map(admin => ({
+        ...admin,
+        source: 'admins_table',
+        is_super_admin: admin.email === SUPER_ADMIN_EMAIL || admin.is_super_admin === true,
+        can_be_modified: admin.email !== SUPER_ADMIN_EMAIL
+      })),
+      ...(adminsFromClientsTable || []).map(admin => ({
+        ...admin,
+        source: 'clients_table',
+        is_super_admin: admin.email === SUPER_ADMIN_EMAIL,
+        can_be_modified: admin.email !== SUPER_ADMIN_EMAIL
+      }))
+    ];
 
-    // Mark super admin
-    const adminsWithSuperFlag = (admins || []).map(admin => ({
-      ...admin,
-      is_super_admin: admin.email === SUPER_ADMIN_EMAIL,
-      can_be_modified: admin.email !== SUPER_ADMIN_EMAIL // Super admin cannot be modified by others
-    }));
+    // Remove duplicates (same email from both tables)
+    const uniqueAdmins = allAdmins.reduce((acc, admin) => {
+      const existing = acc.find(a => a.email === admin.email);
+      if (!existing) {
+        acc.push(admin);
+      } else if (admin.source === 'admins_table') {
+        // Prefer admins table over clients table
+        const index = acc.findIndex(a => a.email === admin.email);
+        acc[index] = admin;
+      }
+      return acc;
+    }, []);
 
-    res.json({ admins: adminsWithSuperFlag });
+    res.json({ 
+      admins: uniqueAdmins,
+      total: uniqueAdmins.length,
+      super_admin_email: SUPER_ADMIN_EMAIL
+    });
   } catch (error) {
     console.error('List admins error:', error);
     res.status(500).json({ error: 'Failed to list admins' });
