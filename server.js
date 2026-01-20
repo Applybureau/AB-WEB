@@ -326,6 +326,10 @@ app.use('/api/client/dashboard', clientDashboardRoutes); // Client dashboard wit
 app.use('/api/client/uploads', clientUploadsRoutes); // File upload system (resume, LinkedIn, portfolio)
 app.use('/api/admin/onboarding-triggers', adminOnboardingTriggersRoutes); // Admin onboarding confirmation triggers
 
+// Complete Client Dashboard System
+const clientDashboardCompleteRoutes = require('./routes/clientDashboardComplete');
+app.use('/api/client-dashboard', clientDashboardCompleteRoutes); // Complete client dashboard with all features
+
 // Existing Concierge Routes (Updated for New Flow)
 app.use('/api/public-consultations', publicConsultationsRoutes); // Simplified public consultation requests
 app.use('/api/admin/concierge', adminConciergeRoutes); // Admin gatekeeper controls
