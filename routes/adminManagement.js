@@ -319,14 +319,20 @@ router.post('/admins', authenticateToken, requireAdmin, upload.single('profile_p
       return res.status(403).json({ error: 'Only super admin can create new admins' });
     }
 
-    // Check if email already exists
-    const { data: existingAdmin } = await supabaseAdmin
+    // Check if email already exists in either table
+    const { data: existingClientAdmin } = await supabaseAdmin
       .from('clients')
       .select('id')
       .eq('email', email)
       .single();
 
-    if (existingAdmin) {
+    const { data: existingAdminAdmin } = await supabaseAdmin
+      .from('admins')
+      .select('id')
+      .eq('email', email)
+      .single();
+
+    if (existingClientAdmin || existingAdminAdmin) {
       return res.status(400).json({ error: 'Admin with this email already exists' });
     }
 
@@ -363,9 +369,11 @@ router.post('/admins', authenticateToken, requireAdmin, upload.single('profile_p
         role: 'admin',
         profile_picture_url: profilePictureUrl,
         status: 'active',
-        is_active: true
+        onboarding_complete: true,
+        created_at: new Date().toISOString(),
+        updated_at: new Date().toISOString()
       })
-      .select('id, full_name, email, role, profile_picture_url, phone, is_active, created_at')
+      .select('id, full_name, email, role, profile_picture_url, phone, status, created_at')
       .single();
 
     if (error) {
