@@ -447,13 +447,11 @@ router.put('/admins/:id/suspend', authenticateToken, requireAdmin, async (req, r
     const { data: suspendedAdmin, error } = await supabaseAdmin
       .from('clients')
       .update({ 
-        is_active: false,
-        suspended_at: new Date().toISOString(),
-        suspended_by: currentAdminId,
-        suspension_reason: reason
+        status: 'suspended',
+        updated_at: new Date().toISOString()
       })
       .eq('id', id)
-      .select('id, full_name, email, is_active')
+      .select('id, full_name, email, status')
       .single();
 
     if (error) {
@@ -530,15 +528,11 @@ router.put('/admins/:id/reactivate', authenticateToken, requireAdmin, async (req
     const { data: reactivatedAdmin, error } = await supabaseAdmin
       .from('clients')
       .update({ 
-        is_active: true,
-        suspended_at: null,
-        suspended_by: null,
-        suspension_reason: null,
-        reactivated_at: new Date().toISOString(),
-        reactivated_by: currentAdminId
+        status: 'active',
+        updated_at: new Date().toISOString()
       })
       .eq('id', id)
-      .select('id, full_name, email, is_active')
+      .select('id, full_name, email, status')
       .single();
 
     if (error) {
@@ -686,10 +680,8 @@ router.delete('/admins/:id', authenticateToken, requireAdmin, async (req, res) =
       .from('clients')
       .update({ 
         role: 'deleted_admin',
-        is_active: false,
-        deleted_at: new Date().toISOString(),
-        deleted_by: currentAdminId,
-        deletion_reason: reason
+        status: 'inactive',
+        updated_at: new Date().toISOString()
       })
       .eq('id', id)
       .select('id, full_name, email')
