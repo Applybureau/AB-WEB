@@ -242,25 +242,8 @@ router.post('/', authenticateToken, requireAdmin, async (req, res) => {
       });
     }
 
-    // Verify client exists
-    const { data: client, error: clientError } = await supabaseAdmin
-      .from('clients')
-      .select('id, full_name, email')
-      .eq('id', client_id)
-      .single();
-
-    if (clientError || !client) {
-      // Try registered_users table as fallback
-      const { data: registeredUser, error: userError } = await supabaseAdmin
-        .from('registered_users')
-        .select('id, full_name, email')
-        .eq('id', client_id)
-        .single();
-
-      if (userError || !registeredUser) {
-        return res.status(404).json({ error: 'Client not found' });
-      }
-    }
+    // Skip client validation - let the foreign key constraint handle it
+    // The applications table has a foreign key to auth.users(id)
 
     // Create application with minimal required fields
     const { data: application, error } = await supabaseAdmin
