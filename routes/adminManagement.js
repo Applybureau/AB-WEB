@@ -117,10 +117,59 @@ async function sendAdminActionEmail(targetEmail, action, details) {
   }
 }
 
+// GET /api/admin-management - List all admins (root endpoint)
+router.get('/', authenticateToken, requireAdmin, async (req, res) => {
+  try {
+    const currentAdminId = req.user.id;
+    
+    // Check if current user is super admin
+    const isSuper = await isSuperAdmin(currentAdminId);
+    if (!isSuper) {
+      return res.status(403).json({ error: 'Super admin access required' });
+    }
+
+    // Get all admins from both tables
+    const { data: adminsFromAdminsTable } = await supabaseAdmin
+      .from('admins')
+      .select('id, email, full_name, role, is_active, created_at, last_login_at, profile_picture_url, phone, permissions')
+      .order('created_at', { ascending: false });
+
+    const { data: adminsFromClientsTable } = await supabaseAdmin
+      .from('clients')
+      .select('id, email, full_name, role, created_at, last_login_at')
+      .eq('role', 'admin')
+      .order('created_at', { ascending: false });
+
+    // Combine and format results
+    const allAdmins = [
+      ...(adminsFromAdminsTable || []).map(admin => ({
+        ...admin,
+        source: 'admins_table',
+        is_super_admin: admin.email === SUPER_ADMIN_EMAIL
+      })),
+      ...(adminsFromClientsTable || []).map(admin => ({
+        ...admin,
+        source: 'clients_table',
+        is_active: true,
+        is_super_admin: admin.email === SUPER_ADMIN_EMAIL
+      }))
+    ];
+
+    res.json({
+      admins: allAdmins,
+      total: allAdmins.length,
+      super_admin_email: SUPER_ADMIN_EMAIL
+    });
+  } catch (error) {
+    console.error('Error fetching admin list:', error);
+    res.status(500).json({ error: 'Failed to fetch admin list' });
+  }
+});
+
 // GET /api/admin-management/profile - Get current admin profile with full details
 router.get('/profile', authenticateToken, requireAdmin, async (req, res) => {
   try {
-    const adminId = req.user.userId || req.user.id;
+    const adminId = req.user.id;
 
     // Get admin details from clients table (main admin system)
     const { data: adminData, error } = await supabaseAdmin
@@ -183,7 +232,7 @@ router.get('/profile', authenticateToken, requireAdmin, async (req, res) => {
 // GET /api/admin-management/admins - List all admins (super admin only)
 router.get('/admins', authenticateToken, requireAdmin, async (req, res) => {
   try {
-    const currentAdminId = req.user.userId || req.user.id;
+    const currentAdminId = req.user.id;
 
     // Check if current user is super admin
     const isSuper = await isSuperAdmin(currentAdminId);
@@ -219,7 +268,7 @@ router.get('/admins', authenticateToken, requireAdmin, async (req, res) => {
 // POST /api/admin-management/admins - Create new admin (super admin only)
 router.post('/admins', authenticateToken, requireAdmin, upload.single('profile_picture'), async (req, res) => {
   try {
-    const currentAdminId = req.user.userId || req.user.id;
+    const currentAdminId = req.user.id;
     const { full_name, email, password, phone } = req.body;
 
     // Check if current user is super admin

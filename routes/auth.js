@@ -51,7 +51,7 @@ router.post('/invite', authenticateToken, validate(schemas.invite), async (req, 
 
     // Generate registration token
     const registrationToken = generateToken({ 
-      userId: client.id, 
+      id: client.id, 
       email: client.email,
       type: 'registration'
     });
@@ -100,7 +100,7 @@ router.post('/complete-registration', validate(schemas.completeRegistration), as
     const { data: client, error } = await supabaseAdmin
       .from('clients')
       .update(updateData)
-      .eq('id', decoded.userId)
+      .eq('id', decoded.id)
       .select('id, email, full_name, role')
       .single();
 
@@ -111,7 +111,7 @@ router.post('/complete-registration', validate(schemas.completeRegistration), as
 
     // Generate auth token
     const authToken = generateToken({
-      userId: client.id,
+      id: client.id,
       email: client.email,
       role: client.role
     });
@@ -203,7 +203,7 @@ router.post('/login', validate(schemas.login), async (req, res) => {
 
     // Generate auth token with proper role
     const token = generateToken({
-      userId: user.id,
+      id: user.id,
       email: user.email,
       full_name: user.full_name,
       role: user.role || (userType === 'admin' ? 'admin' : 'client')

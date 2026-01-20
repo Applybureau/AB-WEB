@@ -43,11 +43,12 @@ class ContactRequestController {
         .insert({
           first_name: fName,
           last_name: lName,
+          name: `${fName} ${lName}`,
           email,
           phone: phone || null,
           subject,
           message,
-          status: 'new'
+          status: 'pending' // Use 'pending' instead of 'new' to match our CHECK constraint
         })
         .select()
         .single();
@@ -90,7 +91,7 @@ class ContactRequestController {
 
       res.status(201).json({
         id: contactRequest.id,
-        status: 'new',
+        status: 'pending',
         message: 'Contact request submitted successfully'
       });
     } catch (error) {

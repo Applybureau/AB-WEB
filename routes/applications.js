@@ -68,7 +68,7 @@ router.get('/',
           .range(parseInt(offset), parseInt(offset) + parseInt(limit) - 1);
 
         if (client_id) {
-          query = query.eq('user_id', client_id);
+          query = query.eq('client_id', client_id);
         }
 
         const { data: applications, error } = await query;
@@ -117,7 +117,7 @@ router.get('/',
             created_at,
             updated_at
           `)
-          .eq('user_id', userId)
+          .eq('client_id', userId)
           .order('created_at', { ascending: false });
 
         const { data: applications, error } = await baseQuery;

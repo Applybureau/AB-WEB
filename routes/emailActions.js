@@ -30,7 +30,7 @@ router.get('/consultation/:id/confirm/:token', async (req, res) => {
 
     // Verify consultation exists
     const { data: consultation, error } = await supabaseAdmin
-      .from('consultation_requests')
+      .from('consultations')
       .select('*')
       .eq('id', id)
       .single();
@@ -47,8 +47,9 @@ router.get('/consultation/:id/confirm/:token', async (req, res) => {
       `);
     }
 
-    // Simple token validation
-    const expectedToken = Buffer.from(`${consultation.id}-${consultation.email}`).toString('base64').slice(0, 16);
+    // Simple token validation - use prospect_email instead of email
+    const email = consultation.prospect_email || consultation.client_id;
+    const expectedToken = Buffer.from(`${consultation.id}-${email}`).toString('base64').slice(0, 16);
     
     if (token !== expectedToken) {
       return res.status(403).send(`
@@ -64,7 +65,7 @@ router.get('/consultation/:id/confirm/:token', async (req, res) => {
 
     // Update consultation status
     const { error: updateError } = await supabaseAdmin
-      .from('consultation_requests')
+      .from('consultations')
       .update({ 
         status: 'confirmed',
         admin_notes: `Confirmed via email action at ${new Date().toISOString()}`,
@@ -78,7 +79,7 @@ router.get('/consultation/:id/confirm/:token', async (req, res) => {
     }
 
     // Log success
-    console.log('Consultation confirmed via email:', { consultationId: id, email: consultation.email });
+    console.log('Consultation confirmed via email:', { consultationId: id, email });
 
     res.send(`
       <html>
@@ -119,7 +120,7 @@ router.get('/consultation/:id/waitlist/:token', async (req, res) => {
 
     // Verify consultation exists
     const { data: consultation, error } = await supabaseAdmin
-      .from('consultation_requests')
+      .from('consultations')
       .select('*')
       .eq('id', id)
       .single();
@@ -136,8 +137,9 @@ router.get('/consultation/:id/waitlist/:token', async (req, res) => {
       `);
     }
 
-    // Simple token validation
-    const expectedToken = Buffer.from(`${consultation.id}-${consultation.email}`).toString('base64').slice(0, 16);
+    // Simple token validation - use prospect_email instead of email
+    const email = consultation.prospect_email || consultation.client_id;
+    const expectedToken = Buffer.from(`${consultation.id}-${email}`).toString('base64').slice(0, 16);
     
     if (token !== expectedToken) {
       return res.status(403).send(`
@@ -153,7 +155,7 @@ router.get('/consultation/:id/waitlist/:token', async (req, res) => {
 
     // Update consultation status to pending (since waitlisted is not allowed)
     const { error: updateError } = await supabaseAdmin
-      .from('consultation_requests')
+      .from('consultations')
       .update({ 
         status: 'pending',
         admin_notes: `Added to waitlist via email action at ${new Date().toISOString()}`,
@@ -167,7 +169,7 @@ router.get('/consultation/:id/waitlist/:token', async (req, res) => {
     }
 
     // Log success
-    console.log('Consultation added to waitlist via email:', { consultationId: id, email: consultation.email });
+    console.log('Consultation added to waitlist via email:', { consultationId: id, email });
 
     res.send(`
       <html>
@@ -206,14 +208,27 @@ router.get('/admin/:adminId/suspend/:token', async (req, res) => {
       return handleEmailActionError(res, 'Missing parameters', 'Invalid suspension link');
     }
 
-    // Verify admin exists
-    const { data: admin, error } = await supabaseAdmin
+    // Verify admin exists - try both admins and clients tables
+    let admin = null;
+    const { data: adminData } = await supabaseAdmin
       .from('admins')
       .select('*')
       .eq('id', adminId)
       .single();
 
-    if (error || !admin) {
+    if (adminData) {
+      admin = adminData;
+    } else {
+      const { data: clientData } = await supabaseAdmin
+        .from('clients')
+        .select('*')
+        .eq('id', adminId)
+        .eq('role', 'admin')
+        .single();
+      admin = clientData;
+    }
+
+    if (!admin) {
       return res.status(404).send(`
         <html>
           <body style="font-family: Arial, sans-serif; text-align: center; padding: 50px;">
@@ -253,14 +268,27 @@ router.get('/admin/:adminId/suspend/:token', async (req, res) => {
       `);
     }
 
-    // Suspend the admin
-    const { error: updateError } = await supabaseAdmin
-      .from('admins')
-      .update({ 
-        is_active: false,
-        updated_at: new Date().toISOString()
-      })
-      .eq('id', adminId);
+    // Suspend the admin - try both tables
+    let updateError = null;
+    if (adminData) {
+      const { error } = await supabaseAdmin
+        .from('admins')
+        .update({ 
+          is_active: false,
+          updated_at: new Date().toISOString()
+        })
+        .eq('id', adminId);
+      updateError = error;
+    } else {
+      const { error } = await supabaseAdmin
+        .from('clients')
+        .update({ 
+          status: 'suspended',
+          updated_at: new Date().toISOString()
+        })
+        .eq('id', adminId);
+      updateError = error;
+    }
 
     if (updateError) {
       console.error('Failed to suspend admin via email:', updateError);
@@ -280,107 +308,6 @@ router.get('/admin/:adminId/suspend/:token', async (req, res) => {
               <li>Account access has been disabled</li>
               <li>Admin privileges have been revoked</li>
               <li>Suspension notification has been sent</li>
-            </ul>
-            <div style="margin-top: 30px;">
-              <a href="${process.env.FRONTEND_URL || 'https://applybureau.com'}/admin/management" 
-                 style="background: #007bff; color: white; padding: 12px 24px; text-decoration: none; border-radius: 5px;">
-                Manage Admins
-              </a>
-            </div>
-          </div>
-        </body>
-      </html>
-    `);
-  } catch (error) {
-    return handleEmailActionError(res, error, 'An unexpected error occurred');
-  }
-});
-
-// GET /api/email-actions/admin/:adminId/delete/:token - Delete admin from email (Super Admin only)
-router.get('/admin/:adminId/delete/:token', async (req, res) => {
-  try {
-    const { adminId, token } = req.params;
-
-    // Basic validation
-    if (!adminId || !token) {
-      return handleEmailActionError(res, 'Missing parameters', 'Invalid deletion link');
-    }
-
-    // Verify admin exists
-    const { data: admin, error } = await supabaseAdmin
-      .from('admins')
-      .select('*')
-      .eq('id', adminId)
-      .single();
-
-    if (error || !admin) {
-      return res.status(404).send(`
-        <html>
-          <body style="font-family: Arial, sans-serif; text-align: center; padding: 50px;">
-            <h2>Admin Not Found</h2>
-            <p>The admin account could not be found.</p>
-            <a href="${process.env.FRONTEND_URL || 'https://applybureau.com'}/admin" style="color: #007bff;">Return to Admin Panel</a>
-          </body>
-        </html>
-      `);
-    }
-
-    // Simple token validation
-    const expectedToken = Buffer.from(`delete-${admin.id}-${admin.email}`).toString('base64').slice(0, 16);
-    
-    if (token !== expectedToken) {
-      return res.status(403).send(`
-        <html>
-          <body style="font-family: Arial, sans-serif; text-align: center; padding: 50px;">
-            <h2>Invalid Link</h2>
-            <p>This deletion link is invalid or has expired.</p>
-            <a href="${process.env.FRONTEND_URL || 'https://applybureau.com'}/admin" style="color: #007bff;">Return to Admin Panel</a>
-          </body>
-        </html>
-      `);
-    }
-
-    // Prevent deleting super admin
-    if (admin.email === 'admin@applybureau.com') {
-      return res.status(403).send(`
-        <html>
-          <body style="font-family: Arial, sans-serif; text-align: center; padding: 50px;">
-            <h2>Action Not Allowed</h2>
-            <p>Super admin account cannot be deleted.</p>
-            <a href="${process.env.FRONTEND_URL || 'https://applybureau.com'}/admin" style="color: #007bff;">Return to Admin Panel</a>
-          </body>
-        </html>
-      `);
-    }
-
-    // Soft delete the admin (deactivate instead of hard delete)
-    const { error: updateError } = await supabaseAdmin
-      .from('admins')
-      .update({ 
-        is_active: false,
-        updated_at: new Date().toISOString()
-      })
-      .eq('id', adminId);
-
-    if (updateError) {
-      console.error('Failed to delete admin via email:', updateError);
-      return handleEmailActionError(res, updateError, 'Failed to delete admin account');
-    }
-
-    console.log('Admin deleted via email action:', { adminId, email: admin.email });
-
-    res.send(`
-      <html>
-        <body style="font-family: Arial, sans-serif; text-align: center; padding: 50px;">
-          <div style="max-width: 600px; margin: 0 auto;">
-            <h2 style="color: #dc3545;">🗑️ Admin Account Deleted</h2>
-            <p>The admin account for <strong>${admin.full_name || admin.name}</strong> (${admin.email}) has been permanently deleted.</p>
-            <p><strong>Actions taken:</strong></p>
-            <ul style="text-align: left; display: inline-block;">
-              <li>Account has been permanently disabled</li>
-              <li>All admin privileges have been revoked</li>
-              <li>Account data has been archived</li>
-              <li>Deletion notification has been sent</li>
             </ul>
             <div style="margin-top: 30px;">
               <a href="${process.env.FRONTEND_URL || 'https://applybureau.com'}/admin/management" 

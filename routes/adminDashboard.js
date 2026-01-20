@@ -7,7 +7,7 @@ const router = express.Router();
 // GET /api/admin-dashboard - Admin dashboard with comprehensive stats
 router.get('/', authenticateToken, requireAdmin, async (req, res) => {
   try {
-    const adminId = req.user.userId || req.user.id;
+    const adminId = req.user.id;
 
     // Get admin profile from both tables for compatibility
     let adminProfile = null;

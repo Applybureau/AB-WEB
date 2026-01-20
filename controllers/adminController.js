@@ -701,6 +701,60 @@ class AdminController {
       res.status(500).json({ error: 'Failed to schedule consultation' });
     }
   }
+
+  // GET /api/admin/profile - Get admin profile
+  static async getAdminProfile(req, res) {
+    try {
+      const adminId = req.user.id;
+
+      // Try to get admin from admins table first
+      let admin = null;
+      const { data: adminData, error: adminError } = await supabaseAdmin
+        .from('admins')
+        .select('id, email, full_name, role, profile_picture_url, phone, permissions, is_active, created_at, last_login_at')
+        .eq('id', adminId)
+        .single();
+
+      if (adminData) {
+        admin = adminData;
+      } else {
+        // Fallback to clients table
+        const { data: clientData, error: clientError } = await supabaseAdmin
+          .from('clients')
+          .select('id, email, full_name, role, profile_picture_url, phone, created_at, last_login_at')
+          .eq('id', adminId)
+          .eq('role', 'admin')
+          .single();
+
+        if (clientData) {
+          admin = {
+            ...clientData,
+            permissions: {
+              can_create_admins: true,
+              can_delete_admins: true,
+              can_manage_clients: true,
+              can_schedule_consultations: true,
+              can_view_reports: true,
+              can_manage_system: true
+            },
+            is_active: true
+          };
+        }
+      }
+
+      if (!admin) {
+        return res.status(404).json({ error: 'Admin profile not found' });
+      }
+
+      res.json({
+        admin,
+        dashboard_type: 'admin'
+      });
+    } catch (error) {
+      logger.error('Get admin profile error', error, { adminId: req.user?.id });
+      res.status(500).json({ error: 'Failed to fetch admin profile' });
+    }
+  }
 }
 
 module.exports = AdminController;

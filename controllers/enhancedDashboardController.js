@@ -253,30 +253,40 @@ const getNotifications = async (req, res) => {
     const userType = req.user.role;
     const { page = 1, limit = 20, unread_only = false } = req.query;
 
-    let query = supabaseAdmin
-      .from('notifications')
-      .select('*')
-      .eq('user_id', userId)
-      .eq('user_type', userType)
-      .order('created_at', { ascending: false })
-      .range((page - 1) * limit, page * limit - 1);
+    // Try to get notifications with error handling
+    let notifications = [];
+    try {
+      let query = supabaseAdmin
+        .from('notifications')
+        .select('*')
+        .eq('user_id', userId)
+        .order('created_at', { ascending: false })
+        .range((page - 1) * limit, page * limit - 1);
 
-    if (unread_only === 'true') {
-      query = query.eq('is_read', false);
-    }
+      if (unread_only === 'true') {
+        query = query.eq('is_read', false);
+      }
 
-    const { data: notifications, error } = await query;
+      const { data, error } = await query;
 
-    if (error) {
-      throw error;
+      if (error) {
+        console.error('Notifications query error:', error);
+        // Return empty notifications instead of failing
+        notifications = [];
+      } else {
+        notifications = data || [];
+      }
+    } catch (dbError) {
+      console.error('Database error in notifications:', dbError);
+      notifications = [];
     }
 
     res.json({
-      notifications: notifications || [],
+      notifications,
       pagination: {
         page: parseInt(page),
         limit: parseInt(limit),
-        has_more: notifications?.length === parseInt(limit)
+        has_more: notifications.length === parseInt(limit)
       }
     });
 
@@ -362,9 +372,9 @@ const getMessages = async (req, res) => {
     let query = supabaseAdmin
       .from('messages')
       .select(`
-        id, message_text, sender_type, recipient_type, is_read, created_at,
+        id, content, sender_type, recipient_type, is_read, created_at,
         sender_id, recipient_id, consultation_id, application_id,
-        attachment_url, attachment_name
+        attachments, subject, priority
       `)
       .order('created_at', { ascending: false })
       .range((page - 1) * limit, page * limit - 1);

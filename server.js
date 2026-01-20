@@ -151,8 +151,12 @@ const corsOptions = {
     } else {
       console.log('CORS blocked origin:', origin);
       console.log('Allowed origins:', allowedOrigins);
-      // Allow all origins for now to fix frontend issues
-      callback(null, true);
+      // For production security, only allow specific origins
+      if (process.env.NODE_ENV === 'development') {
+        callback(null, true); // Allow all in development
+      } else {
+        callback(new Error('Not allowed by CORS'), false);
+      }
     }
   },
   credentials: true,
@@ -330,7 +334,11 @@ app.use('/api/client/onboarding-20q', clientOnboarding20QRoutes); // 20-question
 
 // Workflow Features Routes (no conflicts)
 const onboardingWorkflowRoutes = require('./routes/onboardingWorkflow');
-app.use('/api/workflow', onboardingWorkflowRoutes); // 20-field onboarding, profile unlock, payment verification
+const workflowRoutes = require('./routes/workflow');
+const applicationsWorkflowRoutes = require('./routes/applicationsWorkflow');
+app.use('/api/workflow', workflowRoutes); // Workflow consultation requests
+app.use('/api/applications-workflow', applicationsWorkflowRoutes); // Applications workflow
+app.use('/api/onboarding-workflow', onboardingWorkflowRoutes); // 20-field onboarding, profile unlock, payment verification
 
 // Client Pipeline Routes
 app.use('/api/client/profile', clientProfileRoutes); // Client profile management

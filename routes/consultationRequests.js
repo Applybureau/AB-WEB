@@ -77,22 +77,21 @@ router.post('/', async (req, res) => {
       ]);
     }
 
-    // Create consultation request with actual table column names
+    // Create consultation request using the consultations table
     const { data: consultation, error } = await supabaseAdmin
-      .from('consultation_requests')
+      .from('consultations')
       .insert({
-        name: fullName, // Map fullName to name
-        email,
-        phone,
-        message,
-        preferred_slots: preferredSlots, // Map preferredSlots to preferred_slots
-        company,
+        prospect_name: fullName,
+        prospect_email: email,
+        prospect_phone: phone,
+        client_reason: message,
         consultation_type,
-        urgency: urgency_level, // Map urgency_level to urgency
-        source,
         status: 'pending',
-        admin_status: 'pending', // Map pipeline_status to admin_status
-        lead_score: urgency_level === 'high' ? 80 : 50 // Set initial lead score
+        scheduled_at: new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString(), // Default to tomorrow
+        duration_minutes: 60,
+        preferred_slots: preferredSlots,
+        urgency_level,
+        country: 'Not specified'
       })
       .select()
       .single();
@@ -148,26 +147,26 @@ router.post('/', async (req, res) => {
     // Format response according to specification using actual data
     const responseData = {
       id: consultation.id,
-      fullName: consultation.name, // Map name to fullName
-      email: consultation.email,
-      phone: consultation.phone,
-      message: consultation.message,
-      preferredSlots: consultation.preferred_slots || [], // Map preferred_slots to preferredSlots
-      requestType: 'consultation_booking', // Default value
-      company: consultation.company,
-      job_title: null, // Not available in current schema
+      fullName: consultation.prospect_name,
+      email: consultation.prospect_email,
+      phone: consultation.prospect_phone,
+      message: consultation.client_reason,
+      preferredSlots: [],
+      requestType: 'consultation_booking',
+      company: null,
+      job_title: null,
       consultation_type: consultation.consultation_type,
-      urgency_level: consultation.urgency || 'normal', // Map urgency to urgency_level
-      source: consultation.source,
+      urgency_level: consultation.urgency_level || 'normal',
+      source: 'website',
       status: consultation.status,
-      pipeline_status: consultation.admin_status || 'lead', // Map admin_status to pipeline_status
-      priority: consultation.urgency === 'high' ? 'high' : 'medium', // Derive priority from urgency
+      pipeline_status: 'lead',
+      priority: consultation.urgency_level === 'high' ? 'high' : 'medium',
       created_at: consultation.created_at,
       updated_at: consultation.updated_at,
       admin_notes: consultation.admin_notes,
-      confirmedSlot: consultation.confirmed_time, // Map confirmed_time to confirmedSlot
-      scheduled_datetime: consultation.scheduled_at, // Map scheduled_at to scheduled_datetime
-      google_meet_link: null // Not available in current schema
+      confirmedSlot: consultation.scheduled_at,
+      scheduled_datetime: consultation.scheduled_at,
+      google_meet_link: consultation.meeting_link
     };
 
     res.status(201).json(createSuccessResponse(
@@ -191,41 +190,29 @@ router.get('/',
       // Add search fields for filtering
       req.searchFields = ['fullName', 'email', 'company', 'job_title', 'message'];
 
-      // Base query - using actual table column names
+      // Base query - using consultations table
       const baseQuery = supabaseAdmin
-        .from('consultation_requests')
+        .from('consultations')
         .select(`
           id,
-          name,
-          email,
-          phone,
-          message,
-          preferred_slots,
-          company,
+          prospect_name,
+          prospect_email,
+          prospect_phone,
+          client_reason,
           consultation_type,
-          urgency,
-          source,
           status,
+          scheduled_at,
+          duration_minutes,
+          admin_notes,
           created_at,
           updated_at,
-          admin_notes,
-          confirmed_time,
-          assigned_to,
-          admin_status,
-          preferred_times,
-          timezone,
-          duration_preference,
-          meeting_preference,
-          lead_score,
-          qualification_notes,
-          scheduled_at,
-          follow_up_required,
-          follow_up_date
+          urgency_level,
+          country
         `);
 
       // Count query
       const countQuery = supabaseAdmin
-        .from('consultation_requests')
+        .from('consultations')
         .select('*', { count: 'exact', head: true });
 
       // Get paginated results
@@ -234,28 +221,28 @@ router.get('/',
       // Format response data to match expected API format
       const formattedData = result.data.map(consultation => ({
         id: consultation.id,
-        fullName: consultation.name, // Map name to fullName for API consistency
-        email: consultation.email,
-        phone: consultation.phone,
-        message: consultation.message,
-        preferredSlots: consultation.preferred_slots || [], // Map preferred_slots to preferredSlots
-        requestType: 'consultation_booking', // Default value
-        company: consultation.company,
-        job_title: null, // Not available in current schema
+        fullName: consultation.prospect_name,
+        email: consultation.prospect_email,
+        phone: consultation.prospect_phone,
+        message: consultation.client_reason,
+        preferredSlots: [],
+        requestType: 'consultation_booking',
+        company: null,
+        job_title: null,
         consultation_type: consultation.consultation_type,
-        urgency_level: consultation.urgency || 'normal', // Map urgency to urgency_level
-        source: consultation.source,
+        urgency_level: consultation.urgency_level || 'normal',
+        source: 'website',
         status: consultation.status,
-        pipeline_status: consultation.admin_status || 'lead', // Map admin_status to pipeline_status
-        priority: consultation.urgency === 'high' ? 'high' : 'medium', // Derive priority from urgency
+        pipeline_status: 'lead',
+        priority: consultation.urgency_level === 'high' ? 'high' : 'medium',
         created_at: consultation.created_at,
         updated_at: consultation.updated_at,
         admin_notes: consultation.admin_notes,
-        confirmedSlot: consultation.confirmed_time, // Map confirmed_time to confirmedSlot
-        scheduled_datetime: consultation.scheduled_at, // Map scheduled_at to scheduled_datetime
-        google_meet_link: null, // Not available in current schema
-        handled_by: consultation.assigned_to, // Map assigned_to to handled_by
-        response_sent: consultation.follow_up_required // Map follow_up_required to response_sent
+        confirmedSlot: consultation.scheduled_at,
+        scheduled_datetime: consultation.scheduled_at,
+        google_meet_link: consultation.meeting_link,
+        handled_by: consultation.admin_id,
+        response_sent: false
       }));
 
       res.json(createPaginatedResponse(
@@ -310,19 +297,13 @@ router.patch('/:id', authenticateToken, requireAdmin, async (req, res) => {
     
     if (status) updateData.status = status;
     if (admin_notes) updateData.admin_notes = admin_notes;
-    if (confirmedSlot) updateData.confirmed_time = confirmedSlot; // Map confirmedSlot to confirmed_time
-    if (scheduled_datetime) updateData.scheduled_at = scheduled_datetime; // Map scheduled_datetime to scheduled_at
-    if (google_meet_link) updateData.internal_notes = google_meet_link; // Store google_meet_link in internal_notes
-    if (pipeline_status) updateData.admin_status = pipeline_status; // Map pipeline_status to admin_status
-    if (handled_by) updateData.assigned_to = handled_by; // Map handled_by to assigned_to
-    if (response_sent !== undefined) updateData.follow_up_required = response_sent; // Map response_sent to follow_up_required
-    if (priority) {
-      // Map priority to urgency
-      updateData.urgency = priority === 'urgent' ? 'high' : priority === 'high' ? 'high' : 'medium';
-    }
+    if (confirmedSlot) updateData.scheduled_at = confirmedSlot; // Use scheduled_at for confirmed slot
+    if (scheduled_datetime) updateData.scheduled_at = scheduled_datetime;
+    if (google_meet_link) updateData.meeting_link = google_meet_link; // Use meeting_link column
+    if (priority) updateData.urgency_level = priority; // Use urgency_level column
 
     const { data: consultation, error } = await supabaseAdmin
-      .from('consultation_requests')
+      .from('consultations')
       .update(updateData)
       .eq('id', id)
       .select()
@@ -340,19 +321,19 @@ router.patch('/:id', authenticateToken, requireAdmin, async (req, res) => {
     // Send appropriate email based on status change
     try {
       if (status === 'confirmed' && confirmedSlot) {
-        await sendEmail(consultation.email, 'consultation_confirmed', {
-          client_name: consultation.name, // Use name instead of fullName
+        await sendEmail(consultation.prospect_email, 'consultation_confirmed', {
+          client_name: consultation.prospect_name,
           confirmed_slot: confirmedSlot,
           meeting_link: google_meet_link || 'Will be provided separately'
         });
       } else if (status === 'rejected') {
-        await sendEmail(consultation.email, 'consultation_rejected', {
-          client_name: consultation.name, // Use name instead of fullName
+        await sendEmail(consultation.prospect_email, 'consultation_rejected', {
+          client_name: consultation.prospect_name,
           reason: admin_notes || 'Unfortunately, we cannot accommodate your request at this time.'
         });
       } else if (status === 'scheduled' && google_meet_link) {
-        await sendEmail(consultation.email, 'consultation_scheduled', {
-          client_name: consultation.name, // Use name instead of fullName
+        await sendEmail(consultation.prospect_email, 'consultation_scheduled', {
+          client_name: consultation.prospect_name,
           meeting_date: scheduled_datetime,
           meeting_link: google_meet_link
         });
@@ -364,28 +345,28 @@ router.patch('/:id', authenticateToken, requireAdmin, async (req, res) => {
     // Format response to match specification using actual data
     const formattedConsultation = {
       id: consultation.id,
-      fullName: consultation.name, // Map name to fullName
-      email: consultation.email,
-      phone: consultation.phone,
-      message: consultation.message,
-      preferredSlots: consultation.preferred_slots || [], // Map preferred_slots to preferredSlots
-      requestType: 'consultation_booking', // Default value
-      company: consultation.company,
-      job_title: null, // Not available in current schema
+      fullName: consultation.prospect_name,
+      email: consultation.prospect_email,
+      phone: consultation.prospect_phone,
+      message: consultation.client_reason,
+      preferredSlots: [],
+      requestType: 'consultation_booking',
+      company: null,
+      job_title: null,
       consultation_type: consultation.consultation_type,
-      urgency_level: consultation.urgency || 'normal', // Map urgency to urgency_level
-      source: consultation.source,
+      urgency_level: consultation.urgency_level || 'normal',
+      source: 'website',
       status: consultation.status,
-      pipeline_status: consultation.admin_status || 'lead', // Map admin_status to pipeline_status
-      priority: consultation.urgency === 'high' ? 'high' : 'medium', // Derive priority from urgency
+      pipeline_status: 'lead',
+      priority: consultation.urgency_level === 'high' ? 'high' : 'medium',
       created_at: consultation.created_at,
       updated_at: consultation.updated_at,
       admin_notes: consultation.admin_notes,
-      confirmedSlot: consultation.confirmed_time, // Map confirmed_time to confirmedSlot
-      scheduled_datetime: consultation.scheduled_at, // Map scheduled_at to scheduled_datetime
-      google_meet_link: consultation.internal_notes, // Map internal_notes to google_meet_link
-      handled_by: consultation.assigned_to, // Map assigned_to to handled_by
-      response_sent: consultation.follow_up_required // Map follow_up_required to response_sent
+      confirmedSlot: consultation.scheduled_at,
+      scheduled_datetime: consultation.scheduled_at,
+      google_meet_link: consultation.meeting_link,
+      handled_by: consultation.admin_id,
+      response_sent: false
     };
 
     res.json(createSuccessResponse(
@@ -404,7 +385,7 @@ router.delete('/:id', authenticateToken, requireAdmin, async (req, res) => {
     const { id } = req.params;
 
     const { error } = await supabaseAdmin
-      .from('consultation_requests')
+      .from('consultations')
       .delete()
       .eq('id', id);
 

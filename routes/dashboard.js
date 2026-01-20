@@ -9,7 +9,7 @@ router.get('/', authenticateToken, async (req, res) => {
   try {
     console.log('Dashboard - req.user:', req.user);
     
-    const clientId = req.user.userId || req.user.id;
+    const clientId = req.user.id;
     if (!clientId) {
       return res.status(401).json({ error: 'Invalid token - no user ID' });
     }
@@ -44,6 +44,7 @@ router.get('/', authenticateToken, async (req, res) => {
     // Get recent applications (with error handling)
     let applications = [];
     try {
+      // Try with client_id first
       const { data: appsData, error: appsError } = await supabaseAdmin
         .from('applications')
         .select('*')
@@ -51,7 +52,22 @@ router.get('/', authenticateToken, async (req, res) => {
         .order('created_at', { ascending: false })
         .limit(10);
 
-      if (appsData) applications = appsData;
+      if (appsError && appsError.message.includes('client_id')) {
+        console.log('client_id column missing, trying user_id...');
+        // Fallback to user_id if client_id doesn't exist
+        const { data: fallbackData, error: fallbackError } = await supabaseAdmin
+          .from('applications')
+          .select('*')
+          .eq('user_id', clientId)
+          .order('created_at', { ascending: false })
+          .limit(10);
+        
+        if (fallbackData && !fallbackError) {
+          applications = fallbackData;
+        }
+      } else if (appsData) {
+        applications = appsData;
+      }
     } catch (error) {
       console.error('Applications fetch error:', error);
     }
@@ -83,7 +99,22 @@ router.get('/', authenticateToken, async (req, res) => {
         .order('created_at', { ascending: false })
         .limit(10);
 
-      if (notifData) notifications = notifData;
+      if (notifError && notifError.message.includes('is_read')) {
+        console.log('is_read column missing, getting all notifications...');
+        // Fallback without is_read filter if column doesn't exist
+        const { data: fallbackData, error: fallbackError } = await supabaseAdmin
+          .from('notifications')
+          .select('*')
+          .eq('user_id', clientId)
+          .order('created_at', { ascending: false })
+          .limit(10);
+        
+        if (fallbackData && !fallbackError) {
+          notifications = fallbackData;
+        }
+      } else if (notifData) {
+        notifications = notifData;
+      }
     } catch (error) {
       console.error('Notifications fetch error:', error);
     }
@@ -114,20 +145,43 @@ router.get('/', authenticateToken, async (req, res) => {
 // GET /api/dashboard/stats - Get detailed statistics
 router.get('/stats', authenticateToken, async (req, res) => {
   try {
-    const clientId = req.user.userId || req.user.id;
+    const clientId = req.user.id;
     if (!clientId) {
       return res.status(401).json({ error: 'Invalid token - no user ID' });
     }
 
-    // Get all applications for detailed stats
-    const { data: applications, error } = await supabaseAdmin
-      .from('applications')
-      .select('status, created_at, date_applied')
-      .eq('client_id', clientId);
+    // Get all applications for detailed stats with error handling
+    let applications = [];
+    try {
+      // Try with client_id first
+      const { data: appsData, error } = await supabaseAdmin
+        .from('applications')
+        .select('status, created_at, date_applied')
+        .eq('client_id', clientId);
 
-    if (error) {
-      console.error('Error fetching application stats:', error);
-      return res.status(500).json({ error: 'Failed to fetch statistics' });
+      if (error && error.message.includes('client_id')) {
+        console.log('client_id column missing, trying user_id...');
+        // Fallback to user_id if client_id doesn't exist
+        const { data: fallbackData, error: fallbackError } = await supabaseAdmin
+          .from('applications')
+          .select('status, created_at, date_applied')
+          .eq('user_id', clientId);
+        
+        if (fallbackData && !fallbackError) {
+          applications = fallbackData;
+        } else {
+          console.error('Both client_id and user_id failed:', fallbackError);
+          applications = [];
+        }
+      } else if (error) {
+        console.error('Applications query error:', error);
+        applications = [];
+      } else {
+        applications = appsData || [];
+      }
+    } catch (dbError) {
+      console.error('Database error in stats:', dbError);
+      applications = [];
     }
 
     // Calculate detailed statistics
@@ -161,6 +215,50 @@ router.get('/stats', authenticateToken, async (req, res) => {
   } catch (error) {
     console.error('Stats error:', error);
     res.status(500).json({ error: 'Failed to calculate statistics' });
+  }
+});
+
+// GET /api/dashboard/contacts - Get contacts for dashboard
+router.get('/contacts', authenticateToken, async (req, res) => {
+  try {
+    const userId = req.user.id;
+    const userRole = req.user.role;
+    
+    // Get contacts based on user role
+    let contacts = [];
+    try {
+      if (userRole === 'admin') {
+        // Admin can see all contacts
+        const { data, error } = await supabaseAdmin
+          .from('contact_requests')
+          .select('*')
+          .order('created_at', { ascending: false })
+          .limit(50);
+        
+        if (data) contacts = data;
+      } else {
+        // Client can see their own contacts
+        const { data, error } = await supabaseAdmin
+          .from('contact_requests')
+          .select('*')
+          .eq('client_id', userId)
+          .order('created_at', { ascending: false })
+          .limit(50);
+        
+        if (data) contacts = data;
+      }
+    } catch (dbError) {
+      console.error('Database error fetching contacts:', dbError);
+      contacts = [];
+    }
+
+    res.json({
+      contacts,
+      total: contacts.length
+    });
+  } catch (error) {
+    console.error('Dashboard contacts error:', error);
+    res.status(500).json({ error: 'Failed to fetch contacts' });
   }
 });
 

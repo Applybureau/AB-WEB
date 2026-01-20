@@ -24,27 +24,59 @@ router.post('/consultation-booking', validate(schemas.consultationBooking), asyn
     logger.info('New consultation booking from website', { email, name, package_interest });
 
     // Create consultation record as "scheduled" (pending admin confirmation)
-    const { data: consultation, error } = await supabaseAdmin
-      .from('consultations')
-      .insert({
-        client_id: null, // No client yet - this is pre-onboarding
-        admin_id: null, // Will be assigned by admin
-        scheduled_at: new Date(`${preferred_date}T${preferred_time}`).toISOString(),
-        consultation_type: 'initial',
-        status: 'scheduled',
-        client_reason: reason,
-        admin_notes: `Website booking - Package interest: ${package_interest}, Timeline: ${timeline}, Situation: ${current_situation}`,
-        // Store prospect info in admin notes until client is created
-        prospect_name: name,
-        prospect_email: email,
-        prospect_phone: phone
-      })
-      .select()
-      .single();
+    let consultation = null;
+    try {
+      const { data, error } = await supabaseAdmin
+        .from('consultations')
+        .insert({
+          client_id: null, // No client yet - this is pre-onboarding
+          admin_id: null, // Will be assigned by admin
+          scheduled_at: new Date(`${preferred_date}T${preferred_time}`).toISOString(),
+          consultation_type: 'initial',
+          status: 'scheduled',
+          client_reason: reason,
+          admin_notes: `Website booking - Package interest: ${package_interest}, Timeline: ${timeline}, Situation: ${current_situation}`,
+          // Store prospect info in admin notes until client is created
+          prospect_name: name,
+          prospect_email: email,
+          prospect_phone: phone
+        })
+        .select()
+        .single();
 
-    if (error) {
-      logger.error('Error creating consultation booking', error, { email, name });
-      return res.status(500).json({ error: 'Failed to book consultation' });
+      if (error) {
+        console.error('Consultation insert error:', error);
+        // Try with minimal fields if full insert fails
+        const { data: fallbackData, error: fallbackError } = await supabaseAdmin
+          .from('consultations')
+          .insert({
+            scheduled_at: new Date(`${preferred_date}T${preferred_time}`).toISOString(),
+            consultation_type: 'initial',
+            status: 'scheduled',
+            prospect_name: name,
+            prospect_email: email
+          })
+          .select()
+          .single();
+        
+        if (fallbackError) {
+          throw fallbackError;
+        }
+        consultation = fallbackData;
+      } else {
+        consultation = data;
+      }
+    } catch (dbError) {
+      logger.error('Error creating consultation booking', dbError, { email, name });
+      return res.status(500).json({ 
+        success: false,
+        error: 'Failed to submit consultation request',
+        code: 'DATABASE_ERROR',
+        details: [],
+        timestamp: new Date().toISOString(),
+        path: req.path,
+        status: 500
+      });
     }
 
     // Send confirmation email to prospect

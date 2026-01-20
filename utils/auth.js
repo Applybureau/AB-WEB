@@ -26,10 +26,9 @@ const authenticateToken = async (req, res, next) => {
       return res.status(401).json({ error: 'Invalid token - no user ID' });
     }
     
-    // Set user data from token (don't rely on database check here)
+    // Set user data from token - standardize to use 'id' everywhere
     req.user = {
       id: userId,
-      userId: userId,
       email: decoded.email,
       role: decoded.role || 'client',
       full_name: decoded.full_name

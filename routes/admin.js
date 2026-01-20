@@ -27,4 +27,7 @@ router.post('/consultations/schedule', validate(schemas.scheduleConsultation), A
 // Dashboard & Analytics Routes
 router.get('/dashboard/stats', AdminController.getDashboardStats);
 
+// Profile Routes
+router.get('/profile', AdminController.getAdminProfile);
+
 module.exports = router;
