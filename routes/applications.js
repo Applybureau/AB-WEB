@@ -251,24 +251,15 @@ router.post('/', authenticateToken, requireAdmin, async (req, res) => {
       }
     }
 
-    // Create application
+    // Create application with minimal required fields
     const { data: application, error } = await supabaseAdmin
       .from('applications')
       .insert({
         client_id,
-        // applied_by_admin_id: adminId, // Column doesn't exist - remove this
         company: finalCompany,
         role: finalRole,
-        job_description,
-        job_link,
-        salary_range,
-        location,
-        job_type,
-        application_method,
-        application_strategy,
-        notes: admin_notes || notes,
         status: 'applied',
-        applied_date: new Date().toISOString(),
+        notes: admin_notes || notes || `Application created by admin for ${finalCompany} - ${finalRole}`,
         created_at: new Date().toISOString()
       })
       .select()
