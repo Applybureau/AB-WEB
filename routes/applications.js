@@ -21,88 +21,110 @@ const {
 
 const router = express.Router();
 
-// GET /api/applications - Get client's applications (CLIENT ONLY)
+// GET /api/applications - Get client's applications (CLIENT ONLY) OR admin access
 router.get('/', 
   authenticateToken, 
-  requireClient,
-  discoveryModeInfo, 
-  isProfileUnlocked,
-  addValidSortFields(['applied_date', 'created_at', 'company', 'role', 'status']),
-  parsePaginationParams,
   async (req, res) => {
     try {
-      const clientId = req.user.id;
+      const userId = req.user.id;
+      const userRole = req.user.role;
 
-      // Add search fields for filtering
-      req.searchFields = ['company', 'role', 'location', 'notes'];
+      // Admin can access all applications, clients can only access their own
+      if (userRole === 'admin') {
+        // Admin access - get all applications or filter by client_id
+        const { client_id, limit = 50, offset = 0 } = req.query;
+        
+        let query = supabaseAdmin
+          .from('applications')
+          .select(`
+            id,
+            client_id,
+            company,
+            role,
+            status,
+            applied_date,
+            job_link,
+            salary_range,
+            location,
+            application_method,
+            notes,
+            interview_date,
+            interview_type,
+            interviewer,
+            meeting_link,
+            offer_amount,
+            offer_currency,
+            preparation_notes,
+            week_number,
+            created_at,
+            updated_at
+          `)
+          .order('created_at', { ascending: false })
+          .range(parseInt(offset), parseInt(offset) + parseInt(limit) - 1);
 
-      // Base query
-      const baseQuery = supabaseAdmin
-        .from('applications')
-        .select(`
-          id,
-          company,
-          role,
-          status,
-          applied_date,
-          job_link,
-          salary_range,
-          location,
-          application_method,
-          notes,
-          interview_date,
-          interview_type,
-          interviewer,
-          meeting_link,
-          offer_amount,
-          offer_currency,
-          preparation_notes,
-          week_number,
-          created_at,
-          updated_at
-        `)
-        .eq('clientId', clientId);
+        if (client_id) {
+          query = query.eq('client_id', client_id);
+        }
 
-      // Count query
-      const countQuery = supabaseAdmin
-        .from('applications')
-        .select('*', { count: 'exact', head: true })
-        .eq('clientId', clientId);
+        const { data: applications, error } = await query;
 
-      // Get paginated results
-      const result = await paginateResults(baseQuery, countQuery, req);
+        if (error) {
+          console.error('Error fetching applications (admin):', error);
+          return res.status(500).json({ error: 'Failed to fetch applications' });
+        }
 
-      // Format response data according to specification
-      const formattedData = result.data.map(app => ({
-        id: app.id,
-        company: app.company,
-        role: app.role,
-        status: app.status,
-        applied_date: app.applied_date,
-        job_link: app.job_link,
-        salary_range: app.salary_range,
-        location: app.location,
-        application_method: app.application_method,
-        notes: app.notes,
-        interview_date: app.interview_date,
-        interview_type: app.interview_type,
-        interviewer: app.interviewer,
-        meeting_link: app.meeting_link,
-        offer_amount: app.offer_amount,
-        offer_currency: app.offer_currency,
-        preparation_notes: app.preparation_notes,
-        created_at: app.created_at,
-        updated_at: app.updated_at
-      }));
+        return res.json({
+          applications: applications || [],
+          total: applications?.length || 0,
+          offset: parseInt(offset),
+          limit: parseInt(limit),
+          user_role: 'admin'
+        });
+      } else {
+        // Client access - only their own applications
+        const baseQuery = supabaseAdmin
+          .from('applications')
+          .select(`
+            id,
+            company,
+            role,
+            status,
+            applied_date,
+            job_link,
+            salary_range,
+            location,
+            application_method,
+            notes,
+            interview_date,
+            interview_type,
+            interviewer,
+            meeting_link,
+            offer_amount,
+            offer_currency,
+            preparation_notes,
+            week_number,
+            created_at,
+            updated_at
+          `)
+          .eq('client_id', userId)
+          .order('created_at', { ascending: false });
 
-      res.json(createPaginatedResponse(
-        formattedData,
-        result.pagination,
-        'Applications retrieved successfully'
-      ));
+        const { data: applications, error } = await baseQuery;
+
+        if (error) {
+          console.error('Error fetching applications (client):', error);
+          return res.status(500).json({ error: 'Failed to fetch applications' });
+        }
+
+        return res.json({
+          applications: applications || [],
+          total: applications?.length || 0,
+          user_role: 'client'
+        });
+      }
     } catch (error) {
       console.error('Error fetching applications:', error);
-      return handleDatabaseError(req, res, error, 'Failed to fetch applications');
+      return res.status(500).json({ error: 'Failed to fetch applications' });
     }
   }
 );
@@ -176,7 +198,107 @@ router.get('/weekly', authenticateToken, isProfileUnlocked, async (req, res) => 
 });
 
 // POST /api/applications - Create new application (admin only)
-router.post('/', authenticateToken, requireAdmin, ApplicationTrackingController.createApplication);
+router.post('/', authenticateToken, requireAdmin, async (req, res) => {
+  try {
+    const {
+      client_id,
+      company_name,
+      job_title,
+      company,
+      role,
+      job_description,
+      job_link,
+      salary_range,
+      location,
+      job_type = 'full-time',
+      application_method,
+      application_strategy,
+      admin_notes,
+      notes
+    } = req.body;
+
+    const adminId = req.user.id;
+
+    // Use either company_name or company, job_title or role
+    const finalCompany = company_name || company;
+    const finalRole = job_title || role;
+
+    if (!client_id || !finalCompany || !finalRole) {
+      return res.status(400).json({ 
+        error: 'Missing required fields',
+        required: ['client_id', 'company_name (or company)', 'job_title (or role)'],
+        received: { client_id, company_name, job_title, company, role }
+      });
+    }
+
+    // Verify client exists
+    const { data: client, error: clientError } = await supabaseAdmin
+      .from('clients')
+      .select('id, full_name, email')
+      .eq('id', client_id)
+      .single();
+
+    if (clientError || !client) {
+      // Try registered_users table as fallback
+      const { data: registeredUser, error: userError } = await supabaseAdmin
+        .from('registered_users')
+        .select('id, full_name, email')
+        .eq('id', client_id)
+        .single();
+
+      if (userError || !registeredUser) {
+        return res.status(404).json({ error: 'Client not found' });
+      }
+    }
+
+    // Create application
+    const { data: application, error } = await supabaseAdmin
+      .from('applications')
+      .insert({
+        client_id,
+        applied_by_admin_id: adminId,
+        company: finalCompany,
+        role: finalRole,
+        job_description,
+        job_link,
+        salary_range,
+        location,
+        job_type,
+        application_method,
+        application_strategy,
+        admin_notes: admin_notes || notes,
+        status: 'applied',
+        applied_date: new Date().toISOString(),
+        created_at: new Date().toISOString()
+      })
+      .select()
+      .single();
+
+    if (error) {
+      console.error('Error creating application:', error);
+      return res.status(500).json({ 
+        error: 'Failed to create application',
+        details: error.message 
+      });
+    }
+
+    console.log('Application created by admin:', {
+      applicationId: application.id,
+      clientId: client_id,
+      adminId,
+      company: finalCompany,
+      role: finalRole
+    });
+
+    res.status(201).json({
+      message: 'Application created successfully',
+      application
+    });
+  } catch (error) {
+    console.error('Create application error:', error);
+    res.status(500).json({ error: 'Failed to create application' });
+  }
+});
 
 // PATCH /api/applications/:id - Update application (ENHANCED INTERVIEW NOTIFICATIONS)
 router.patch('/:id', authenticateToken, async (req, res) => {

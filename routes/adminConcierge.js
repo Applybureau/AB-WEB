@@ -108,7 +108,14 @@ router.post('/consultations/:id/confirm', async (req, res) => {
     console.log('🔍 Consultation confirmation request:', { id, selected_slot_index, meeting_link });
 
     // Validate selected_slot_index
-    if (selected_slot_index === undefined || selected_slot_index < 0 || selected_slot_index > 2) {
+    if (selected_slot_index === undefined || selected_slot_index === null) {
+      return res.status(400).json({ 
+        error: 'selected_slot_index is required (0, 1, or 2 representing which of the 3 time slots to confirm)' 
+      });
+    }
+
+    const slotIndex = parseInt(selected_slot_index);
+    if (isNaN(slotIndex) || slotIndex < 0 || slotIndex > 2) {
       return res.status(400).json({ 
         error: 'selected_slot_index must be 0, 1, or 2 (representing which of the 3 time slots to confirm)' 
       });
@@ -138,10 +145,14 @@ router.post('/consultations/:id/confirm', async (req, res) => {
     }
 
     // Get the selected time slot
-    const selectedSlot = consultation.preferred_slots[selected_slot_index];
+    const selectedSlot = consultation.preferred_slots[slotIndex];
     if (!selectedSlot) {
-      console.error('❌ Invalid slot index:', { selected_slot_index, slots: consultation.preferred_slots });
-      return res.status(400).json({ error: 'Invalid slot index' });
+      console.error('❌ Invalid slot index:', { selected_slot_index: slotIndex, slots: consultation.preferred_slots });
+      return res.status(400).json({ 
+        error: 'Invalid slot index',
+        available_slots: consultation.preferred_slots?.length || 0,
+        requested_index: slotIndex
+      });
     }
 
     console.log('✅ Selected slot:', selectedSlot);
