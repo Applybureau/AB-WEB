@@ -170,21 +170,50 @@ class AuthController {
         return res.status(403).json({ error: 'Access temporarily blocked' });
       }
 
-      // Get client from database
-      const { data: client, error } = await supabaseAdmin
-        .from('clients')
-        .select('id, email, full_name, password, role, onboarding_complete')
+      let user = null;
+      let userSource = null;
+
+      // First, try to find user in admins table (new admin system)
+      const { data: admin, error: adminError } = await supabaseAdmin
+        .from('admins')
+        .select('id, email, full_name, password, role, is_active, is_super_admin')
         .eq('email', email)
         .single();
 
-      if (error || !client) {
+      if (admin && !adminError) {
+        user = {
+          ...admin,
+          onboarding_complete: true // Admins are always considered onboarded
+        };
+        userSource = 'admins';
+      } else {
+        // Fallback to clients table (legacy system and regular clients)
+        const { data: client, error: clientError } = await supabaseAdmin
+          .from('clients')
+          .select('id, email, full_name, password, role, onboarding_complete')
+          .eq('email', email)
+          .single();
+
+        if (client && !clientError) {
+          user = client;
+          userSource = 'clients';
+        }
+      }
+
+      if (!user) {
         const failedAttempt = securityManager.recordFailedAttempt(email, ip);
         logger.security('invalid_login_credentials', { email, ip, attempts: failedAttempt.attempts });
         return res.status(401).json({ error: 'Invalid credentials' });
       }
 
+      // Check if admin account is active
+      if (userSource === 'admins' && user.is_active === false) {
+        logger.security('inactive_admin_login_attempt', { email, ip });
+        return res.status(401).json({ error: 'Account is suspended' });
+      }
+
       // Verify password
-      const validPassword = await bcrypt.compare(password, client.password);
+      const validPassword = await bcrypt.compare(password, user.password);
       if (!validPassword) {
         const failedAttempt = securityManager.recordFailedAttempt(email, ip);
         logger.security('invalid_password', { email, ip, attempts: failedAttempt.attempts });
@@ -194,29 +223,54 @@ class AuthController {
       // Clear failed attempts on successful login
       securityManager.clearFailedAttempts(email, ip);
 
+      // Update last login time
+      if (userSource === 'admins') {
+        await supabaseAdmin
+          .from('admins')
+          .update({ last_login_at: new Date().toISOString() })
+          .eq('id', user.id);
+      } else {
+        await supabaseAdmin
+          .from('clients')
+          .update({ last_login_at: new Date().toISOString() })
+          .eq('id', user.id);
+      }
+
       // Generate auth token
       const token = jwt.sign({
-        userId: client.id,
-        email: client.email,
-        role: client.role,
+        userId: user.id,
+        email: user.email,
+        role: user.role,
+        is_super_admin: user.is_super_admin || false,
+        source: userSource,
         exp: Math.floor(Date.now() / 1000) + (24 * 60 * 60) // 24 hours
       }, process.env.JWT_SECRET);
 
       logger.info('Login successful', { 
-        userId: client.id, 
-        email: client.email, 
-        role: client.role 
+        userId: user.id, 
+        email: user.email, 
+        role: user.role,
+        source: userSource,
+        is_super_admin: user.is_super_admin || false
       });
+
+      // Determine dashboard type
+      let dashboardType = 'client';
+      if (user.role === 'admin' || user.role === 'super_admin') {
+        dashboardType = 'admin';
+      }
 
       res.json({
         message: 'Login successful',
         token,
         user: {
-          id: client.id,
-          email: client.email,
-          full_name: client.full_name,
-          role: client.role,
-          onboarding_complete: client.onboarding_complete
+          id: user.id,
+          email: user.email,
+          full_name: user.full_name,
+          role: user.role,
+          onboarding_complete: user.onboarding_complete,
+          is_super_admin: user.is_super_admin || false,
+          dashboard_type: dashboardType
         }
       });
     } catch (error) {
@@ -229,22 +283,46 @@ class AuthController {
   static async getCurrentUser(req, res) {
     try {
       const userId = req.user.id;
+      const userSource = req.user.source || 'clients'; // Default to clients for backward compatibility
 
-      const { data: client, error } = await supabaseAdmin
-        .from('clients')
-        .select('id, email, full_name, role, onboarding_complete, resume_url, created_at')
-        .eq('id', userId)
-        .single();
+      let user = null;
 
-      if (error || !client) {
-        logger.warn('User not found in getCurrentUser', { userId });
+      if (userSource === 'admins') {
+        // Get from admins table
+        const { data: admin, error } = await supabaseAdmin
+          .from('admins')
+          .select('id, email, full_name, role, is_active, is_super_admin, created_at, last_login_at')
+          .eq('id', userId)
+          .single();
+
+        if (admin && !error) {
+          user = {
+            ...admin,
+            onboarding_complete: true // Admins are always considered onboarded
+          };
+        }
+      } else {
+        // Get from clients table
+        const { data: client, error } = await supabaseAdmin
+          .from('clients')
+          .select('id, email, full_name, role, onboarding_complete, resume_url, created_at')
+          .eq('id', userId)
+          .single();
+
+        if (client && !error) {
+          user = client;
+        }
+      }
+
+      if (!user) {
+        logger.warn('User not found in getCurrentUser', { userId, source: userSource });
         return res.status(404).json({ error: 'User not found' });
       }
 
-      logger.debug('User info retrieved', { userId, email: client.email });
+      logger.debug('User info retrieved', { userId, email: user.email, source: userSource });
 
       res.json({
-        user: client
+        user: user
       });
     } catch (error) {
       logger.error('Get current user error', error, { userId: req.user?.id });
