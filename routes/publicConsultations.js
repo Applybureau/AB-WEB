@@ -63,6 +63,7 @@ router.post('/', async (req, res) => {
         duration_minutes: 60,
         urgency_level: 'normal',
         country: 'Not specified',
+        scheduled_at: new Date().toISOString(), // Required field - use current time as placeholder
         created_at: new Date().toISOString()
       })
       .select()
