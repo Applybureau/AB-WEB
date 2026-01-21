@@ -23,14 +23,23 @@ router.get('/consultations', async (req, res) => {
     } = req.query;
 
     let query = supabaseAdmin
-      .from('consultation_requests')
-      .select('id, name, email, phone, message, preferred_slots, admin_status, status, confirmed_time, admin_notes, reschedule_reason, waitlist_reason, admin_action_by, admin_action_at, created_at, updated_at')
+      .from('consultations')
+      .select('id, prospect_name, prospect_email, prospect_phone, message, preferred_slots, status, scheduled_at, admin_notes, client_reason, package_interest, country, created_at, updated_at')
       .order(sort_by, { ascending: sort_order === 'asc' })
       .range(offset, offset + limit - 1);
 
-    // Filter by admin_status if specified
+    // Filter by status if specified (using status instead of admin_status)
     if (admin_status !== 'all') {
-      query = query.eq('admin_status', admin_status);
+      // Map admin_status to actual status values
+      const statusMap = {
+        'pending': 'pending',
+        'confirmed': 'scheduled',
+        'completed': 'completed',
+        'rescheduled': 'rescheduled',
+        'waitlisted': 'waitlisted'
+      };
+      const actualStatus = statusMap[admin_status] || admin_status;
+      query = query.eq('status', actualStatus);
     }
 
     const { data: consultations, error } = await query;
@@ -43,36 +52,44 @@ router.get('/consultations', async (req, res) => {
     // Format consultations for dashboard display
     const formattedConsultations = consultations.map(consultation => ({
       ...consultation,
+      // Map fields to expected format
+      name: consultation.prospect_name,
+      email: consultation.prospect_email,
+      phone: consultation.prospect_phone,
+      admin_status: consultation.status, // Use status as admin_status
       booking_details: {
-        name: consultation.name, // Use 'name' instead of 'full_name'
-        email: consultation.email,
-        phone: consultation.phone,
-        message: consultation.message || 'No message provided'
+        name: consultation.prospect_name,
+        email: consultation.prospect_email,
+        phone: consultation.prospect_phone,
+        message: consultation.message || consultation.client_reason || 'No message provided'
       },
       time_slots: consultation.preferred_slots || [],
       has_time_slots: consultation.preferred_slots && consultation.preferred_slots.length > 0,
-      display_message: consultation.message ? 
-        (consultation.message.length > 100 ? 
-          consultation.message.substring(0, 100) + '...' : 
-          consultation.message) : 
+      display_message: consultation.message || consultation.client_reason ? 
+        ((consultation.message || consultation.client_reason).length > 100 ? 
+          (consultation.message || consultation.client_reason).substring(0, 100) + '...' : 
+          (consultation.message || consultation.client_reason)) : 
         'No message provided'
     }));
 
     // Get status counts
     const { data: statusCounts } = await supabaseAdmin
-      .from('consultation_requests')
-      .select('admin_status')
+      .from('consultations')
+      .select('status')
       .then(({ data }) => {
         const counts = {
           pending: 0,
           confirmed: 0,
           rescheduled: 0,
-          waitlisted: 0
+          waitlisted: 0,
+          completed: 0
         };
         
         if (data) {
           data.forEach(item => {
-            counts[item.admin_status] = (counts[item.admin_status] || 0) + 1;
+            // Map status to admin_status format
+            const mappedStatus = item.status === 'scheduled' ? 'confirmed' : item.status;
+            counts[mappedStatus] = (counts[mappedStatus] || 0) + 1;
           });
         }
         
@@ -86,7 +103,7 @@ router.get('/consultations', async (req, res) => {
       limit: parseInt(limit),
       status_counts: statusCounts || {},
       gatekeeper_actions: ['confirm', 'reschedule', 'waitlist'],
-      dashboard_fields: ['name', 'email', 'phone', 'message', 'time_slots', 'admin_status']
+      dashboard_fields: ['prospect_name', 'prospect_email', 'prospect_phone', 'message', 'time_slots', 'status']
     });
   } catch (error) {
     console.error('Admin consultations list error:', error);
@@ -123,7 +140,7 @@ router.post('/consultations/:id/confirm', async (req, res) => {
 
     // Get consultation request
     const { data: consultation, error: fetchError } = await supabaseAdmin
-      .from('consultation_requests')
+      .from('consultations')
       .select('*')
       .eq('id', id)
       .single();
@@ -162,14 +179,12 @@ router.post('/consultations/:id/confirm', async (req, res) => {
 
     // Update consultation with confirmation
     const { data: updatedConsultation, error: updateError } = await supabaseAdmin
-      .from('consultation_requests')
+      .from('consultations')
       .update({
-        admin_status: 'confirmed',
-        status: 'confirmed',
-        confirmed_time: confirmedTime.toISOString(),
+        status: 'scheduled', // Use 'scheduled' instead of 'confirmed'
+        scheduled_at: confirmedTime.toISOString(),
         admin_notes: admin_notes || null,
-        // admin_action_by: req.user.id, // Removed FK constraint issue
-        admin_action_at: new Date().toISOString(),
+        meeting_link: meeting_link || null,
         updated_at: new Date().toISOString()
       })
       .eq('id', id)
@@ -188,8 +203,8 @@ router.post('/consultations/:id/confirm', async (req, res) => {
 
     // Send confirmation email to client
     try {
-      await sendEmail(consultation.email, 'consultation_confirmed_concierge', {
-        client_name: consultation.name, // Use 'name' instead of 'full_name'
+      await sendEmail(consultation.prospect_email, 'consultation_confirmed_concierge', {
+        client_name: consultation.prospect_name,
         confirmed_date: selectedSlot.date,
         confirmed_time: selectedSlot.time,
         meeting_details: meeting_details || 'Your consultation has been confirmed.',
@@ -239,7 +254,7 @@ router.post('/consultations/:id/reschedule', async (req, res) => {
 
     // Get consultation request
     const { data: consultation, error: fetchError } = await supabaseAdmin
-      .from('consultation_requests')
+      .from('consultations')
       .select('*')
       .eq('id', id)
       .single();
@@ -250,14 +265,10 @@ router.post('/consultations/:id/reschedule', async (req, res) => {
 
     // Update consultation with reschedule status
     const { data: updatedConsultation, error: updateError } = await supabaseAdmin
-      .from('consultation_requests')
+      .from('consultations')
       .update({
-        admin_status: 'rescheduled',
-        status: 'pending', // Reset to pending for new times
-        reschedule_reason,
+        status: 'rescheduled',
         admin_notes: admin_notes || null,
-        // admin_action_by: req.user.id, // Removed FK constraint issue
-        admin_action_at: new Date().toISOString(),
         updated_at: new Date().toISOString()
       })
       .eq('id', id)
@@ -271,8 +282,8 @@ router.post('/consultations/:id/reschedule', async (req, res) => {
 
     // Send reschedule email to client
     try {
-      await sendEmail(consultation.email, 'consultation_reschedule_request', {
-        client_name: consultation.name, // Use 'name' instead of 'full_name'
+      await sendEmail(consultation.prospect_email, 'consultation_reschedule_request', {
+        client_name: consultation.prospect_name,
         reschedule_reason,
         admin_name: req.user.full_name || 'Apply Bureau Team',
         new_times_url: buildUrl(`/consultation/new-times/${consultation.id}`),
@@ -315,7 +326,7 @@ router.post('/consultations/:id/waitlist', async (req, res) => {
 
     // Get consultation request
     const { data: consultation, error: fetchError } = await supabaseAdmin
-      .from('consultation_requests')
+      .from('consultations')
       .select('*')
       .eq('id', id)
       .single();
@@ -326,14 +337,10 @@ router.post('/consultations/:id/waitlist', async (req, res) => {
 
     // Update consultation with waitlist status
     const { data: updatedConsultation, error: updateError } = await supabaseAdmin
-      .from('consultation_requests')
+      .from('consultations')
       .update({
-        admin_status: 'waitlisted',
-        status: 'pending', // Keep as pending until resolved
-        waitlist_reason,
+        status: 'waitlisted',
         admin_notes: admin_notes || null,
-        // admin_action_by: req.user.id, // Removed FK constraint issue
-        admin_action_at: new Date().toISOString(),
         updated_at: new Date().toISOString()
       })
       .eq('id', id)
@@ -347,8 +354,8 @@ router.post('/consultations/:id/waitlist', async (req, res) => {
 
     // Send waitlist email to client
     try {
-      await sendEmail(consultation.email, 'consultation_waitlisted', {
-        client_name: consultation.name, // Use 'name' instead of 'full_name'
+      await sendEmail(consultation.prospect_email, 'consultation_waitlisted', {
+        client_name: consultation.prospect_name,
         waitlist_reason,
         admin_name: req.user.full_name || 'Apply Bureau Team',
         next_steps: 'We will contact you as soon as availability opens up. Thank you for your patience.'
@@ -401,20 +408,13 @@ router.post('/payment-confirmation', async (req, res) => {
       });
     }
 
-    // Step 1: Update consultation_requests status to 'onboarding'
+    // Step 1: Update consultations status to 'onboarding'
     if (consultation_id) {
       const { data: consultation, error: consultationError } = await supabaseAdmin
-        .from('consultation_requests')
+        .from('consultations')
         .update({
-          admin_status: 'onboarding',
           status: 'onboarding',
-          payment_verified: true,
-          payment_amount: payment_amount,
-          payment_date: payment_date || new Date().toISOString().split('T')[0],
-          package_tier: package_tier,
-          package_type: package_type,
           admin_notes: admin_notes || null,
-          admin_action_at: new Date().toISOString(),
           updated_at: new Date().toISOString()
         })
         .eq('id', consultation_id)

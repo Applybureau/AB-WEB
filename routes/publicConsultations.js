@@ -50,15 +50,19 @@ router.post('/', async (req, res) => {
 
     // Create simplified consultation request (CONCIERGE MODEL)
     const { data: consultation, error } = await supabaseAdmin
-      .from('consultation_requests')
+      .from('consultations')
       .insert({
-        name: full_name, // Use 'name' column instead of 'full_name'
-        email,
-        phone,
-        message: message || null, // Store the brief message
+        prospect_name: full_name,
+        prospect_email: email,
+        prospect_phone: phone,
+        message: message || null,
+        client_reason: message || null, // Store the brief message
         preferred_slots: preferred_slots || [], // Store as JSONB (can be empty)
-        admin_status: 'pending', // Admin gatekeeper status
         status: 'pending', // Use valid status value
+        consultation_type: 'general_consultation',
+        duration_minutes: 60,
+        urgency_level: 'normal',
+        country: 'Not specified',
         created_at: new Date().toISOString()
       })
       .select()
@@ -73,10 +77,6 @@ router.post('/', async (req, res) => {
     try {
       await sendEmail(email, 'consultation_request_received', {
         client_name: full_name,
-        role_targets: role_targets || 'Not specified',
-        package_interest: package_interest || 'Not specified',
-        country: country || 'Not specified',
-        employment_status: employment_status || 'Not specified',
         request_id: consultation.id,
         message: message || 'No message provided',
         preferred_slots: preferred_slots || [],
@@ -153,7 +153,7 @@ router.post('/request-new-times/:id', async (req, res) => {
 
     // Get consultation request
     const { data: consultation, error: fetchError } = await supabaseAdmin
-      .from('consultation_requests')
+      .from('consultations')
       .select('*')
       .eq('id', id)
       .single();
@@ -164,11 +164,10 @@ router.post('/request-new-times/:id', async (req, res) => {
 
     // Update with new time preferences
     const { data: updatedConsultation, error: updateError } = await supabaseAdmin
-      .from('consultation_requests')
+      .from('consultations')
       .update({
         preferred_slots,
-        admin_status: 'pending', // Reset to pending for admin review
-        status: 'pending', // Use valid status value
+        status: 'pending', // Reset to pending for admin review
         admin_notes: client_message || null,
         updated_at: new Date().toISOString()
       })
@@ -183,8 +182,8 @@ router.post('/request-new-times/:id', async (req, res) => {
 
     // Send confirmation to client
     try {
-      await sendEmail(consultation.email, 'new_times_received', {
-        client_name: consultation.full_name,
+      await sendEmail(consultation.prospect_email, 'new_times_received', {
+        client_name: consultation.prospect_name,
         preferred_slots: preferred_slots,
         message: 'Thank you for providing new availability. We will review your updated preferences and confirm a time shortly.'
       });
@@ -195,8 +194,8 @@ router.post('/request-new-times/:id', async (req, res) => {
     // Notify admin of new time preferences
     try {
       await sendEmail('admin@applybureau.com', 'client_updated_consultation_times_concierge', {
-        client_name: consultation.full_name,
-        client_email: consultation.email,
+        client_name: consultation.prospect_name,
+        client_email: consultation.prospect_email,
         consultation_id: consultation.id,
         new_preferred_slots: preferred_slots,
         client_message: client_message || 'No additional message',
