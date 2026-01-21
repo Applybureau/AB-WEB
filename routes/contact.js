@@ -44,17 +44,19 @@ router.post('/', async (req, res) => {
 
     // Create contact submission
     const { data: contact, error } = await supabaseAdmin
-      .from('contact_submissions')
+      .from('contact_requests')
       .insert({
         name: contactName,
+        first_name: firstName || contactName.split(' ')[0] || '',
+        last_name: lastName || contactName.split(' ').slice(1).join(' ') || '',
         email,
         phone,
         subject: subject || 'General Inquiry',
         message,
         company,
-        country,
-        position,
-        status: 'new'
+        status: 'pending',
+        source: 'website',
+        priority: 'normal'
       })
       .select()
       .single();
@@ -67,8 +69,8 @@ router.post('/', async (req, res) => {
     // Send confirmation email to client
     try {
       await sendEmail(email, 'contact_form_received', {
-        client_name: `${firstName} ${lastName}`,
-        subject: subject,
+        client_name: contactName,
+        subject: subject || 'General Inquiry',
         message: message,
         next_steps: 'We will respond to your inquiry within 24 hours.'
       });
@@ -79,11 +81,12 @@ router.post('/', async (req, res) => {
     // Send notification email to admin
     try {
       await sendEmail('admin@applybureau.com', 'new_contact_submission', {
-        client_name: `${firstName} ${lastName}`,
+        client_name: contactName,
         client_email: email,
-        subject: subject,
+        subject: subject || 'General Inquiry',
         message: message,
-        phone: phone || 'Not provided'
+        phone: phone || 'Not provided',
+        company: company || 'Not provided'
       });
     } catch (emailError) {
       console.error('Failed to send admin contact notification:', emailError);
@@ -111,7 +114,7 @@ router.get('/', authenticateToken, async (req, res) => {
     const offset = (page - 1) * limit;
 
     let query = supabaseAdmin
-      .from('contact_submissions')
+      .from('contact_requests')
       .select('*', { count: 'exact' })
       .order('created_at', { ascending: false });
 
@@ -122,7 +125,7 @@ router.get('/', authenticateToken, async (req, res) => {
 
     // Search functionality
     if (search) {
-      query = query.or(`first_name.ilike.%${search}%,last_name.ilike.%${search}%,email.ilike.%${search}%,subject.ilike.%${search}%`);
+      query = query.or(`name.ilike.%${search}%,email.ilike.%${search}%,subject.ilike.%${search}%`);
     }
 
     // Apply pagination
@@ -162,10 +165,10 @@ router.patch('/:id', authenticateToken, async (req, res) => {
     const { status, admin_notes } = req.body;
 
     // Validate status
-    const validStatuses = ['new', 'in_progress', 'resolved'];
+    const validStatuses = ['pending', 'in_progress', 'handled', 'archived'];
     if (status && !validStatuses.includes(status)) {
       return res.status(400).json({ 
-        error: 'Invalid status. Must be one of: new, in_progress, resolved' 
+        error: 'Invalid status. Must be one of: pending, in_progress, handled, archived' 
       });
     }
 
@@ -175,7 +178,7 @@ router.patch('/:id', authenticateToken, async (req, res) => {
     updateData.updated_at = new Date().toISOString();
 
     const { data: contact, error } = await supabaseAdmin
-      .from('contact_submissions')
+      .from('contact_requests')
       .update(updateData)
       .eq('id', id)
       .select()
