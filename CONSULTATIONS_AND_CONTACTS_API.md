@@ -1,4 +1,4 @@
-# 📚 APPLY BUREAU - COMPLETE API DOCUMENTATION
+# 📞📅 CONSULTATIONS & CONTACTS API DOCUMENTATION
 
 ## 🔗 Base URL
 ```
@@ -19,22 +19,40 @@ Authorization: Bearer <admin_token>
 
 # 📞 CONTACTS SYSTEM
 
+The Contacts system handles general inquiries, questions, and contact form submissions from the website. These are stored in the `contact_requests` table and are completely separate from consultation requests.
+
 ## 🌐 Public Contact Endpoints
 
 ### 1. **Submit Contact Form**
 **Endpoint:** `POST /api/contact`
 
-**Use Case:** Main website contact form submission
+**Use Case:** Main website contact form submission for general inquiries
 
 **Request Body:**
 ```json
 {
-  "name": "Israel Loko",
-  "email": "israelloko65@gmail.com",
-  "phone": "+2348012345678",
+  "name": "John Smith",
+  "email": "john.smith@example.com",
+  "phone": "+1234567890",
+  "subject": "General Inquiry about Services",
+  "message": "I'm interested in learning more about your career services and pricing options.",
+  "company": "Tech Solutions Inc"
+}
+```
+
+**Alternative Field Names Supported:**
+```json
+{
+  "firstName": "John",
+  "lastName": "Smith",
+  "full_name": "John Smith",
+  "email": "john.smith@example.com",
+  "phone": "+1234567890",
   "subject": "General Inquiry",
-  "message": "I'm interested in your services and would like more information.",
-  "company": "Tech Company Ltd"
+  "message": "Your inquiry message here",
+  "company": "Optional company name",
+  "country": "Optional country",
+  "position": "Optional job position"
 }
 ```
 
@@ -48,14 +66,14 @@ Authorization: Bearer <admin_token>
 
 **Status Codes:**
 - `201` - Success
-- `400` - Missing required fields or invalid email
+- `400` - Missing required fields (name, email, message) or invalid email
 - `500` - Server error
 
 ---
 
 ## 🔒 Admin Contact Endpoints
 
-### 2. **Get All Contacts**
+### 2. **Get All Contact Requests**
 **Endpoint:** `GET /api/contact`
 
 **Headers:**
@@ -68,8 +86,14 @@ Authorization: Bearer <admin_token>
 
 **Query Parameters:**
 ```
-?page=1&limit=10&status=pending&search=israel
+?page=1&limit=10&status=pending&search=john
 ```
+
+**Available Status Values:**
+- `pending` - New contact request awaiting review
+- `in_progress` - Currently being handled
+- `handled` - Completed/responded to
+- `archived` - Archived for record keeping
 
 **Response Format:**
 ```json
@@ -77,14 +101,14 @@ Authorization: Bearer <admin_token>
   "contacts": [
     {
       "id": "e1a19d78-facf-42fb-8bf6-bb8eaf935c5e",
-      "name": "Israel Loko Contact Test",
-      "first_name": "Israel",
-      "last_name": "Loko",
-      "email": "israelloko65@gmail.com",
-      "phone": "+2348012345678",
-      "subject": "Testing Contact Form Separation",
-      "message": "This is a test to ensure contacts and consultations are separate",
-      "company": "Test Company",
+      "name": "John Smith",
+      "first_name": "John",
+      "last_name": "Smith",
+      "email": "john.smith@example.com",
+      "phone": "+1234567890",
+      "subject": "General Inquiry about Services",
+      "message": "I'm interested in learning more about your career services and pricing options.",
+      "company": "Tech Solutions Inc",
       "status": "pending",
       "source": "website",
       "priority": "normal",
@@ -98,7 +122,7 @@ Authorization: Bearer <admin_token>
   "pagination": {
     "page": 1,
     "limit": 10,
-    "total": 6,
+    "total": 10,
     "totalPages": 1
   }
 }
@@ -122,14 +146,14 @@ Authorization: Bearer <admin_token>
     {
       "id": "175a2b9d-ab10-4e4e-977a-ff979f079234",
       "client_id": null,
-      "name": "Test User",
-      "first_name": "Test",
-      "last_name": "User",
-      "email": "test@example.com",
-      "phone": null,
-      "company": null,
-      "message": "This is a test contact submission",
-      "subject": "Test Contact",
+      "name": "Jane Doe",
+      "first_name": "Jane",
+      "last_name": "Doe",
+      "email": "jane.doe@example.com",
+      "phone": "+1987654321",
+      "company": "Marketing Agency",
+      "message": "Interested in your resume optimization services",
+      "subject": "Resume Services Inquiry",
       "source": "website",
       "status": "pending",
       "assigned_to": null,
@@ -140,7 +164,7 @@ Authorization: Bearer <admin_token>
       "updated_at": "2026-01-20T10:12:12.160455+00:00"
     }
   ],
-  "total": 6,
+  "total": 10,
   "page": 1,
   "limit": 50,
   "totalPages": 1
@@ -162,7 +186,7 @@ Authorization: Bearer <admin_token>
 ```json
 {
   "status": "handled",
-  "admin_notes": "Responded via email with service details"
+  "admin_notes": "Responded via email with detailed service information and pricing"
 }
 ```
 
@@ -173,7 +197,7 @@ Authorization: Bearer <admin_token>
   "contact": {
     "id": "e1a19d78-facf-42fb-8bf6-bb8eaf935c5e",
     "status": "handled",
-    "admin_notes": "Responded via email with service details",
+    "admin_notes": "Responded via email with detailed service information and pricing",
     "updated_at": "2026-01-21T10:30:00.000Z"
   }
 }
@@ -183,19 +207,40 @@ Authorization: Bearer <admin_token>
 
 # 📅 CONSULTATIONS SYSTEM
 
+The Consultations system handles consultation booking requests where prospects want to schedule a meeting to discuss their career needs. These are stored in the `consultations` table and include time slot preferences.
+
 ## 🌐 Public Consultation Endpoints
 
-### 5. **Request Consultation**
+### 5. **Request Consultation Booking**
 **Endpoint:** `POST /api/public-consultations`
 
-**Use Case:** Main website consultation booking form
+**Use Case:** Main website consultation booking form for scheduling meetings
 
-**Request Body:**
+**Request Body (Minimal):**
 ```json
 {
-  "full_name": "Israel Loko",
-  "email": "israelloko65@gmail.com",
-  "phone": "+2348012345678",
+  "full_name": "Sarah Johnson",
+  "email": "sarah.johnson@example.com",
+  "phone": "+1555123456"
+}
+```
+
+**Request Body (With Message):**
+```json
+{
+  "full_name": "Sarah Johnson",
+  "email": "sarah.johnson@example.com",
+  "phone": "+1555123456",
+  "message": "I need help with interview preparation and resume optimization for senior software engineer roles."
+}
+```
+
+**Request Body (Complete with Time Slots):**
+```json
+{
+  "full_name": "Sarah Johnson",
+  "email": "sarah.johnson@example.com",
+  "phone": "+1555123456",
   "message": "I need help with interview preparation and resume optimization for senior software engineer roles.",
   "preferred_slots": [
     {
@@ -214,6 +259,12 @@ Authorization: Bearer <admin_token>
 }
 ```
 
+**Time Slot Format:**
+- `date`: YYYY-MM-DD format
+- `time`: HH:MM format (24-hour)
+- Maximum 3 preferred time slots
+- Time slots are optional - can submit without them
+
 **Response Format:**
 ```json
 {
@@ -222,14 +273,22 @@ Authorization: Bearer <admin_token>
   "admin_status": "pending",
   "message": "Request received. We will confirm your consultation shortly.",
   "booking_details": {
-    "name": "Israel Loko",
-    "email": "israelloko65@gmail.com",
-    "phone": "+2348012345678",
-    "message": "I need help with interview preparation",
+    "name": "Sarah Johnson",
+    "email": "sarah.johnson@example.com",
+    "phone": "+1555123456",
+    "message": "I need help with interview preparation and resume optimization for senior software engineer roles.",
     "preferred_slots": [
       {
         "date": "2026-01-25",
         "time": "14:00"
+      },
+      {
+        "date": "2026-01-26",
+        "time": "15:00"
+      },
+      {
+        "date": "2026-01-27",
+        "time": "16:00"
       }
     ]
   },
@@ -237,11 +296,16 @@ Authorization: Bearer <admin_token>
 }
 ```
 
+**Status Codes:**
+- `201` - Success
+- `400` - Missing required fields (full_name, email, phone) or invalid data
+- `500` - Server error
+
 ---
 
 ## 🔒 Admin Consultation Endpoints
 
-### 6. **Get All Consultations**
+### 6. **Get All Consultation Requests**
 **Endpoint:** `GET /api/admin/concierge/consultations`
 
 **Headers:**
@@ -258,9 +322,9 @@ Authorization: Bearer <admin_token>
 ```
 
 **Admin Status Values:**
-- `all` - All consultations
-- `pending` - Awaiting admin review
-- `confirmed` - Approved and scheduled
+- `all` - All consultation requests
+- `pending` - Awaiting admin review/action
+- `confirmed` - Approved and scheduled (status: 'scheduled')
 - `completed` - Consultation finished
 - `rescheduled` - Needs new time slots
 - `waitlisted` - No current availability
@@ -271,11 +335,11 @@ Authorization: Bearer <admin_token>
   "consultations": [
     {
       "id": "50f72867-4df4-46cf-bcd6-ef99314d84f8",
-      "prospect_name": "Israel Loko",
-      "prospect_email": "israelloko65@gmail.com",
-      "prospect_phone": "+2348012345678",
-      "message": "I need help with interview preparation",
-      "client_reason": "Need help with resume optimization",
+      "prospect_name": "Sarah Johnson",
+      "prospect_email": "sarah.johnson@example.com",
+      "prospect_phone": "+1555123456",
+      "message": "I need help with interview preparation and resume optimization for senior software engineer roles.",
+      "client_reason": "Need comprehensive career guidance",
       "preferred_slots": [
         {
           "date": "2026-01-25",
@@ -284,45 +348,57 @@ Authorization: Bearer <admin_token>
         {
           "date": "2026-01-26",
           "time": "15:00"
+        },
+        {
+          "date": "2026-01-27",
+          "time": "16:00"
         }
       ],
       "status": "pending",
       "admin_status": "pending",
-      "scheduled_at": null,
+      "scheduled_at": "2026-01-21T08:39:30.081785+00:00",
       "consultation_type": "general_consultation",
       "duration_minutes": 60,
       "meeting_link": null,
       "admin_notes": null,
       "package_interest": "Tier 2",
-      "country": "Nigeria",
+      "country": "Not specified",
       "created_at": "2026-01-21T08:39:30.081785+00:00",
       "updated_at": "2026-01-21T08:39:30.081785+00:00",
       
       // Formatted fields for dashboard display
-      "name": "Israel Loko",
-      "email": "israelloko65@gmail.com",
-      "phone": "+2348012345678",
+      "name": "Sarah Johnson",
+      "email": "sarah.johnson@example.com",
+      "phone": "+1555123456",
       "booking_details": {
-        "name": "Israel Loko",
-        "email": "israelloko65@gmail.com",
-        "phone": "+2348012345678",
-        "message": "I need help with interview preparation"
+        "name": "Sarah Johnson",
+        "email": "sarah.johnson@example.com",
+        "phone": "+1555123456",
+        "message": "I need help with interview preparation and resume optimization for senior software engineer roles."
       },
       "time_slots": [
         {
           "date": "2026-01-25",
           "time": "14:00"
+        },
+        {
+          "date": "2026-01-26",
+          "time": "15:00"
+        },
+        {
+          "date": "2026-01-27",
+          "time": "16:00"
         }
       ],
       "has_time_slots": true,
-      "display_message": "I need help with interview preparation"
+      "display_message": "I need help with interview preparation and resume optimization for senior software engineer roles."
     }
   ],
-  "total": 8,
+  "total": 6,
   "offset": 0,
   "limit": 50,
   "status_counts": {
-    "pending": 8,
+    "pending": 6,
     "confirmed": 0,
     "rescheduled": 0,
     "waitlisted": 0,
@@ -333,7 +409,7 @@ Authorization: Bearer <admin_token>
 }
 ```
 
-### 7. **Confirm Consultation**
+### 7. **Confirm Consultation (Gatekeeper Action)**
 **Endpoint:** `POST /api/admin/concierge/consultations/:id/confirm`
 
 **Headers:**
@@ -354,6 +430,12 @@ Authorization: Bearer <admin_token>
 }
 ```
 
+**Parameters:**
+- `selected_slot_index`: Integer (0, 1, or 2) - which of the 3 preferred slots to confirm
+- `meeting_details`: String - description of the meeting
+- `meeting_link`: String - video call link (optional)
+- `admin_notes`: String - internal admin notes (optional)
+
 **Response Format:**
 ```json
 {
@@ -373,8 +455,16 @@ Authorization: Bearer <admin_token>
 }
 ```
 
-### 8. **Reschedule Consultation**
+### 8. **Reschedule Consultation (Gatekeeper Action)**
 **Endpoint:** `POST /api/admin/concierge/consultations/:id/reschedule`
+
+**Headers:**
+```json
+{
+  "Authorization": "Bearer <admin_token>",
+  "Content-Type": "application/json"
+}
+```
 
 **Request Body:**
 ```json
@@ -392,12 +482,20 @@ Authorization: Bearer <admin_token>
     "id": "50f72867-4df4-46cf-bcd6-ef99314d84f8",
     "status": "rescheduled"
   },
-  "reschedule_reason": "Admin unavailable at requested times"
+  "reschedule_reason": "Admin unavailable at requested times. Please provide 3 new time slots."
 }
 ```
 
-### 9. **Waitlist Consultation**
+### 9. **Waitlist Consultation (Gatekeeper Action)**
 **Endpoint:** `POST /api/admin/concierge/consultations/:id/waitlist`
+
+**Headers:**
+```json
+{
+  "Authorization": "Bearer <admin_token>",
+  "Content-Type": "application/json"
+}
+```
 
 **Request Body:**
 ```json
@@ -415,206 +513,13 @@ Authorization: Bearer <admin_token>
     "id": "50f72867-4df4-46cf-bcd6-ef99314d84f8",
     "status": "waitlisted"
   },
-  "waitlist_reason": "No availability in requested timeframe"
+  "waitlist_reason": "No availability in requested timeframe. Will contact when slots open up."
 }
 ```
 
 ---
 
-# 📊 DASHBOARD ENDPOINTS
-
-## 10. **Admin Dashboard Statistics**
-**Endpoint:** `GET /api/admin/dashboard/stats`
-
-**Headers:**
-```json
-{
-  "Authorization": "Bearer <admin_token>",
-  "Content-Type": "application/json"
-}
-```
-
-**Response Format:**
-```json
-{
-  "clients": {
-    "total_clients": 15,
-    "active_clients": 8,
-    "new_clients_this_month": 5,
-    "onboarded_clients": 12,
-    "pending_onboarding": 3
-  },
-  "consultations": {
-    "total": 8,
-    "scheduled": 0,
-    "completed": 0,
-    "upcoming": 0
-  },
-  "applications": {
-    "total_applications": 25,
-    "applications_by_status": {
-      "applied": 15,
-      "interview": 5,
-      "offer": 3,
-      "rejected": 2
-    },
-    "success_rate": "12.0"
-  },
-  "communication": {
-    "total_contacts": 6,
-    "pending_contacts": 4,
-    "handled_contacts": 2
-  },
-  "top_companies": [
-    {
-      "name": "Google",
-      "applications": 5
-    },
-    {
-      "name": "Microsoft",
-      "applications": 3
-    }
-  ],
-  "recent_activity": [
-    {
-      "type": "consultation_request",
-      "message": "New consultation request from Israel Loko",
-      "timestamp": "2026-01-21T08:39:30.081785+00:00"
-    },
-    {
-      "type": "contact_form",
-      "message": "New contact form submission",
-      "timestamp": "2026-01-21T09:15:30.081785+00:00"
-    }
-  ]
-}
-```
-
-## 11. **Complete Admin Dashboard**
-**Endpoint:** `GET /api/admin-dashboard`
-
-**Headers:**
-```json
-{
-  "Authorization": "Bearer <admin_token>",
-  "Content-Type": "application/json"
-}
-```
-
-**Response Format:**
-```json
-{
-  "admin": {
-    "id": "5388b9e3-1dc6-4128-b595-e03a63014096",
-    "full_name": "Israel Loko (Admin)",
-    "email": "israelloko65@gmail.com",
-    "role": "admin",
-    "profile_picture_url": null,
-    "permissions": {
-      "can_create_admins": true,
-      "can_delete_admins": true,
-      "can_manage_clients": true,
-      "can_schedule_consultations": true,
-      "can_view_reports": true,
-      "can_manage_system": true
-    },
-    "last_login_at": "2026-01-21T09:00:00.000Z"
-  },
-  "dashboard_type": "admin",
-  "stats": {
-    "clients": {
-      "total_clients": 15,
-      "active_clients": 8,
-      "onboarded_clients": 12,
-      "pending_onboarding": 3
-    },
-    "consultations": {
-      "total_consultations": 8,
-      "scheduled_consultations": 0,
-      "completed_consultations": 0,
-      "upcoming_consultations": 0,
-      "consultations_this_week": 8,
-      "consultations_this_month": 8
-    },
-    "applications": {
-      "total_applications": 25,
-      "success_rate": "12.0"
-    },
-    "system": {
-      "total_users": 16,
-      "total_data_points": 39,
-      "system_health": "excellent",
-      "last_backup": "2026-01-21T09:00:00.000Z"
-    }
-  },
-  "recent_activity": {
-    "new_clients": [],
-    "upcoming_consultations": [],
-    "recent_applications": [],
-    "notifications": []
-  },
-  "quick_actions": [
-    {
-      "action": "invite_client",
-      "label": "Invite New Client",
-      "icon": "user-plus"
-    },
-    {
-      "action": "schedule_consultation",
-      "label": "Schedule Consultation",
-      "icon": "calendar-plus"
-    },
-    {
-      "action": "view_reports",
-      "label": "View Reports",
-      "icon": "chart-bar"
-    },
-    {
-      "action": "manage_admins",
-      "label": "Manage Admins",
-      "icon": "users-cog"
-    },
-    {
-      "action": "system_settings",
-      "label": "System Settings",
-      "icon": "cog"
-    }
-  ]
-}
-```
-
----
-
-# 🔐 AUTHENTICATION ENDPOINTS
-
-## 12. **Admin Login**
-**Endpoint:** `POST /api/auth/login`
-
-**Request Body:**
-```json
-{
-  "email": "israelloko65@gmail.com",
-  "password": "admin123"
-}
-```
-
-**Response Format:**
-```json
-{
-  "token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...",
-  "user": {
-    "id": "5388b9e3-1dc6-4128-b595-e03a63014096",
-    "email": "israelloko65@gmail.com",
-    "full_name": "Israel Loko (Admin)",
-    "role": "admin"
-  },
-  "expires_in": "24h"
-}
-```
-
----
-
-# 📋 DATABASE SCHEMAS
+# 📊 DATABASE SCHEMAS
 
 ## Contact Requests Table
 ```sql
@@ -644,14 +549,14 @@ CREATE TABLE contact_requests (
 ```sql
 CREATE TABLE consultations (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-  client_id UUID REFERENCES clients(id),
-  admin_id UUID REFERENCES clients(id),
+  client_id UUID REFERENCES clients(id) ON DELETE CASCADE,
+  admin_id UUID REFERENCES admins(id),
   prospect_name TEXT NOT NULL,
   prospect_email TEXT NOT NULL,
   prospect_phone TEXT,
-  scheduled_at TIMESTAMP,
-  consultation_type TEXT DEFAULT 'general_consultation',
-  status TEXT DEFAULT 'pending' CHECK (status IN ('pending', 'scheduled', 'completed', 'rescheduled', 'waitlisted')),
+  scheduled_at TIMESTAMPTZ NOT NULL,
+  consultation_type TEXT DEFAULT 'general_consultation' CHECK (consultation_type IN ('initial', 'follow_up', 'strategy', 'review', 'general_consultation')),
+  status TEXT DEFAULT 'pending' CHECK (status IN ('scheduled', 'completed', 'cancelled', 'rescheduled', 'pending', 'confirmed')),
   duration_minutes INTEGER DEFAULT 60,
   meeting_link TEXT,
   meeting_notes TEXT,
@@ -661,12 +566,28 @@ CREATE TABLE consultations (
   current_situation TEXT,
   timeline TEXT,
   urgency_level TEXT DEFAULT 'normal' CHECK (urgency_level IN ('low', 'normal', 'high', 'urgent')),
-  preferred_slots JSONB,
+  preferred_slots JSONB DEFAULT '[]'::jsonb,
   country TEXT DEFAULT 'Not specified',
   message TEXT,
-  created_at TIMESTAMP DEFAULT NOW(),
-  updated_at TIMESTAMP DEFAULT NOW()
+  created_at TIMESTAMPTZ DEFAULT NOW(),
+  updated_at TIMESTAMPTZ DEFAULT NOW()
 );
+```
+
+---
+
+# 🔄 STATUS WORKFLOWS
+
+## Contact Status Flow
+```
+pending → in_progress → handled → archived
+```
+
+## Consultation Status Flow
+```
+pending → scheduled → completed
+pending → rescheduled → scheduled → completed
+pending → waitlisted → scheduled → completed
 ```
 
 ---
@@ -724,22 +645,6 @@ const consultationsWidget = {
 
 ---
 
-# 🔄 STATUS WORKFLOWS
-
-## Contact Status Flow
-```
-pending → in_progress → handled → archived
-```
-
-## Consultation Status Flow
-```
-pending → scheduled → completed
-pending → rescheduled → scheduled → completed
-pending → waitlisted → scheduled → completed
-```
-
----
-
 # ✅ WORKING ENDPOINTS SUMMARY
 
 ## 📞 **CONTACTS (100% Working)**
@@ -749,16 +654,40 @@ pending → waitlisted → scheduled → completed
 - ✅ `PATCH /api/contact/:id` - Update contact status
 
 ## 📅 **CONSULTATIONS (100% Working)**
+- ✅ `POST /api/public-consultations` - Create consultation request
 - ✅ `GET /api/admin/concierge/consultations` - List consultations
-- ✅ `POST /api/admin/concierge/consultations/:id/confirm` - Confirm
-- ✅ `POST /api/admin/concierge/consultations/:id/reschedule` - Reschedule
-- ✅ `POST /api/admin/concierge/consultations/:id/waitlist` - Waitlist
-- ✅ `POST /api/public-consultations` - Create consultation (100% working)
+- ✅ `POST /api/admin/concierge/consultations/:id/confirm` - Confirm consultation
+- ✅ `POST /api/admin/concierge/consultations/:id/reschedule` - Reschedule consultation
+- ✅ `POST /api/admin/concierge/consultations/:id/waitlist` - Waitlist consultation
 
-## 📊 **DASHBOARD (100% Working)**
-- ✅ `GET /api/admin/dashboard/stats` - Dashboard statistics
-- ✅ `GET /api/admin-dashboard` - Complete admin dashboard
-- ✅ `POST /api/auth/login` - Admin authentication
+---
+
+# 🚀 KEY FEATURES
+
+## ✅ **Data Separation**
+- Contacts and consultations are stored in separate tables
+- No data mixing between systems
+- Independent workflows and status management
+
+## ✅ **Flexible Time Slots**
+- Consultations support 0-3 preferred time slots
+- Proper date/time format validation
+- Admin can select which slot to confirm
+
+## ✅ **Gatekeeper Actions**
+- Admins can confirm, reschedule, or waitlist consultations
+- Email notifications sent automatically
+- Status tracking and admin notes
+
+## ✅ **Email Notifications**
+- Automatic confirmation emails to clients
+- Admin notification emails
+- Status update notifications
+
+## ✅ **Admin Dashboard Integration**
+- Real-time status counts
+- Filtering and sorting options
+- Pagination support
 
 ---
 
