@@ -291,7 +291,7 @@ app.use('/api/dashboard', cacheMiddleware(300), dashboardRoutes); // Cache dashb
 app.use('/api/enhanced-dashboard', enhancedDashboardRoutes); // Real-time dashboard (no caching)
 app.use('/api/consultation-requests', consultationRequestsRoutes); // Enhanced consultation requests (replaces consultationsCombinedRoutes)
 app.use('/api/contact', contactRoutes); // Contact form (public)
-app.use('/api/consultation-management', consultationRoutes); // Internal consultation management (admin only)
+app.use('/api/consultation-management', require('./routes/consultationManagement')); // Internal consultation management (admin only)
 app.use('/api/applications', applicationRoutes); // Main applications route
 app.use('/api/notifications', notificationRoutes);
 app.use('/api/upload', uploadRoutes);

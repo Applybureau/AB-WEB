@@ -10,8 +10,8 @@ const FormData = require('form-data');
 
 // Configuration
 const BASE_URL = process.env.TEST_BASE_URL || 'https://apply-bureau-backend.vercel.app';
-const ADMIN_EMAIL = 'admin@example.com';
-const ADMIN_PASSWORD = 'AdminPassword123!';
+const ADMIN_EMAIL = 'admin@applybureau.com';
+const ADMIN_PASSWORD = 'Admin123@#';
 
 // Test state
 let testResults = { passed: 0, failed: 0, total: 0, failures: [] };

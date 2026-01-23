@@ -1,8 +1,14 @@
 const { verifySupabaseJWT } = require('../utils/supabase');
 const logger = require('../utils/logger');
+const jwt = require('jsonwebtoken');
+
+// JWT Token generation for authentication
+const generateToken = (payload) => {
+  return jwt.sign(payload, process.env.JWT_SECRET, { expiresIn: '24h' });
+};
 
 // Zero-Trust JWT Authentication Middleware
-// Verifies Supabase JWT tokens on every request (stateless)
+// Verifies JWT tokens on every request (stateless)
 const authenticateToken = async (req, res, next) => {
   try {
     const authHeader = req.headers['authorization'];
@@ -17,8 +23,18 @@ const authenticateToken = async (req, res, next) => {
       return res.status(401).json({ error: 'Access token required' });
     }
 
-    // Use Supabase's built-in JWT verification for Zero-Trust
-    const user = await verifySupabaseJWT(token);
+    // Use regular JWT verification to match token generation
+    const decoded = jwt.verify(token, process.env.JWT_SECRET);
+    
+    // Standardize user object structure
+    const user = {
+      id: decoded.userId || decoded.id,
+      email: decoded.email,
+      role: decoded.role || 'client',
+      full_name: decoded.full_name,
+      is_super_admin: decoded.is_super_admin || false,
+      source: decoded.source || 'clients'
+    };
     
     // Attach user context to request
     req.user = user;
@@ -103,6 +119,7 @@ const onboardingRateLimit = createZeroTrustRateLimit(60 * 60 * 1000, 3, 'Too man
 const generalRateLimit = createZeroTrustRateLimit(15 * 60 * 1000, 100, 'Too many requests');
 
 module.exports = {
+  generateToken,
   authenticateToken,
   requireAdmin,
   requireClient,
