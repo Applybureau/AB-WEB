@@ -31,7 +31,10 @@
     "audit": "npm audit --audit-level=moderate",
     "security-check": "npm audit",
     "deploy-check": "npm run health-check && npm run test:vercel",
-    "production-ready": "npm run test:production"
+    "production-ready": "npm run test:production",
+    "optimize-production": "node scripts/production-optimization.js",
+    "deploy-production": "node scripts/deploy-production.js",
+    "final-production-test": "node tests/final-production-test.js"
   },
   "dependencies": {
     "@supabase/supabase-js": "^2.38.4",

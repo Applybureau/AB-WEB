@@ -131,7 +131,7 @@ const createSecureEmailContent = async (templateName, variables, userId) => {
   }
 };
 
-const sendEmail = async (to, templateName, variables = {}) => {
+const sendEmail = async (to, subject, templateName, variables = {}) => {
   try {
     // Extract user ID for security features
     const userId = variables.user_id || variables.client_id || 'unknown';
@@ -141,8 +141,8 @@ const sendEmail = async (to, templateName, variables = {}) => {
 
     // Extract subject from template or use provided subject
     const subjectMatch = htmlContent.match(/<!-- SUBJECT: (.*?) -->/);
-    const subject = variables.subject || 
-                   (subjectMatch ? subjectMatch[1] : `Notification from Apply Bureau`);
+    const finalSubject = subject || 
+                        (subjectMatch ? subjectMatch[1] : `Notification from Apply Bureau`);
 
     // Use verified domain or default Resend domain for testing
     const fromEmail = process.env.VERIFIED_EMAIL_DOMAIN 
@@ -183,7 +183,7 @@ const sendEmail = async (to, templateName, variables = {}) => {
     const emailData = {
       from: fromEmail,
       to: [actualRecipient],
-      subject: subject,
+      subject: finalSubject,
       html: htmlContent,
       headers: headers
     };

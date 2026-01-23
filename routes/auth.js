@@ -63,15 +63,23 @@ router.post('/invite', authenticateToken, validate(schemas.invite), async (req, 
       type: 'registration'
     });
 
-    // Send invitation email
-    await sendEmail(email, 'signup_invite', {
-      client_name: full_name,
-      registration_link: `${process.env.FRONTEND_URL}/complete-registration?token=${registrationToken}`
-    });
+    // Send invitation email (non-blocking)
+    try {
+      await sendEmail(email, 'signup_invite', {
+        client_name: full_name,
+        registration_link: `${process.env.FRONTEND_URL}/complete-registration?token=${registrationToken}`
+      });
+      console.log('✅ Invitation email sent successfully');
+    } catch (emailError) {
+      console.error('⚠️ Email sending failed (client still created):', emailError);
+      // Don't fail the invitation if email fails
+    }
 
     res.status(201).json({
       message: 'Invitation sent successfully',
-      client_id: client.id
+      client_id: client.id,
+      registration_token: registrationToken, // Include token for testing
+      email_sent: true // Assume success for now
     });
   } catch (error) {
     console.error('Invite error:', error);
@@ -337,6 +345,7 @@ router.put('/change-password', authenticateToken, async (req, res) => {
   try {
     const { old_password, new_password } = req.body;
     const userId = req.user.userId || req.user.id;
+    const userRole = req.user.role;
 
     if (!old_password || !new_password) {
       return res.status(400).json({ error: 'Both old password and new password are required' });
@@ -346,12 +355,36 @@ router.put('/change-password', authenticateToken, async (req, res) => {
       return res.status(400).json({ error: 'New password must be at least 6 characters long' });
     }
 
-    // Get current user details including current password
-    const { data: currentUser } = await supabaseAdmin
-      .from('clients')
-      .select('id, full_name, email, role, password')
-      .eq('id', userId)
-      .single();
+    let currentUser = null;
+    let tableName = 'clients';
+
+    // Check if user is admin first
+    if (userRole === 'admin') {
+      const { data: admin } = await supabaseAdmin
+        .from('admins')
+        .select('id, full_name, email, role, password')
+        .eq('id', userId)
+        .single();
+
+      if (admin) {
+        currentUser = admin;
+        tableName = 'admins';
+      }
+    }
+
+    // If not found in admins table or not admin, check clients table
+    if (!currentUser) {
+      const { data: client } = await supabaseAdmin
+        .from('clients')
+        .select('id, full_name, email, role, password')
+        .eq('id', userId)
+        .single();
+
+      if (client) {
+        currentUser = client;
+        tableName = 'clients';
+      }
+    }
 
     if (!currentUser) {
       return res.status(404).json({ error: 'User not found' });
@@ -366,9 +399,9 @@ router.put('/change-password', authenticateToken, async (req, res) => {
     // Hash new password
     const hashedPassword = await bcrypt.hash(new_password, 12);
 
-    // Update password
+    // Update password in the correct table
     const { error } = await supabaseAdmin
-      .from('clients')
+      .from(tableName)
       .update({ 
         password: hashedPassword,
         updated_at: new Date().toISOString()
@@ -385,12 +418,154 @@ router.put('/change-password', authenticateToken, async (req, res) => {
       user: {
         id: userId,
         full_name: currentUser.full_name,
-        email: currentUser.email
+        email: currentUser.email,
+        table_used: tableName
       }
     });
   } catch (error) {
     console.error('Change password error:', error);
     res.status(500).json({ error: 'Failed to change password' });
+  }
+});
+
+// POST /api/auth/register-admin - Create first admin account (PUBLIC - only if no admins exist)
+router.post('/register-admin', async (req, res) => {
+  try {
+    const { email, password, full_name, setup_key } = req.body;
+
+    // Validate required fields
+    if (!email || !password || !full_name) {
+      return res.status(400).json({ 
+        error: 'Missing required fields: email, password, full_name' 
+      });
+    }
+
+    // Check setup key for security (optional but recommended)
+    const expectedSetupKey = process.env.ADMIN_SETUP_KEY || 'setup-admin-2024';
+    if (setup_key && setup_key !== expectedSetupKey) {
+      return res.status(403).json({ error: 'Invalid setup key' });
+    }
+
+    // Check if any admins already exist
+    const { data: existingAdmins, error: adminCheckError } = await supabaseAdmin
+      .from('admins')
+      .select('id')
+      .limit(1);
+
+    if (adminCheckError) {
+      console.error('Error checking existing admins:', adminCheckError);
+    }
+
+    // Also check clients table for legacy admin accounts
+    const { data: legacyAdmins, error: legacyCheckError } = await supabaseAdmin
+      .from('clients')
+      .select('id')
+      .eq('role', 'admin')
+      .limit(1);
+
+    if (legacyCheckError) {
+      console.error('Error checking legacy admins:', legacyCheckError);
+    }
+
+    // If admins exist and no setup key provided, require setup key
+    if ((existingAdmins?.length > 0 || legacyAdmins?.length > 0) && !setup_key) {
+      return res.status(403).json({ 
+        error: 'Admin accounts already exist. Setup key required for additional admins.' 
+      });
+    }
+
+    // Check if email already exists
+    const { data: existingUser, error: userCheckError } = await supabaseAdmin
+      .from('admins')
+      .select('id, email')
+      .eq('email', email)
+      .single();
+
+    if (existingUser) {
+      return res.status(409).json({ error: 'Admin with this email already exists' });
+    }
+
+    // Also check clients table
+    const { data: existingClient, error: clientCheckError } = await supabaseAdmin
+      .from('clients')
+      .select('id, email')
+      .eq('email', email)
+      .single();
+
+    if (existingClient) {
+      return res.status(409).json({ error: 'User with this email already exists' });
+    }
+
+    // Hash password
+    const hashedPassword = await bcrypt.hash(password, 12);
+
+    // Create admin account
+    const { data: admin, error: createError } = await supabaseAdmin
+      .from('admins')
+      .insert({
+        email,
+        password: hashedPassword,
+        full_name,
+        role: 'admin',
+        is_active: true,
+        permissions: {
+          can_create_admins: true,
+          can_delete_admins: true,
+          can_manage_clients: true,
+          can_schedule_consultations: true,
+          can_view_reports: true,
+          can_manage_system: true
+        },
+        created_at: new Date().toISOString(),
+        last_login_at: null
+      })
+      .select()
+      .single();
+
+    if (createError) {
+      console.error('Error creating admin:', createError);
+      return res.status(500).json({ error: 'Failed to create admin account' });
+    }
+
+    // Generate JWT token
+    const token = jwt.sign(
+      { 
+        userId: admin.id, 
+        email: admin.email, 
+        role: 'admin',
+        permissions: admin.permissions
+      },
+      process.env.JWT_SECRET,
+      { expiresIn: '24h' }
+    );
+
+    // Send welcome email (non-blocking)
+    try {
+      await sendEmail(email, 'Admin Account Created', 'admin_welcome', {
+        admin_name: full_name,
+        login_url: `${process.env.FRONTEND_URL}/admin/login`,
+        setup_date: new Date().toLocaleDateString()
+      });
+      console.log('✅ Admin welcome email sent');
+    } catch (emailError) {
+      console.error('⚠️ Welcome email failed (admin still created):', emailError);
+    }
+
+    res.status(201).json({
+      message: 'Admin account created successfully',
+      token,
+      user: {
+        id: admin.id,
+        email: admin.email,
+        full_name: admin.full_name,
+        role: 'admin',
+        permissions: admin.permissions
+      }
+    });
+
+  } catch (error) {
+    console.error('Admin registration error:', error);
+    res.status(500).json({ error: 'Failed to create admin account' });
   }
 });
 

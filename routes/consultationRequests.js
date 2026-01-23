@@ -275,7 +275,7 @@ router.patch('/:id', authenticateToken, requireAdmin, async (req, res) => {
 
     // Validate status if provided
     if (status) {
-      const validStatuses = ['pending', 'confirmed', 'rescheduled', 'waitlisted', 'under_review', 'approved', 'scheduled', 'rejected'];
+      const validStatuses = ['pending', 'confirmed', 'rescheduled', 'waitlisted', 'under_review', 'approved', 'scheduled', 'rejected', 'awaiting_new_times', 'payment_received', 'completed'];
       if (!validStatuses.includes(status)) {
         return handleValidationError(req, res, [
           `Invalid status. Valid options: ${validStatuses.join(', ')}`
