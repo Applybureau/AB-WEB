@@ -156,7 +156,7 @@ router.post('/login', validate(schemas.login), async (req, res) => {
       // Check clients table (including legacy admin accounts)
       const { data: client, error: clientError } = await supabaseAdmin
         .from('clients')
-        .select('id, email, full_name, password_hash, role')
+        .select('id, email, full_name, password_hash, password, role')
         .eq('email', email)
         .single();
 
@@ -170,7 +170,8 @@ router.post('/login', validate(schemas.login), async (req, res) => {
     console.log('Database query result:', { 
       found: !!user, 
       userType,
-      hasPassword: !!user?.password_hash 
+      hasPasswordHash: !!user?.password_hash,
+      hasPassword: !!user?.password
     });
 
     if (!user) {
@@ -178,9 +179,10 @@ router.post('/login', validate(schemas.login), async (req, res) => {
       return res.status(401).json({ error: 'Invalid credentials' });
     }
 
-    // Verify password
+    // Verify password - handle both password_hash and password fields
     console.log('Comparing passwords...');
-    const validPassword = await bcrypt.compare(password, user.password_hash);
+    const passwordField = user.password_hash || user.password;
+    const validPassword = await bcrypt.compare(password, passwordField);
     console.log('Password valid:', validPassword);
     
     if (!validPassword) {

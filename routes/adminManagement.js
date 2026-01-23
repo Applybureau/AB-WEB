@@ -364,7 +364,7 @@ router.post('/admins', authenticateToken, requireAdmin, upload.single('profile_p
       .insert({
         full_name,
         email,
-        password: hashedPassword,
+        password: hashedPassword, // Use password field for clients table
         phone,
         role: 'admin',
         profile_picture_url: profilePictureUrl,
