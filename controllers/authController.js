@@ -190,7 +190,7 @@ class AuthController {
         // Fallback to clients table (legacy system and regular clients)
         const { data: client, error: clientError } = await supabaseAdmin
           .from('clients')
-          .select('id, email, full_name, password, role, onboarding_complete')
+          .select('id, email, full_name, password, password_hash, role, onboarding_complete')
           .eq('email', email)
           .single();
 
@@ -213,7 +213,8 @@ class AuthController {
       }
 
       // Verify password
-      const validPassword = await bcrypt.compare(password, user.password_hash);
+      const passwordField = user.password_hash || user.password;
+      const validPassword = await bcrypt.compare(password, passwordField);
       if (!validPassword) {
         const failedAttempt = securityManager.recordFailedAttempt(email, ip);
         logger.security('invalid_password', { email, ip, attempts: failedAttempt.attempts });
