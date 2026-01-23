@@ -2,374 +2,398 @@
 
 ## Overview
 
-This design implements a 4-stage lead lifecycle pipeline for Apply Bureau, transforming website consultation submissions into registered clients. The system handles PDF resume uploads, status-triggered emails, secure registration tokens, and admin dashboard features for managing leads and contact requests.
+The consultation-to-client pipeline system is a comprehensive workflow management platform that transforms consultation requests into fully onboarded clients. The system manages the entire journey from initial consultation submission through client approval, registration, profile completion, and ongoing service delivery.
 
-The architecture extends the existing Express.js/Supabase backend with new routes, controllers, database schema changes, and email templates following strict brand guidelines.
+The architecture supports two distinct user experiences: a client-focused dashboard for tracking personal progress and applications, and an admin dashboard for managing the business pipeline, capacity, and client relationships.
 
 ## Architecture
 
+The system follows a multi-layered architecture with clear separation between consultation management, client onboarding, and ongoing service delivery:
+
 ```mermaid
-flowchart TD
-    subgraph "Stage 1: Lead Submission"
-        A[Website Form] -->|POST /api/leads| B[Lead Controller]
-        B --> C[Upload PDF to Supabase Storage]
-        C --> D[Create Lead Record]
-        D --> E[Status: lead]
-    end
+graph TB
+    A[Website Consultation Form] --> B[Consultation Processing]
+    B --> C[Admin Review Dashboard]
+    C --> D[Client Approval System]
+    D --> E[Registration Token Generation]
+    E --> F[Client Registration Portal]
+    F --> G[Profile Completion System]
+    G --> H[Client Dashboard]
+    H --> I[Application Tracking]
+    H --> J[Interview Hub]
+    H --> K[Communication System]
     
-    subgraph "Stage 2: Under Review"
-        F[Admin Dashboard] -->|PATCH /api/leads/:id/review| G[Update Status]
-        G --> H[Status: under_review]
-        H --> I[Trigger Email #1]
-        I --> J[Profile Under Review Email]
-    end
-    
-    subgraph "Stage 3: Approval"
-        K[Admin Dashboard] -->|PATCH /api/leads/:id/approve| L[Generate JWT Token]
-        L --> M[Status: approved]
-        M --> N[Trigger Email #2]
-        N --> O[Selection Email with Dashboard Link]
-    end
-    
-    subgraph "Stage 4: Registration"
-        P[User Clicks Link] -->|GET /api/register/verify| Q[Verify Token]
-        Q --> R[Load Registration Form]
-        R -->|POST /api/register/complete| S[Create User Account]
-        S --> T[Status: client]
-    end
+    C --> L[Admin Dashboard]
+    L --> M[Client Management]
+    L --> N[Capacity Tracking]
+    L --> O[System Administration]
 ```
+
+### Core Components
+
+1. **Consultation Processing Engine**: Handles initial consultation requests and status management
+2. **Admin Review System**: Provides tools for consultation evaluation and client approval
+3. **Registration Management**: Manages secure token-based client registration
+4. **Profile Completion Tracker**: Guides clients through multi-stage profile setup
+5. **Client Dashboard**: Comprehensive client-facing interface
+6. **Admin Dashboard**: Business management and client oversight tools
+7. **Email Notification System**: Automated communication throughout the pipeline
 
 ## Components and Interfaces
 
-### 1. Lead Controller (`controllers/leadController.js`)
+### Consultation Processing Engine
 
-Handles the 4-stage pipeline logic with status transitions and email triggers.
+**Purpose**: Manages the initial consultation request lifecycle from submission to approval/rejection.
 
-```javascript
-// Lead submission with PDF upload
-async submitLead(req, res) {
-  // Input: { firstName, lastName, email, phone, subject, message, resume (file) }
-  // Output: { id, status: 'lead', pdf_url }
-}
+**Key Functions**:
+- Consultation request validation and storage
+- Status tracking (pending → approved/rejected → registered)
+- PDF resume handling and storage
+- Integration with email notification system
 
-// Admin marks lead as under review
-async markUnderReview(req, res) {
-  // Input: { id } (params)
-  // Output: { id, status: 'under_review', reviewed_at, reviewed_by }
-  // Side effect: Sends Email #1 (no dashboard link)
-}
+**Database Tables**:
+- `consultation_requests`: Core consultation data
+- `consultation_documents`: Associated files and resumes
 
-// Admin approves lead
-async approveLead(req, res) {
-  // Input: { id } (params)
-  // Output: { id, status: 'approved', registration_token, approved_at, approved_by }
-  // Side effect: Sends Email #2 (with dashboard link + warning)
-}
+**API Endpoints**:
+- `POST /api/consultations` - Submit consultation request
+- `GET /api/consultations` - Admin: List all consultations
+- `PATCH /api/consultations/:id` - Admin: Update consultation status
 
-// Verify registration token
-async verifyRegistrationToken(req, res) {
-  // Input: { token } (query)
-  // Output: { valid: boolean, email, consultation_id }
-}
+### Registration Management System
 
-// Complete registration
-async completeRegistration(req, res) {
-  // Input: { token, passcode, profile_data }
-  // Output: { user_id, status: 'client' }
-  // Side effect: Invalidates token, creates user account
-}
-```
+**Purpose**: Handles secure client account creation using unique registration tokens.
 
-### 2. Contact Request Controller (`controllers/contactRequestController.js`)
+**Key Functions**:
+- Registration token generation and validation
+- Secure password creation with strength requirements
+- Client account provisioning
+- Integration with consultation status updates
 
-Handles general inquiries from the landing page.
+**Database Tables**:
+- `registration_tokens`: Secure tokens for approved clients
+- `clients`: Client account information
 
-```javascript
-// Submit contact request
-async submitContactRequest(req, res) {
-  // Input: { firstName, lastName, email, phone?, subject, message }
-  // Output: { id, status: 'new' }
-}
+**API Endpoints**:
+- `GET /api/register/:token` - Validate registration token
+- `POST /api/register` - Complete client registration
+- `POST /api/auth/login` - Client authentication
 
-// Get all contact requests (admin)
-async getContactRequests(req, res) {
-  // Input: { page, limit, status?, search? } (query)
-  // Output: { data: [], total, page, limit }
-}
+### Profile Completion System
 
-// Update contact request status
-async updateContactRequestStatus(req, res) {
-  // Input: { id } (params), { status, admin_notes? } (body)
-  // Output: { id, status, handled_at, handled_by }
-}
-```
+**Purpose**: Guides new clients through comprehensive profile setup with progress tracking.
 
-### 3. Meeting Controller (`controllers/meetingController.js`)
+**Key Functions**:
+- Profile completion percentage calculation
+- Required field validation and tracking
+- Document upload management (LinkedIn, preferences, etc.)
+- Progressive feature unlocking
 
-Handles admin meeting scheduling.
+**Database Tables**:
+- `client_profiles`: Extended client information
+- `profile_completion_tracking`: Progress monitoring
 
-```javascript
-// Schedule meeting
-async scheduleMeeting(req, res) {
-  // Input: { lead_id, meeting_date, meeting_time, meeting_link }
-  // Output: { id, meeting_date, meeting_time, meeting_link }
-  // Side effect: Sends Meeting Scheduled email
-}
-```
+**API Endpoints**:
+- `GET /api/client/profile` - Get profile completion status
+- `PATCH /api/client/profile` - Update profile information
+- `POST /api/client/documents` - Upload profile documents
 
-### 4. Token Service (`utils/tokenService.js`)
+### Application Tracking System
 
-Handles secure registration token generation and verification.
+**Purpose**: Comprehensive job application management with progress monitoring against tier-based targets.
 
-```javascript
-// Generate registration token
-function generateRegistrationToken(consultationId, email) {
-  // Returns: signed JWT with 72h expiration
-  // Payload: { consultation_id, email, exp, iat, type: 'registration' }
-}
+**Key Functions**:
+- Application CRUD operations
+- Status tracking (Applied → Interviewing → Offer/Rejected)
+- Weekly volume tracking against tier targets (17/30/50)
+- Tailored resume version management
 
-// Verify registration token
-function verifyRegistrationToken(token) {
-  // Returns: { valid: boolean, payload: { consultation_id, email } }
-  // Checks: signature, expiration, token_used flag in DB
-}
+**Database Tables**:
+- `applications`: Job application records
+- `application_documents`: Tailored resumes and materials
+- `client_tiers`: Tier-based service levels and targets
 
-// Invalidate token after use
-async function invalidateToken(consultationId) {
-  // Updates: leads.token_used = true
-}
-```
+**API Endpoints**:
+- `GET /api/applications` - Client: Get personal applications
+- `POST /api/applications` - Admin: Add application for client
+- `PATCH /api/applications/:id` - Update application status
+- `GET /api/applications/stats` - Get progress statistics
 
-### 5. Email Service Enhancement (`utils/email.js`)
+### Interview Preparation Hub
 
-Extended to support Base64 logo and new templates.
+**Purpose**: Manages mock interviews, preparation materials, and interview feedback.
 
-```javascript
-// Logo as Base64 constant
-const LOGO_BASE64 = 'data:image/png;base64,[ENCODED_STRING]';
+**Key Functions**:
+- Mock interview scheduling with Google Meet integration
+- Role-specific preparation material delivery
+- Interview debrief collection and processing
+- Admin feedback and next-round guidance
 
-// Send email with brand styling
-async function sendBrandedEmail(to, templateName, variables) {
-  // Injects: logo_base64, container_width: '800px'
-  // Applies: dark background, white text styling
-}
-```
+**Database Tables**:
+- `mock_interviews`: Scheduled interview sessions
+- `interview_materials`: Preparation resources
+- `interview_debriefs`: Client feedback after real interviews
+
+**API Endpoints**:
+- `GET /api/interviews` - Get scheduled interviews
+- `POST /api/interviews` - Admin: Schedule mock interview
+- `POST /api/interviews/:id/debrief` - Submit interview feedback
+- `GET /api/interviews/materials` - Get preparation materials
+
+### Client Dashboard System
+
+**Purpose**: Comprehensive client-facing interface for tracking progress and accessing services.
+
+**Key Features**:
+- Profile completion tracker with visual progress bar
+- Active applications table with status indicators
+- Weekly volume counter with tier-based targets
+- Interview preparation hub with scheduled sessions
+- Document vault for optimized resumes
+- Admin communication channel
+
+**API Endpoints**:
+- `GET /api/client/dashboard` - Get dashboard overview
+- `GET /api/client/progress` - Get completion status
+- `GET /api/client/messages` - Get admin communications
+
+### Admin Dashboard System
+
+**Purpose**: Business management interface for consultation review, client management, and system administration.
+
+**Key Features**:
+- Global overview with capacity tracking
+- Consultation review with PDF preview
+- Client management workspace
+- Application queue management
+- Interview coordination tools
+- System settings and capacity controls
+
+**API Endpoints**:
+- `GET /api/admin/dashboard` - Get admin overview
+- `GET /api/admin/capacity` - Get capacity status
+- `GET /api/admin/clients/:id` - Get client details
+- `POST /api/admin/clients/:id/applications` - Add client application
 
 ## Data Models
 
-### Enhanced Leads Table Schema
-
-```sql
--- Migration: Add pipeline fields to consultation_requests (renamed to leads)
-ALTER TABLE consultation_requests RENAME TO leads;
-
-ALTER TABLE leads ADD COLUMN IF NOT EXISTS status VARCHAR(20) DEFAULT 'lead' 
-  CHECK (status IN ('lead', 'under_review', 'approved', 'client', 'rejected'));
-
-ALTER TABLE leads ADD COLUMN IF NOT EXISTS pdf_url TEXT;
-ALTER TABLE leads ADD COLUMN IF NOT EXISTS pdf_path TEXT;
-
--- Review stage fields
-ALTER TABLE leads ADD COLUMN IF NOT EXISTS reviewed_at TIMESTAMPTZ;
-ALTER TABLE leads ADD COLUMN IF NOT EXISTS reviewed_by UUID REFERENCES admins(id);
-
--- Approval stage fields  
-ALTER TABLE leads ADD COLUMN IF NOT EXISTS approved_at TIMESTAMPTZ;
-ALTER TABLE leads ADD COLUMN IF NOT EXISTS approved_by UUID REFERENCES admins(id);
-ALTER TABLE leads ADD COLUMN IF NOT EXISTS registration_token TEXT;
-ALTER TABLE leads ADD COLUMN IF NOT EXISTS token_expires_at TIMESTAMPTZ;
-ALTER TABLE leads ADD COLUMN IF NOT EXISTS token_used BOOLEAN DEFAULT FALSE;
-
--- Registration stage fields
-ALTER TABLE leads ADD COLUMN IF NOT EXISTS registered_at TIMESTAMPTZ;
-ALTER TABLE leads ADD COLUMN IF NOT EXISTS user_id UUID REFERENCES users(id);
-
--- Profile fields (populated during registration)
-ALTER TABLE leads ADD COLUMN IF NOT EXISTS age INTEGER;
-ALTER TABLE leads ADD COLUMN IF NOT EXISTS linkedin_url TEXT;
-ALTER TABLE leads ADD COLUMN IF NOT EXISTS profile_pic_url TEXT;
-ALTER TABLE leads ADD COLUMN IF NOT EXISTS current_job VARCHAR(200);
-ALTER TABLE leads ADD COLUMN IF NOT EXISTS target_job VARCHAR(200);
-ALTER TABLE leads ADD COLUMN IF NOT EXISTS country VARCHAR(100);
-ALTER TABLE leads ADD COLUMN IF NOT EXISTS location VARCHAR(200);
-ALTER TABLE leads ADD COLUMN IF NOT EXISTS years_of_experience INTEGER;
-
--- Performance indexes
-CREATE INDEX IF NOT EXISTS idx_leads_status ON leads(status);
-CREATE INDEX IF NOT EXISTS idx_leads_email ON leads(email);
-CREATE INDEX IF NOT EXISTS idx_leads_created_at ON leads(created_at);
-CREATE INDEX IF NOT EXISTS idx_leads_token ON leads(registration_token) WHERE registration_token IS NOT NULL;
+### Consultation Request Model
+```typescript
+interface ConsultationRequest {
+  id: string;
+  full_name: string;
+  email: string;
+  phone?: string;
+  linkedin_url?: string;
+  role_targets: string;
+  location_preferences: string;
+  minimum_salary?: string;
+  target_market: string;
+  employment_status: string;
+  package_interest: 'Tier 1' | 'Tier 2' | 'Tier 3';
+  area_of_concern: string;
+  consultation_window: string;
+  resume_url?: string;
+  status: 'pending' | 'approved' | 'rejected' | 'registered';
+  admin_notes?: string;
+  processed_by?: string;
+  processed_at?: Date;
+  registration_token?: string;
+  created_at: Date;
+  updated_at: Date;
+}
 ```
 
-### Contact Requests Table Schema
-
-```sql
-CREATE TABLE IF NOT EXISTS contact_requests (
-    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-    first_name VARCHAR(100) NOT NULL,
-    last_name VARCHAR(100) NOT NULL,
-    email VARCHAR(255) NOT NULL,
-    phone VARCHAR(20),
-    subject VARCHAR(500) NOT NULL,
-    message TEXT NOT NULL,
-    status VARCHAR(20) DEFAULT 'new' CHECK (status IN ('new', 'in_progress', 'handled', 'archived')),
-    handled_by UUID REFERENCES admins(id),
-    handled_at TIMESTAMPTZ,
-    admin_notes TEXT,
-    created_at TIMESTAMPTZ DEFAULT NOW(),
-    updated_at TIMESTAMPTZ DEFAULT NOW()
-);
-
--- Performance indexes
-CREATE INDEX IF NOT EXISTS idx_contact_requests_email ON contact_requests(email);
-CREATE INDEX IF NOT EXISTS idx_contact_requests_status ON contact_requests(status);
-CREATE INDEX IF NOT EXISTS idx_contact_requests_created_at ON contact_requests(created_at);
+### Client Profile Model
+```typescript
+interface ClientProfile {
+  id: string;
+  consultation_id: string;
+  email: string;
+  password_hash: string;
+  first_name: string;
+  last_name: string;
+  phone?: string;
+  linkedin_url?: string;
+  resume_url?: string;
+  profile_picture_url?: string;
+  tier: 'Tier 1' | 'Tier 2' | 'Tier 3';
+  target_roles: string[];
+  location_preferences: string[];
+  minimum_salary?: number;
+  preferred_industries: string[];
+  years_experience?: number;
+  education_level?: string;
+  career_goals?: string;
+  current_challenges?: string;
+  profile_completion_percentage: number;
+  status: 'active' | 'inactive' | 'suspended';
+  onboarding_completed: boolean;
+  created_at: Date;
+  updated_at: Date;
+}
 ```
 
-### Meetings Table Schema
-
-```sql
-CREATE TABLE IF NOT EXISTS meetings (
-    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-    lead_id UUID NOT NULL REFERENCES leads(id),
-    admin_id UUID NOT NULL REFERENCES admins(id),
-    meeting_date DATE NOT NULL,
-    meeting_time TIME NOT NULL,
-    meeting_link TEXT NOT NULL,
-    status VARCHAR(20) DEFAULT 'scheduled' CHECK (status IN ('scheduled', 'completed', 'cancelled')),
-    notes TEXT,
-    created_at TIMESTAMPTZ DEFAULT NOW(),
-    updated_at TIMESTAMPTZ DEFAULT NOW()
-);
-
-CREATE INDEX IF NOT EXISTS idx_meetings_lead_id ON meetings(lead_id);
-CREATE INDEX IF NOT EXISTS idx_meetings_date ON meetings(meeting_date);
+### Application Model
+```typescript
+interface Application {
+  id: string;
+  client_id: string;
+  company_name: string;
+  job_title: string;
+  job_url?: string;
+  application_date: Date;
+  status: 'applied' | 'interviewing' | 'offer' | 'rejected' | 'withdrawn';
+  tailored_resume_url?: string;
+  cover_letter_url?: string;
+  notes?: string;
+  admin_notes?: string;
+  interview_date?: Date;
+  offer_amount?: number;
+  created_at: Date;
+  updated_at: Date;
+}
 ```
 
-### Users Table Schema (for registered clients)
-
-```sql
-CREATE TABLE IF NOT EXISTS users (
-    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-    lead_id UUID UNIQUE REFERENCES leads(id),
-    email VARCHAR(255) UNIQUE NOT NULL,
-    passcode_hash VARCHAR(255) NOT NULL,
-    full_name VARCHAR(200) NOT NULL,
-    role VARCHAR(20) DEFAULT 'client',
-    is_active BOOLEAN DEFAULT TRUE,
-    last_login TIMESTAMPTZ,
-    created_at TIMESTAMPTZ DEFAULT NOW(),
-    updated_at TIMESTAMPTZ DEFAULT NOW()
-);
-
-CREATE INDEX IF NOT EXISTS idx_users_email ON users(email);
-CREATE INDEX IF NOT EXISTS idx_users_lead_id ON users(lead_id);
+### Mock Interview Model
+```typescript
+interface MockInterview {
+  id: string;
+  client_id: string;
+  application_id?: string;
+  scheduled_date: Date;
+  duration_minutes: number;
+  meeting_link: string;
+  preparation_materials?: string;
+  admin_feedback?: string;
+  client_debrief?: string;
+  status: 'scheduled' | 'completed' | 'cancelled';
+  created_at: Date;
+  updated_at: Date;
+}
 ```
 
 ## Correctness Properties
 
-*A property is a characteristic or behavior that should hold true across all valid executions of a system—essentially, a formal statement about what the system should do. Properties serve as the bridge between human-readable specifications and machine-verifiable correctness guarantees.*
+*A property is a characteristic or behavior that should hold true across all valid executions of a system-essentially, a formal statement about what the system should do. Properties serve as the bridge between human-readable specifications and machine-verifiable correctness guarantees.*
 
-### Property 1: Form Data Capture Completeness
-*For any* form submission (full or simplified format), all provided fields SHALL be correctly parsed and stored in the database with no data loss.
-**Validates: Requirements 1.1, 1.5**
+### Property Reflection
 
-### Property 2: Initial Status Invariant
-*For any* newly created lead record, the status SHALL always be initialized to "lead".
-**Validates: Requirements 1.3**
+After analyzing all acceptance criteria, I identified several areas where properties can be consolidated to eliminate redundancy:
 
-### Property 3: Cloud File Storage Round-Trip
-*For any* uploaded PDF file, storing it in cloud storage and then retrieving it via the returned URL SHALL produce the identical file content.
-**Validates: Requirements 1.2, 10.1, 10.4**
+- Email sending properties (1.2, 1.3, 2.5, 2.6, 11.1-11.5) can be combined into comprehensive email notification properties
+- Dashboard display properties (2.1, 4.1, 8.1-8.5, 12.1-12.4) can be consolidated into role-based dashboard properties
+- Status update properties (2.3, 3.5) can be combined into a comprehensive status transition property
+- Data persistence properties (1.4, 3.4, 9.2) can be unified into data integrity properties
 
-### Property 4: Status Transition Correctness
-*For any* lead, status transitions SHALL only follow the valid state machine: lead → under_review → approved → client (or rejected at any stage).
-**Validates: Requirements 2.1, 3.1, 4.6**
+### Core Correctness Properties
 
-### Property 5: Email Triggering on Status Change
-*For any* status transition to "under_review" or "approved", the corresponding email (Email #1 or Email #2) SHALL be triggered exactly once.
-**Validates: Requirements 2.2, 3.3**
+Property 1: Consultation lifecycle integrity
+*For any* consultation request, the system should maintain data integrity throughout the complete lifecycle from submission through registration, ensuring all required fields are preserved and status transitions are valid.
+**Validates: Requirements 1.1, 1.4, 1.5, 2.3, 3.5**
 
-### Property 6: JWT Token Generation Correctness
-*For any* approved lead, the generated registration token SHALL be a valid JWT containing consultation_id, email, and expiration timestamp (72 hours from creation).
-**Validates: Requirements 3.2, 3.6, 11.1, 11.2**
+Property 2: Email notification consistency
+*For any* consultation status change (submitted, approved, rejected, registered), the system should send appropriate email notifications to both clients and administrators with correct content and timing.
+**Validates: Requirements 1.2, 1.3, 2.5, 2.6, 11.1, 11.2, 11.3, 11.4**
 
-### Property 7: Token Verification and Rejection
-*For any* registration token, verification SHALL succeed only if the signature is valid, the token is not expired, and the token has not been previously used.
-**Validates: Requirements 4.1, 4.2, 11.3**
+Property 3: Registration token security
+*For any* approved consultation, the system should generate a unique, secure registration token that validates correctly during registration and becomes invalid after use.
+**Validates: Requirements 2.4, 3.1, 3.2**
 
-### Property 8: Token Single-Use Enforcement
-*For any* registration token that has been used to complete registration, subsequent verification attempts SHALL be rejected.
-**Validates: Requirements 11.4, 11.5**
+Property 4: Role-based dashboard access
+*For any* user login, the system should display role-appropriate dashboard features and enforce access control, preventing cross-role access to restricted functionality.
+**Validates: Requirements 12.1, 12.2, 12.3, 12.4, 12.5**
 
-### Property 9: Dashboard Link Exclusivity
-*For any* email sent by the system, the dashboard registration link SHALL appear ONLY in Email #2 (approval email) and in no other email template.
-**Validates: Requirements 2.3, 3.4**
+Property 5: Profile completion tracking accuracy
+*For any* client profile update, the system should accurately calculate completion percentage and unlock features appropriately when profile reaches 100% completion.
+**Validates: Requirements 4.2, 4.3, 4.4**
 
-### Property 10: Email Styling Compliance
-*For any* email generated by the system, the HTML SHALL contain: Base64-encoded logo, container width between 650-800px, dark background color, white (#FFFFFF) body text, and red (#FF0000) for warnings.
-**Validates: Requirements 8.1, 8.2, 8.3, 8.4, 8.5, 8.6**
+Property 6: Application tracking consistency
+*For any* client application, the system should maintain accurate status tracking, display all required information, and correctly calculate progress against tier-based targets.
+**Validates: Requirements 5.1, 5.2, 5.3, 5.4, 5.5**
 
-### Property 11: Pagination Correctness
-*For any* paginated query with page P and limit L, the returned results SHALL contain at most L items and skip exactly (P-1)*L items from the total result set.
-**Validates: Requirements 9.4, 6.4**
+Property 7: Interview hub activation
+*For any* application with status 'interviewing', the interview hub should become active and display all scheduled sessions with correct meeting details and preparation materials.
+**Validates: Requirements 6.1, 6.2, 6.3**
 
-### Property 12: Audit Trail Recording
-*For any* status transition (review or approval), the system SHALL record the timestamp and admin ID who performed the action.
-**Validates: Requirements 2.4, 3.7**
+Property 8: Real-time notification delivery
+*For any* admin message or system update, clients should receive immediate notifications and the system should maintain complete message history.
+**Validates: Requirements 7.4, 7.5, 6.5**
+
+Property 9: Capacity management enforcement
+*For any* capacity limit configuration, the system should accurately track active clients, prevent approvals when at capacity, and send appropriate alerts when approaching limits.
+**Validates: Requirements 10.1, 10.2, 10.3, 10.5**
+
+Property 10: Admin dashboard functionality
+*For any* admin user, the dashboard should provide complete client management capabilities including application queue management, interview coordination, and system administration tools.
+**Validates: Requirements 8.1, 8.2, 8.3, 8.4, 9.1, 9.2, 9.3, 9.4, 9.5**
+
+<function_calls>
+<invoke name="prework">
+<parameter name="featureName">consultation-to-client-pipeline
 
 ## Error Handling
 
-### Input Validation Errors
-- Missing required fields: Return 400 with field-specific error messages
-- Invalid email format: Return 400 with "Invalid email format"
-- Invalid file type (non-PDF): Return 400 with "Only PDF files are allowed"
-- File too large (>5MB): Return 400 with "File size exceeds 5MB limit"
+The system implements comprehensive error handling across all components:
 
-### Token Errors
-- Invalid token signature: Return 401 with "Invalid registration token"
-- Expired token: Return 401 with "Registration token has expired"
-- Already used token: Return 401 with "Registration token has already been used"
+### Consultation Processing Errors
+- **Invalid consultation data**: Return validation errors with specific field requirements
+- **File upload failures**: Retry mechanism with fallback to manual upload
+- **Email delivery failures**: Queue for retry with admin notification of failures
+- **Database connection issues**: Graceful degradation with user-friendly error messages
 
-### State Transition Errors
-- Invalid status transition: Return 400 with "Invalid status transition from {current} to {target}"
-- Lead not found: Return 404 with "Lead not found"
+### Registration and Authentication Errors
+- **Invalid registration tokens**: Clear error messages with support contact information
+- **Password validation failures**: Real-time feedback with strength requirements
+- **Account creation conflicts**: Handle duplicate email scenarios gracefully
+- **Session management**: Automatic token refresh with secure logout on expiration
 
-### File Storage Errors
-- Upload failure: Return 500 with "Failed to upload file" and log detailed error
-- Storage quota exceeded: Return 507 with "Storage quota exceeded"
+### Dashboard and UI Errors
+- **Data loading failures**: Loading states with retry mechanisms
+- **Real-time update failures**: Fallback to periodic refresh with user notification
+- **File upload errors**: Progress indicators with error recovery options
+- **Network connectivity issues**: Offline mode indicators with sync when reconnected
 
-### Database Errors
-- Constraint violation: Return 400 with sanitized error message
-- Connection failure: Return 503 with "Service temporarily unavailable"
+### Capacity and Business Logic Errors
+- **Capacity limit violations**: Prevent approvals with clear messaging about waitlist
+- **Tier configuration errors**: Default to safe tier settings with admin alerts
+- **Interview scheduling conflicts**: Automatic conflict detection with alternative suggestions
+- **Application status inconsistencies**: Data validation with automatic correction where possible
 
 ## Testing Strategy
 
-### Unit Tests
-- Token generation produces valid JWT structure
-- Token verification correctly validates signature and expiration
-- Form data parsing handles both full and simplified formats
-- Status transition validation rejects invalid transitions
-- Email template rendering includes all required variables
+The system employs a dual testing approach combining unit tests for specific scenarios and property-based tests for comprehensive coverage:
 
-### Property-Based Tests (using fast-check)
-- **Property 1**: Generate random form data → verify all fields stored correctly
-- **Property 2**: Create N leads → verify all have status "lead"
-- **Property 3**: Upload random PDF → download → compare checksums
-- **Property 4**: Generate random status transition sequences → verify only valid ones succeed
-- **Property 6**: Generate tokens → verify JWT structure and payload
-- **Property 7**: Generate valid/invalid/expired tokens → verify correct acceptance/rejection
-- **Property 8**: Use token → attempt reuse → verify rejection
-- **Property 10**: Render all email templates → verify styling compliance
-- **Property 11**: Generate random pagination params → verify correct result counts
+### Unit Testing Focus
+- **Specific workflow scenarios**: Complete consultation-to-client journey testing
+- **Edge cases**: Boundary conditions for capacity limits, profile completion percentages
+- **Integration points**: Email service integration, file upload handling, database transactions
+- **Error conditions**: Network failures, invalid data scenarios, authentication edge cases
 
-### Integration Tests
-- Full pipeline flow: Submit lead → Review → Approve → Register → Verify client status
-- Email delivery verification with test SMTP server
-- File upload/download round-trip with Supabase Storage
-- Admin dashboard API pagination with large datasets
+### Property-Based Testing Configuration
+- **Testing framework**: Jest with fast-check for JavaScript/TypeScript property testing
+- **Test iterations**: Minimum 100 iterations per property test for thorough coverage
+- **Test tagging**: Each property test tagged with format: **Feature: consultation-to-client-pipeline, Property {number}: {property_text}**
 
-### Test Configuration
-- Minimum 100 iterations per property test
-- Test database with seeded data for pagination tests
-- Mock email service for unit tests, real service for integration tests
+### Property Test Implementation
+Each correctness property will be implemented as a separate property-based test:
+
+1. **Property 1 Test**: Generate random consultation data, submit through complete lifecycle, verify data integrity
+2. **Property 2 Test**: Generate consultation status changes, verify appropriate emails sent with correct content
+3. **Property 3 Test**: Generate approved consultations, verify unique tokens created and validated correctly
+4. **Property 4 Test**: Generate user logins with different roles, verify appropriate dashboard access
+5. **Property 5 Test**: Generate profile updates, verify completion percentage accuracy and feature unlocking
+6. **Property 6 Test**: Generate applications with various statuses, verify tracking accuracy and target calculations
+7. **Property 7 Test**: Generate interviewing applications, verify hub activation and content display
+8. **Property 8 Test**: Generate admin messages and updates, verify immediate notification delivery
+9. **Property 9 Test**: Generate capacity scenarios, verify enforcement and alert behavior
+10. **Property 10 Test**: Generate admin operations, verify complete functionality access
+
+### Test Data Management
+- **Consultation generators**: Create realistic consultation requests with varied data
+- **Client profile generators**: Generate profiles with different completion states
+- **Application generators**: Create applications across all status types and tiers
+- **Email content validators**: Verify email templates contain required information
+- **Database state validators**: Ensure data consistency across all operations
+
+The testing strategy ensures both specific functionality validation through unit tests and comprehensive system behavior verification through property-based testing, providing confidence in system correctness across all user scenarios.
