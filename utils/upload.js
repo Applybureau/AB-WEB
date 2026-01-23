@@ -22,12 +22,24 @@ const upload = multer({
   storage: storage,
   fileFilter: fileFilter,
   limits: {
-    fileSize: 5 * 1024 * 1024 // 5MB limit
+    fileSize: 10 * 1024 * 1024 // 10MB limit (increased from 5MB)
   }
 });
 
 const uploadToSupabase = async (file, bucket, filePath) => {
   try {
+    // Check if bucket exists first
+    const { data: buckets, error: listError } = await supabaseAdmin.storage.listBuckets();
+    if (listError) {
+      console.error('Error listing buckets:', listError);
+      throw new Error('Storage service unavailable');
+    }
+    
+    const bucketExists = buckets.some(b => b.name === bucket);
+    if (!bucketExists) {
+      throw new Error(`Storage bucket '${bucket}' does not exist`);
+    }
+
     const { data, error } = await supabaseAdmin.storage
       .from(bucket)
       .upload(filePath, file.buffer, {
@@ -37,7 +49,7 @@ const uploadToSupabase = async (file, bucket, filePath) => {
 
     if (error) {
       console.error('Supabase upload error:', error);
-      throw error;
+      throw new Error(`Upload failed: ${error.message}`);
     }
 
     // Get public URL

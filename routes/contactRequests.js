@@ -1,6 +1,6 @@
 const express = require('express');
 const ContactRequestController = require('../controllers/contactRequestController');
-const { authenticateToken, requireAdmin } = require('../utils/auth');
+const { authenticateToken, requireAdmin } = require('../middleware/auth');
 
 const router = express.Router();
 

@@ -12,7 +12,16 @@
     "test:integration": "jest --testPathPattern=integration",
     "test:complete": "node scripts/test-complete-backend-system.js",
     "test:full": "node scripts/run-complete-test.js",
+    "test:comprehensive": "node tests/run-all-tests.js",
+    "test:auth": "node tests/auth-system-test.js",
+    "test:files": "node tests/file-upload-test.js",
+    "test:emails": "node tests/email-system-test.js",
+    "test:backend": "node tests/comprehensive-backend-test.js",
+    "test:vercel": "node tests/vercel-deployment-test.js",
+    "test:production": "node tests/production-readiness-test.js",
+    "test:setup": "node tests/setup-tests.js",
     "setup": "node scripts/setup.js",
+    "setup-zero-trust": "node scripts/setup-zero-trust.js",
     "health-check": "node scripts/health-check.js",
     "verify-setup": "node scripts/verify-clean-setup.js",
     "create-admin": "node scripts/create-admin.js",
@@ -21,8 +30,8 @@
     "lint": "echo 'Linting...' && echo 'No linter configured'",
     "audit": "npm audit --audit-level=moderate",
     "security-check": "npm audit",
-    "deploy-check": "npm run health-check && npm run test",
-    "production-ready": "npm run verify-setup && npm run health-check && npm run test:complete"
+    "deploy-check": "npm run health-check && npm run test:vercel",
+    "production-ready": "npm run test:production"
   },
   "dependencies": {
     "@supabase/supabase-js": "^2.38.4",
@@ -38,6 +47,7 @@
     "express": "^4.18.2",
     "express-rate-limit": "^7.1.5",
     "express-validator": "^7.0.1",
+    "form-data": "^4.0.0",
     "googleapis": "^128.0.0",
     "helmet": "^7.1.0",
     "joi": "^17.11.0",
@@ -49,7 +59,8 @@
     "resend": "^2.1.0",
     "socket.io": "^4.7.4",
     "socket.io-client": "^4.8.3",
-    "uuid": "^9.0.1"
+    "uuid": "^9.0.1",
+    "zod": "^3.22.4"
   },
   "devDependencies": {
     "@types/jest": "^29.5.8",

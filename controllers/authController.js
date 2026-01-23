@@ -35,7 +35,7 @@ class AuthController {
         .insert({
           email,
           full_name,
-          password: hashedPassword,
+          password_hash: hashedPassword,
           onboarding_complete: false,
           role: 'client'
         })
@@ -213,7 +213,7 @@ class AuthController {
       }
 
       // Verify password
-      const validPassword = await bcrypt.compare(password, user.password);
+      const validPassword = await bcrypt.compare(password, user.password_hash);
       if (!validPassword) {
         const failedAttempt = securityManager.recordFailedAttempt(email, ip);
         logger.security('invalid_password', { email, ip, attempts: failedAttempt.attempts });

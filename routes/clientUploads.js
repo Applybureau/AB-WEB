@@ -1,7 +1,7 @@
 const express = require('express');
 const multer = require('multer');
 const { supabaseAdmin } = require('../utils/supabase');
-const { authenticateToken, requireClient } = require('../utils/auth');
+const { authenticateToken, requireClient } = require('../middleware/auth');
 const path = require('path');
 
 const router = express.Router();

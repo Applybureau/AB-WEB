@@ -1,5 +1,5 @@
 const express = require('express');
-const { authenticateToken, requireAdmin } = require('../utils/auth');
+const { authenticateToken, requireAdmin } = require('../middleware/auth');
 const { validate, schemas } = require('../utils/validation');
 const AdminController = require('../controllers/adminController');
 

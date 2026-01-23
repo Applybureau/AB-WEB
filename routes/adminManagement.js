@@ -2,7 +2,7 @@ const express = require('express');
 const bcrypt = require('bcryptjs');
 const multer = require('multer');
 const { supabaseAdmin } = require('../utils/supabase');
-const { authenticateToken, requireAdmin } = require('../utils/auth');
+const { authenticateToken, requireAdmin } = require('../middleware/auth');
 const { validate, schemas } = require('../utils/validation');
 const { sendEmail } = require('../utils/email');
 
@@ -559,84 +559,6 @@ router.put('/admins/:id/reactivate', authenticateToken, requireAdmin, async (req
   } catch (error) {
     console.error('Reactivate admin error:', error);
     res.status(500).json({ error: 'Failed to reactivate admin' });
-  }
-});
-
-// PUT /api/admin-management/admins/:id/reset-password - Reset admin password
-router.put('/admins/:id/reset-password', authenticateToken, requireAdmin, async (req, res) => {
-  try {
-    const { id } = req.params;
-    const { new_password } = req.body;
-    const currentAdminId = req.user.userId || req.user.id;
-
-    // Check if current user is super admin or resetting own password
-    const isSuper = await isSuperAdmin(currentAdminId);
-    const isSelfReset = id === currentAdminId;
-
-    if (!isSuper && !isSelfReset) {
-      return res.status(403).json({ error: 'Only super admin can reset other admin passwords' });
-    }
-
-    if (!new_password || new_password.length < 6) {
-      return res.status(400).json({ error: 'Password must be at least 6 characters long' });
-    }
-
-    // Get target admin details
-    const { data: targetAdmin } = await supabaseAdmin
-      .from('clients')
-      .select('full_name, email, role')
-      .eq('id', id)
-      .eq('role', 'admin')
-      .single();
-
-    if (!targetAdmin) {
-      return res.status(404).json({ error: 'Admin not found' });
-    }
-
-    // Hash new password
-    const hashedPassword = await bcrypt.hash(new_password, 12);
-
-    // Update password
-    const { error } = await supabaseAdmin
-      .from('clients')
-      .update({ 
-        password: hashedPassword,
-        password_reset_at: new Date().toISOString(),
-        password_reset_by: currentAdminId
-      })
-      .eq('id', id);
-
-    if (error) {
-      return res.status(500).json({ error: 'Failed to reset password' });
-    }
-
-    // Get current admin name for email
-    const { data: currentAdmin } = await supabaseAdmin
-      .from('clients')
-      .select('full_name')
-      .eq('id', currentAdminId)
-      .single();
-
-    // Send password reset notification email (only if not self-reset)
-    if (!isSelfReset) {
-      await sendAdminActionEmail(targetAdmin.email, 'password_reset', {
-        admin_name: targetAdmin.full_name,
-        new_password: new_password,
-        reset_by: currentAdmin?.full_name || 'Super Admin'
-      });
-    }
-
-    res.json({
-      message: isSelfReset ? 'Password updated successfully' : 'Admin password reset successfully',
-      admin: {
-        id: id,
-        full_name: targetAdmin.full_name,
-        email: targetAdmin.email
-      }
-    });
-  } catch (error) {
-    console.error('Reset password error:', error);
-    res.status(500).json({ error: 'Failed to reset password' });
   }
 });
 

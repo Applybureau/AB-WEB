@@ -1,5 +1,5 @@
 const express = require('express');
-const { authenticateToken, requireAdmin, requireClient } = require('../utils/auth');
+const { authenticateToken, requireAdmin, requireClient } = require('../middleware/auth');
 const { isProfileUnlocked, discoveryModeInfo } = require('../middleware/profileGuard');
 const { supabaseAdmin } = require('../utils/supabase');
 const ApplicationTrackingController = require('../controllers/applicationTrackingController');

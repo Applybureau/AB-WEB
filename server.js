@@ -29,6 +29,7 @@ const publicRoutes = require('./routes/public');
 const adminManagementRoutes = require('./routes/adminManagement');
 const fileManagementRoutes = require('./routes/fileManagement');
 const adminDashboardRoutes = require('./routes/adminDashboard');
+const admin20QDashboardRoutes = require('./routes/admin20QDashboard');
 
 // New Pipeline Routes
 const leadsRoutes = require('./routes/leads');
@@ -49,6 +50,9 @@ const publicConsultationsRoutes = require('./routes/publicConsultations');
 const adminConciergeRoutes = require('./routes/adminConcierge');
 const clientRegistrationRoutes = require('./routes/clientRegistration');
 const clientOnboarding20QRoutes = require('./routes/clientOnboarding20Q');
+
+// Zero-Trust Secure Routes
+// const secureOnboardingRoutes = require('./routes/secureOnboarding');
 
 // Client Pipeline Routes
 const clientProfileRoutes = require('./routes/clientProfile');
@@ -99,87 +103,73 @@ app.use(helmet({
 }));
 app.use(compression());
 
-// Enhanced rate limiting with different limits for different endpoints
-const createRateLimiter = (windowMs, max, message) => rateLimit({
-  windowMs,
-  max,
-  message: { error: message, retryAfter: Math.ceil(windowMs / 1000) },
-  standardHeaders: true,
-  legacyHeaders: false,
-  handler: (req, res) => {
-    const ip = req.ip || req.connection.remoteAddress;
-    logger.security('rate_limit_exceeded', { ip, endpoint: req.path, userAgent: req.get('User-Agent') });
-    res.status(429).json({ error: message, retryAfter: Math.ceil(windowMs / 1000) });
-  }
-});
+// Zero-Trust Rate Limiting Configuration
+const { authRateLimit, onboardingRateLimit, generalRateLimit, createZeroTrustRateLimit } = require('./middleware/auth');
 
-// Different rate limits for different endpoint types
-app.use('/api/auth/login', createRateLimiter(15 * 60 * 1000, 5, 'Too many login attempts'));
-app.use('/api/auth/invite', createRateLimiter(60 * 60 * 1000, 10, 'Too many invitations sent'));
-app.use('/api/upload', createRateLimiter(60 * 60 * 1000, 20, 'Too many file uploads'));
-app.use('/api/', createRateLimiter(15 * 60 * 1000, 100, 'Too many requests from this IP'));
+// Apply specific rate limits for different endpoint types
+app.use('/api/auth/login', authRateLimit);
+app.use('/api/auth/register', authRateLimit);
+app.use('/api/auth/invite', createZeroTrustRateLimit(60 * 60 * 1000, 10, 'Too many invitations sent'));
+app.use('/api/client/onboarding-20q', onboardingRateLimit);
+app.use('/api/onboarding-workflow', onboardingRateLimit);
+app.use('/api/onboarding', onboardingRateLimit); // Secure onboarding endpoint
+app.use('/api/upload', createZeroTrustRateLimit(60 * 60 * 1000, 20, 'Too many file uploads'));
+app.use('/api/', generalRateLimit);
 
-// Enhanced CORS configuration
+// Enhanced CORS configuration for Zero-Trust architecture
 const corsOptions = {
   origin: function (origin, callback) {
-    const allowedOrigins = [
-      process.env.FRONTEND_URL,
-      'https://apply-bureau.vercel.app',
-      'https://apply-bureau-frontend.vercel.app',
-      'https://applybureau.com',
-      'https://www.applybureau.com',
-      'http://localhost:3000',
-      'http://localhost:3001',
-      'http://localhost:5173',
-      'http://localhost:5174',
-      'http://127.0.0.1:3000',
-      'http://127.0.0.1:5173',
-      'https://localhost:5173'
-    ].filter(Boolean);
+    // Production-only allowed origins for Zero-Trust
+    const allowedOrigins = process.env.NODE_ENV === 'production' 
+      ? [
+          process.env.FRONTEND_URL,
+          'https://apply-bureau.vercel.app',
+          'https://applybureau.com',
+          'https://www.applybureau.com'
+        ].filter(Boolean)
+      : [
+          process.env.FRONTEND_URL,
+          'https://apply-bureau.vercel.app',
+          'https://apply-bureau-frontend.vercel.app',
+          'https://applybureau.com',
+          'https://www.applybureau.com',
+          'http://localhost:3000',
+          'http://localhost:3001',
+          'http://localhost:5173',
+          'http://localhost:5174',
+          'http://127.0.0.1:3000',
+          'http://127.0.0.1:5173'
+        ].filter(Boolean);
     
-    // Allow requests with no origin (mobile apps, Postman, etc.)
+    // Allow requests with no origin (mobile apps, server-to-server)
     if (!origin) return callback(null, true);
     
-    // Check if origin is allowed
-    if (allowedOrigins.some(allowedOrigin => {
-      if (allowedOrigin.endsWith('*')) {
-        return origin.startsWith(allowedOrigin.slice(0, -1));
-      }
-      return origin === allowedOrigin;
-    })) {
+    // Strict origin checking for Zero-Trust
+    if (allowedOrigins.includes(origin)) {
       callback(null, true);
     } else {
-      console.log('CORS blocked origin:', origin);
-      console.log('Allowed origins:', allowedOrigins);
-      // For production security, only allow specific origins
-      if (process.env.NODE_ENV === 'development') {
-        callback(null, true); // Allow all in development
-      } else {
-        callback(new Error('Not allowed by CORS'), false);
-      }
+      logger.security('cors_blocked', { 
+        origin, 
+        allowedOrigins
+      });
+      callback(new Error('Not allowed by CORS'), false);
     }
   },
   credentials: true,
-  methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS', 'HEAD'],
+  methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
   allowedHeaders: [
     'Content-Type', 
     'Authorization', 
     'X-Requested-With', 
     'Accept', 
-    'Origin',
-    'Access-Control-Allow-Origin',
-    'Access-Control-Allow-Headers',
-    'Access-Control-Allow-Methods',
-    'Access-Control-Allow-Credentials'
+    'Origin'
   ],
   exposedHeaders: [
     'Content-Type', 
     'Authorization', 
     'X-Total-Count', 
     'X-Page', 
-    'X-Per-Page',
-    'Access-Control-Allow-Origin',
-    'Access-Control-Allow-Credentials'
+    'X-Per-Page'
   ],
   optionsSuccessStatus: 200,
   preflightContinue: false
@@ -312,6 +302,7 @@ app.use('/api/public', publicRoutes); // Public routes for website integration
 app.use('/api/admin-management', adminManagementRoutes); // Enhanced admin management
 app.use('/api/files', fileManagementRoutes); // File upload and management
 app.use('/api/admin-dashboard', adminDashboardRoutes); // Admin-specific dashboard
+app.use('/api/admin/20q-dashboard', admin20QDashboardRoutes); // 20 Questions admin dashboard
 
 // New Pipeline Routes - Consultation to Client
 app.use('/api/leads', leadsRoutes); // Lead submission and management
@@ -336,6 +327,9 @@ app.use('/api/admin/concierge', adminConciergeRoutes); // Admin gatekeeper contr
 app.use('/api/client-registration', clientRegistrationRoutes); // Payment-gated client registration
 app.use('/api/client/onboarding-20q', clientOnboarding20QRoutes); // 20-question onboarding with approval
 
+// Zero-Trust Secure Routes
+// app.use('/api/onboarding', secureOnboardingRoutes); // Secure 20-question onboarding with Zod validation
+
 // Workflow Features Routes (no conflicts)
 const onboardingWorkflowRoutes = require('./routes/onboardingWorkflow');
 const workflowRoutes = require('./routes/workflow');
@@ -346,7 +340,7 @@ app.use('/api/onboarding-workflow', onboardingWorkflowRoutes); // 20-field onboa
 
 // Client Pipeline Routes
 app.use('/api/client/profile', clientProfileRoutes); // Client profile management
-app.use('/api/client/dashboard', clientDashboardRoutes); // Client dashboard
+// Note: /api/client/dashboard already registered above
 
 // Email action routes (for email button clicks)
 const emailActionsRoutes = require('./routes/emailActions');
@@ -356,7 +350,7 @@ app.use('/api/email-actions', emailActionsRoutes);
 // API Specification routes are integrated into main routes
 
 // Admin routes with enhanced security
-app.get('/api/admin/stats', require('./utils/auth').authenticateToken, require('./utils/auth').requireAdmin, (req, res) => {
+app.get('/api/admin/stats', require('./middleware/auth').authenticateToken, require('./middleware/auth').requireAdmin, (req, res) => {
   const systemInfo = SystemMonitor.getSystemInfo();
   const cacheStats = cache.getStats();
   const securityStats = securityManager.getStats();
@@ -369,7 +363,7 @@ app.get('/api/admin/stats', require('./utils/auth').authenticateToken, require('
   });
 });
 
-app.get('/api/admin/logs', require('./utils/auth').authenticateToken, require('./utils/auth').requireAdmin, (req, res) => {
+app.get('/api/admin/logs', require('./middleware/auth').authenticateToken, require('./middleware/auth').requireAdmin, (req, res) => {
   const { type = 'app', lines = 100 } = req.query;
   const fs = require('fs');
   const path = require('path');
@@ -389,7 +383,7 @@ app.get('/api/admin/logs', require('./utils/auth').authenticateToken, require('.
   }
 });
 
-app.post('/api/admin/cache/clear', require('./utils/auth').authenticateToken, require('./utils/auth').requireAdmin, (req, res) => {
+app.post('/api/admin/cache/clear', require('./middleware/auth').authenticateToken, require('./middleware/auth').requireAdmin, (req, res) => {
   cache.clear();
   logger.info('Cache cleared by admin', { adminId: req.user.id });
   res.json({ message: 'Cache cleared successfully' });
@@ -509,12 +503,25 @@ app.listen(PORT, () => {
   const realtimeManager = require('./utils/realtime');
   const http = require('http');
   const server = http.createServer(app);
-  realtimeManager.initialize(server);
   
-  // Start server with WebSocket support
-  server.listen(PORT + 1, () => {
-    logger.info('Real-time WebSocket server started', { port: PORT + 1 });
-  });
+  try {
+    realtimeManager.initialize(server);
+    
+    // Start server with WebSocket support
+    server.listen(PORT + 1, () => {
+      logger.info('Real-time WebSocket server started', { port: PORT + 1 });
+    });
+    
+    server.on('error', (error) => {
+      if (error.code === 'EADDRINUSE') {
+        logger.warn('WebSocket port in use, continuing without real-time features', { port: PORT + 1 });
+      } else {
+        logger.error('WebSocket server error', { error: error.message });
+      }
+    });
+  } catch (error) {
+    logger.warn('Failed to initialize WebSocket server, continuing without real-time features', { error: error.message });
+  }
   
   // Start monitoring in production
   if (process.env.NODE_ENV === 'production') {

@@ -1,6 +1,6 @@
 const express = require('express');
 const { supabaseAdmin } = require('../utils/supabase');
-const { authenticateToken, requireAdmin, requireClient } = require('../utils/auth');
+const { authenticateToken, requireAdmin, requireClient } = require('../middleware/auth');
 const { sendEmail } = require('../utils/email');
 const { 
   createSuccessResponse, 

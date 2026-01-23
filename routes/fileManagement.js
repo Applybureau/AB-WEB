@@ -1,71 +1,73 @@
 const express = require('express');
-const multer = require('multer');
 const { supabaseAdmin } = require('../utils/supabase');
-const { authenticateToken } = require('../utils/auth');
+const { authenticateToken, requireAdmin, requireClient } = require('../middleware/auth');
+const multer = require('multer');
+const path = require('path');
 
 const router = express.Router();
 
 // Configure multer for file uploads
+const storage = multer.memoryStorage();
+
+const fileFilter = (req, file, cb) => {
+  // Define allowed file types
+  const allowedTypes = {
+    'resume': ['application/pdf'],
+    'profile_picture': ['image/jpeg', 'image/png', 'image/jpg'],
+    'document': ['application/pdf', 'application/msword', 'application/vnd.openxmlformats-officedocument.wordprocessingml.document'],
+    'portfolio': ['application/pdf', 'image/jpeg', 'image/png', 'image/jpg']
+  };
+
+  const uploadPurpose = req.body.upload_purpose || 'document';
+  const allowed = allowedTypes[uploadPurpose] || allowedTypes['document'];
+
+  if (allowed.includes(file.mimetype)) {
+    cb(null, true);
+  } else {
+    cb(new Error(`Invalid file type for ${uploadPurpose}. Allowed: ${allowed.join(', ')}`), false);
+  }
+};
+
 const upload = multer({
-  storage: multer.memoryStorage(),
+  storage: storage,
+  fileFilter: fileFilter,
   limits: {
-    fileSize: 10 * 1024 * 1024, // 10MB limit
-  },
-  fileFilter: (req, file, cb) => {
-    const allowedTypes = {
-      'resume': ['application/pdf'],
-      'profile_picture': ['image/jpeg', 'image/png', 'image/gif', 'image/webp'],
-      'document': ['application/pdf', 'application/msword', 'application/vnd.openxmlformats-officedocument.wordprocessingml.document']
-    };
-
-    const purpose = req.body.upload_purpose || 'document';
-    const allowed = allowedTypes[purpose] || allowedTypes.document;
-
-    if (allowed.includes(file.mimetype)) {
-      cb(null, true);
-    } else {
-      cb(new Error(`Invalid file type for ${purpose}. Allowed: ${allowed.join(', ')}`), false);
-    }
+    fileSize: 10 * 1024 * 1024 // 10MB limit
   }
 });
 
-// POST /api/files/upload - Upload file (resume, profile picture, etc.)
+// POST /api/files/upload - Upload file
 router.post('/upload', authenticateToken, upload.single('file'), async (req, res) => {
   try {
     if (!req.file) {
-      return res.status(400).json({ error: 'No file provided' });
+      return res.status(400).json({ error: 'No file uploaded' });
     }
 
-    const { upload_purpose = 'document' } = req.body;
-    const userId = req.user.userId || req.user.id;
+    const userId = req.user.id;
     const userType = req.user.role === 'admin' ? 'admin' : 'client';
+    const { upload_purpose = 'document' } = req.body;
 
-    // Determine storage bucket based on purpose
-    const bucketMap = {
-      'resume': 'resumes',
-      'profile_picture': 'profile-pictures',
-      'document': 'documents'
-    };
+    // Generate unique filename
+    const fileExtension = path.extname(req.file.originalname);
+    const fileName = `${userId}_${upload_purpose}_${Date.now()}${fileExtension}`;
+    const bucketName = upload_purpose === 'profile_picture' ? 'profile-pictures' : 'documents';
 
-    const bucket = bucketMap[upload_purpose] || 'documents';
-    const fileName = `${userId}/${Date.now()}-${req.file.originalname}`;
-
-    // Upload to Supabase Storage
+    // Upload to Supabase storage
     const { data: uploadData, error: uploadError } = await supabaseAdmin.storage
-      .from(bucket)
+      .from(bucketName)
       .upload(fileName, req.file.buffer, {
         contentType: req.file.mimetype,
-        upsert: false
+        upsert: true
       });
 
     if (uploadError) {
-      console.error('File upload error:', uploadError);
-      return res.status(500).json({ error: 'Failed to upload file' });
+      console.error('Supabase upload error:', uploadError);
+      return res.status(500).json({ error: 'Failed to upload file to storage' });
     }
 
     // Get public URL
     const { data: urlData } = supabaseAdmin.storage
-      .from(bucket)
+      .from(bucketName)
       .getPublicUrl(fileName);
 
     // Save file record to database
@@ -79,22 +81,24 @@ router.post('/upload', authenticateToken, upload.single('file'), async (req, res
         file_type: req.file.mimetype,
         file_size: req.file.size,
         file_url: urlData.publicUrl,
-        upload_purpose
+        upload_purpose: upload_purpose,
+        uploaded_by: userId
       })
       .select()
       .single();
 
     if (dbError) {
       console.error('Database error:', dbError);
-      // Try to clean up uploaded file
-      await supabaseAdmin.storage.from(bucket).remove([fileName]);
+      // Clean up uploaded file
+      await supabaseAdmin.storage.from(bucketName).remove([fileName]);
       return res.status(500).json({ error: 'Failed to save file record' });
     }
 
-    // Update user profile if it's a resume or profile picture
+    // Update user profile if needed
     if (upload_purpose === 'resume') {
+      const table = userType === 'admin' ? 'admins' : 'clients';
       await supabaseAdmin
-        .from('clients')
+        .from(table)
         .update({ resume_url: urlData.publicUrl })
         .eq('id', userId);
     } else if (upload_purpose === 'profile_picture') {
@@ -106,11 +110,16 @@ router.post('/upload', authenticateToken, upload.single('file'), async (req, res
     }
 
     res.status(201).json({
-      message: 'File uploaded successfully',
-      file: fileRecord
+      id: fileRecord.id,
+      file_name: fileRecord.file_name,
+      original_name: fileRecord.original_name,
+      file_url: fileRecord.file_url,
+      file_size: fileRecord.file_size,
+      upload_purpose: fileRecord.upload_purpose,
+      message: 'File uploaded successfully'
     });
   } catch (error) {
-    console.error('Upload error:', error);
+    console.error('File upload error:', error);
     res.status(500).json({ error: 'Failed to upload file' });
   }
 });
@@ -118,9 +127,11 @@ router.post('/upload', authenticateToken, upload.single('file'), async (req, res
 // GET /api/files - List user's files
 router.get('/', authenticateToken, async (req, res) => {
   try {
-    const userId = req.user.userId || req.user.id;
+    const userId = req.user.id;
     const userType = req.user.role === 'admin' ? 'admin' : 'client';
-    const { upload_purpose, limit = 20, offset = 0 } = req.query;
+    const { upload_purpose, page = 1, limit = 10 } = req.query;
+
+    const offset = (page - 1) * limit;
 
     let query = supabaseAdmin
       .from('file_uploads')
@@ -128,14 +139,15 @@ router.get('/', authenticateToken, async (req, res) => {
       .eq('user_id', userId)
       .eq('user_type', userType)
       .eq('is_active', true)
-      .order('uploaded_at', { ascending: false })
-      .range(offset, offset + limit - 1);
+      .order('created_at', { ascending: false });
 
     if (upload_purpose) {
       query = query.eq('upload_purpose', upload_purpose);
     }
 
-    const { data: files, error } = await query;
+    query = query.range(offset, offset + limit - 1);
+
+    const { data: files, error, count } = await query;
 
     if (error) {
       console.error('Error fetching files:', error);
@@ -143,14 +155,17 @@ router.get('/', authenticateToken, async (req, res) => {
     }
 
     res.json({
-      files: files || [],
-      total: files?.length || 0,
-      offset: parseInt(offset),
-      limit: parseInt(limit)
+      files,
+      pagination: {
+        page: parseInt(page),
+        limit: parseInt(limit),
+        total: count,
+        totalPages: Math.ceil(count / limit)
+      }
     });
   } catch (error) {
-    console.error('List files error:', error);
-    res.status(500).json({ error: 'Failed to list files' });
+    console.error('File list error:', error);
+    res.status(500).json({ error: 'Failed to fetch files' });
   }
 });
 
@@ -158,7 +173,8 @@ router.get('/', authenticateToken, async (req, res) => {
 router.get('/:id', authenticateToken, async (req, res) => {
   try {
     const { id } = req.params;
-    const userId = req.user.userId || req.user.id;
+    const userId = req.user.id;
+    const isAdmin = req.user.role === 'admin';
 
     const { data: file, error } = await supabaseAdmin
       .from('file_uploads')
@@ -170,15 +186,15 @@ router.get('/:id', authenticateToken, async (req, res) => {
       return res.status(404).json({ error: 'File not found' });
     }
 
-    // Check permissions - users can only access their own files, admins can access all
-    if (file.user_id !== userId && req.user.role !== 'admin') {
+    // Check permissions
+    if (!isAdmin && file.uploaded_by !== userId) {
       return res.status(403).json({ error: 'Access denied' });
     }
 
-    res.json({ file });
+    res.json(file);
   } catch (error) {
-    console.error('Get file error:', error);
-    res.status(500).json({ error: 'Failed to get file' });
+    console.error('File details error:', error);
+    res.status(500).json({ error: 'Failed to get file details' });
   }
 });
 
@@ -186,8 +202,10 @@ router.get('/:id', authenticateToken, async (req, res) => {
 router.delete('/:id', authenticateToken, async (req, res) => {
   try {
     const { id } = req.params;
-    const userId = req.user.userId || req.user.id;
+    const userId = req.user.id;
+    const isAdmin = req.user.role === 'admin';
 
+    // Get file details
     const { data: file, error: fetchError } = await supabaseAdmin
       .from('file_uploads')
       .select('*')
@@ -199,7 +217,7 @@ router.delete('/:id', authenticateToken, async (req, res) => {
     }
 
     // Check permissions
-    if (file.user_id !== userId && req.user.role !== 'admin') {
+    if (!isAdmin && file.uploaded_by !== userId) {
       return res.status(403).json({ error: 'Access denied' });
     }
 
@@ -210,35 +228,24 @@ router.delete('/:id', authenticateToken, async (req, res) => {
       .eq('id', id);
 
     if (updateError) {
-      console.error('Error deactivating file:', updateError);
+      console.error('Error marking file as inactive:', updateError);
       return res.status(500).json({ error: 'Failed to delete file' });
     }
 
-    // Optionally remove from storage (commented out to keep files for recovery)
-    // const bucketMap = {
-    //   'resume': 'resumes',
-    //   'profile_picture': 'profile-pictures',
-    //   'document': 'documents'
-    // };
-    // const bucket = bucketMap[file.upload_purpose] || 'documents';
-    // await supabaseAdmin.storage.from(bucket).remove([file.file_name]);
-
     res.json({ message: 'File deleted successfully' });
   } catch (error) {
-    console.error('Delete file error:', error);
+    console.error('File delete error:', error);
     res.status(500).json({ error: 'Failed to delete file' });
   }
 });
 
-// GET /api/files/client/:clientId - Admin view client files
-router.get('/client/:clientId', authenticateToken, async (req, res) => {
+// GET /api/files/client/:clientId - Admin: Get client's files
+router.get('/client/:clientId', authenticateToken, requireAdmin, async (req, res) => {
   try {
-    if (req.user.role !== 'admin') {
-      return res.status(403).json({ error: 'Admin access required' });
-    }
-
     const { clientId } = req.params;
-    const { upload_purpose, limit = 20, offset = 0 } = req.query;
+    const { upload_purpose, page = 1, limit = 10 } = req.query;
+
+    const offset = (page - 1) * limit;
 
     let query = supabaseAdmin
       .from('file_uploads')
@@ -246,14 +253,15 @@ router.get('/client/:clientId', authenticateToken, async (req, res) => {
       .eq('user_id', clientId)
       .eq('user_type', 'client')
       .eq('is_active', true)
-      .order('uploaded_at', { ascending: false })
-      .range(offset, offset + limit - 1);
+      .order('created_at', { ascending: false });
 
     if (upload_purpose) {
       query = query.eq('upload_purpose', upload_purpose);
     }
 
-    const { data: files, error } = await query;
+    query = query.range(offset, offset + limit - 1);
+
+    const { data: files, error, count } = await query;
 
     if (error) {
       console.error('Error fetching client files:', error);
@@ -261,26 +269,25 @@ router.get('/client/:clientId', authenticateToken, async (req, res) => {
     }
 
     res.json({
-      files: files || [],
-      total: files?.length || 0,
-      offset: parseInt(offset),
-      limit: parseInt(limit)
+      files,
+      pagination: {
+        page: parseInt(page),
+        limit: parseInt(limit),
+        total: count,
+        totalPages: Math.ceil(count / limit)
+      }
     });
   } catch (error) {
-    console.error('List client files error:', error);
-    res.status(500).json({ error: 'Failed to list client files' });
+    console.error('Client files error:', error);
+    res.status(500).json({ error: 'Failed to fetch client files' });
   }
 });
 
 // POST /api/files/consultation/:consultationId/attach - Attach file to consultation
 router.post('/consultation/:consultationId/attach', authenticateToken, async (req, res) => {
   try {
-    if (req.user.role !== 'admin') {
-      return res.status(403).json({ error: 'Admin access required' });
-    }
-
     const { consultationId } = req.params;
-    const { file_upload_id, document_type = 'resume' } = req.body;
+    const { file_upload_id, document_type = 'general' } = req.body;
 
     // Verify consultation exists
     const { data: consultation, error: consultationError } = await supabaseAdmin
@@ -321,11 +328,11 @@ router.post('/consultation/:consultationId/attach', authenticateToken, async (re
     }
 
     res.status(201).json({
-      message: 'File attached to consultation successfully',
-      consultation_document: consultationDoc
+      id: consultationDoc.id,
+      message: 'File attached to consultation successfully'
     });
   } catch (error) {
-    console.error('Attach file error:', error);
+    console.error('Consultation file attach error:', error);
     res.status(500).json({ error: 'Failed to attach file to consultation' });
   }
 });

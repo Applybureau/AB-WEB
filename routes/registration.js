@@ -1,20 +1,42 @@
 const express = require('express');
-const LeadController = require('../controllers/leadController');
-const { upload } = require('../utils/upload');
+const { supabaseAdmin } = require('../utils/supabase');
+const { sendEmail } = require('../utils/email');
 
 const router = express.Router();
 
-// GET /api/register/verify - Verify registration token and get pre-filled email
-router.get('/verify', LeadController.verifyToken);
+// POST /api/register - Public registration endpoint
+router.post('/', async (req, res) => {
+  try {
+    const { email, full_name, phone, token } = req.body;
 
-// POST /api/register/complete - Complete registration with passcode and profile
-// Supports file uploads for profile_pic and resume
-router.post('/complete', 
-  upload.fields([
-    { name: 'profile_pic', maxCount: 1 },
-    { name: 'resume', maxCount: 1 }
-  ]), 
-  LeadController.completeRegistration
-);
+    // Validate registration token if provided
+    if (token) {
+      // Token validation logic here
+    }
+
+    // Create user registration
+    const { data: registration, error } = await supabaseAdmin
+      .from('registrations')
+      .insert({
+        email,
+        full_name,
+        phone,
+        status: 'pending',
+        created_at: new Date().toISOString()
+      })
+      .select()
+      .single();
+
+    if (error) throw error;
+
+    res.status(201).json({ 
+      message: 'Registration submitted successfully',
+      registration 
+    });
+  } catch (error) {
+    console.error('Error processing registration:', error);
+    res.status(500).json({ error: 'Failed to process registration' });
+  }
+});
 
 module.exports = router;

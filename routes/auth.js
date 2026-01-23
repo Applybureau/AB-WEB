@@ -2,7 +2,7 @@ const express = require('express');
 const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
 const { supabaseAdmin } = require('../utils/supabase');
-const { generateToken, authenticateToken } = require('../utils/auth');
+const { generateToken, authenticateToken } = require('../middleware/auth');
 const { sendEmail } = require('../utils/email');
 const { validate, schemas } = require('../utils/validation');
 
@@ -38,7 +38,7 @@ router.post('/invite', authenticateToken, validate(schemas.invite), async (req, 
       .insert({
         email,
         full_name,
-        password: hashedPassword,
+        password_hash: hashedPassword,
         status: 'invited'
       })
       .select()
@@ -89,7 +89,7 @@ router.post('/complete-registration', validate(schemas.completeRegistration), as
 
     // Update client record
     const updateData = { 
-      password: hashedPassword,
+      password_hash: hashedPassword,
       status: 'active'
     };
     
@@ -144,7 +144,7 @@ router.post('/login', validate(schemas.login), async (req, res) => {
     // First check admins table
     const { data: admin, error: adminError } = await supabaseAdmin
       .from('admins')
-      .select('id, email, full_name, password, role, is_active')
+      .select('id, email, full_name, password_hash, role, is_active')
       .eq('email', email)
       .single();
 
@@ -156,7 +156,7 @@ router.post('/login', validate(schemas.login), async (req, res) => {
       // Check clients table (including legacy admin accounts)
       const { data: client, error: clientError } = await supabaseAdmin
         .from('clients')
-        .select('id, email, full_name, password, role')
+        .select('id, email, full_name, password_hash, role')
         .eq('email', email)
         .single();
 
@@ -170,7 +170,7 @@ router.post('/login', validate(schemas.login), async (req, res) => {
     console.log('Database query result:', { 
       found: !!user, 
       userType,
-      hasPassword: !!user?.password 
+      hasPassword: !!user?.password_hash 
     });
 
     if (!user) {
@@ -180,7 +180,7 @@ router.post('/login', validate(schemas.login), async (req, res) => {
 
     // Verify password
     console.log('Comparing passwords...');
-    const validPassword = await bcrypt.compare(password, user.password);
+    const validPassword = await bcrypt.compare(password, user.password_hash);
     console.log('Password valid:', validPassword);
     
     if (!validPassword) {
@@ -320,6 +320,68 @@ router.get('/me', authenticateToken, async (req, res) => {
   } catch (error) {
     console.error('Get user error:', error);
     res.status(500).json({ error: 'Failed to get user info' });
+  }
+});
+
+// PUT /api/auth/change-password - Change own password (requires old password)
+router.put('/change-password', authenticateToken, async (req, res) => {
+  try {
+    const { old_password, new_password } = req.body;
+    const userId = req.user.userId || req.user.id;
+
+    if (!old_password || !new_password) {
+      return res.status(400).json({ error: 'Both old password and new password are required' });
+    }
+
+    if (new_password.length < 6) {
+      return res.status(400).json({ error: 'New password must be at least 6 characters long' });
+    }
+
+    // Get current user details including current password
+    const { data: currentUser } = await supabaseAdmin
+      .from('clients')
+      .select('id, full_name, email, role, password')
+      .eq('id', userId)
+      .single();
+
+    if (!currentUser) {
+      return res.status(404).json({ error: 'User not found' });
+    }
+
+    // Verify old password
+    const isOldPasswordValid = await bcrypt.compare(old_password, currentUser.password);
+    if (!isOldPasswordValid) {
+      return res.status(400).json({ error: 'Current password is incorrect' });
+    }
+
+    // Hash new password
+    const hashedPassword = await bcrypt.hash(new_password, 12);
+
+    // Update password
+    const { error } = await supabaseAdmin
+      .from('clients')
+      .update({ 
+        password: hashedPassword,
+        updated_at: new Date().toISOString()
+      })
+      .eq('id', userId);
+
+    if (error) {
+      console.error('Password update error:', error);
+      return res.status(500).json({ error: 'Failed to change password' });
+    }
+
+    res.json({
+      message: 'Password changed successfully',
+      user: {
+        id: userId,
+        full_name: currentUser.full_name,
+        email: currentUser.email
+      }
+    });
+  } catch (error) {
+    console.error('Change password error:', error);
+    res.status(500).json({ error: 'Failed to change password' });
   }
 });
 

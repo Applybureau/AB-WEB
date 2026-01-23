@@ -25,6 +25,13 @@ class ClientDashboardController {
         return res.status(404).json({ error: 'Client not found' });
       }
 
+      // Get 20 Questions onboarding status
+      const { data: onboarding20q } = await supabaseAdmin
+        .from('client_onboarding_20q')
+        .select('*')
+        .eq('user_id', clientId)
+        .single();
+
       const profileData = {
         ...client,
         consultation_data: consultation || {}
@@ -48,6 +55,9 @@ class ClientDashboardController {
       // Get upcoming events (placeholder for now)
       const upcomingEvents = [];
 
+      // Format 20Q status for dashboard display
+      const twentyQuestionsStatus = this.format20QuestionsStatus(onboarding20q);
+
       res.json({
         client: {
           id: client.id,
@@ -57,10 +67,11 @@ class ClientDashboardController {
           tier: consultation?.package_interest || 'Tier 1'
         },
         profile_completion: completionStatus,
+        twenty_questions: twentyQuestionsStatus,
         application_stats: applicationStats,
         recent_activity: recentActivity,
         upcoming_events: upcomingEvents,
-        quick_actions: this.getQuickActions(completionStatus)
+        quick_actions: this.getQuickActions(completionStatus, twentyQuestionsStatus)
       });
     } catch (error) {
       logger.error('Get dashboard overview error', error, { userId: req.user?.id });
@@ -209,8 +220,35 @@ class ClientDashboardController {
   }
 
   // Helper method to get quick actions based on profile completion
-  static getQuickActions(completionStatus) {
+  static getQuickActions(completionStatus, twentyQuestionsStatus) {
     const actions = [];
+
+    // 20 Questions specific actions
+    if (twentyQuestionsStatus.status === 'not_started') {
+      actions.push({
+        title: 'Complete 20 Questions Assessment',
+        description: 'Start your detailed career profiling questionnaire',
+        action: 'complete_20q',
+        priority: 'high',
+        url: '/client/onboarding-20q'
+      });
+    } else if (twentyQuestionsStatus.status === 'pending_approval') {
+      actions.push({
+        title: '20 Questions Under Review',
+        description: 'Your assessment is being reviewed by our team',
+        action: 'view_20q_status',
+        priority: 'medium',
+        url: '/client/onboarding-20q/status'
+      });
+    } else if (twentyQuestionsStatus.status === 'active') {
+      actions.push({
+        title: '20 Questions Complete',
+        description: 'Your career profile is active and optimized',
+        action: 'view_20q_results',
+        priority: 'low',
+        url: '/client/onboarding-20q/results'
+      });
+    }
 
     if (completionStatus.percentage < 100) {
       actions.push({
@@ -232,7 +270,7 @@ class ClientDashboardController {
       });
     }
 
-    if (completionStatus.is_complete) {
+    if (completionStatus.is_complete && twentyQuestionsStatus.status === 'active') {
       actions.push({
         title: 'Submit Your First Application',
         description: 'Start your job search journey',
@@ -251,6 +289,71 @@ class ClientDashboardController {
     }
 
     return actions;
+  }
+
+  // Helper method to format 20 Questions status for dashboard display
+  static format20QuestionsStatus(onboarding20q) {
+    if (!onboarding20q) {
+      return {
+        status: 'not_started',
+        display_status: 'Not Yet Started',
+        description: 'Complete your 20-question career assessment',
+        color: 'gray',
+        progress: 0,
+        completed_at: null,
+        approved_at: null,
+        can_edit: true
+      };
+    }
+
+    const statusMap = {
+      'pending_approval': {
+        display_status: 'Pending Review',
+        description: 'Your assessment is being reviewed by our career experts',
+        color: 'yellow',
+        progress: 75,
+        can_edit: false
+      },
+      'active': {
+        display_status: 'Active & Approved',
+        description: 'Your career profile is optimized and active',
+        color: 'green',
+        progress: 100,
+        can_edit: true
+      },
+      'paused': {
+        display_status: 'Temporarily Paused',
+        description: 'Your profile is paused - contact support for assistance',
+        color: 'orange',
+        progress: 50,
+        can_edit: false
+      },
+      'completed': {
+        display_status: 'Completed',
+        description: 'Assessment completed successfully',
+        color: 'blue',
+        progress: 100,
+        can_edit: false
+      }
+    };
+
+    const statusInfo = statusMap[onboarding20q.execution_status] || statusMap['pending_approval'];
+
+    return {
+      status: onboarding20q.execution_status,
+      display_status: statusInfo.display_status,
+      description: statusInfo.description,
+      color: statusInfo.color,
+      progress: statusInfo.progress,
+      completed_at: onboarding20q.completed_at,
+      approved_at: onboarding20q.approved_at,
+      approved_by: onboarding20q.approved_by,
+      can_edit: statusInfo.can_edit,
+      target_roles: onboarding20q.target_job_titles || [],
+      target_industries: onboarding20q.target_industries || [],
+      experience_years: onboarding20q.years_of_experience,
+      job_search_timeline: onboarding20q.job_search_timeline
+    };
   }
 }
 

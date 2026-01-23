@@ -1,6 +1,6 @@
 const express = require('express');
 const { supabaseAdmin } = require('../utils/supabase');
-const { authenticateToken, requireClient } = require('../utils/auth');
+const { authenticateToken, requireClient } = require('../middleware/auth');
 
 const router = express.Router();
 
@@ -56,6 +56,9 @@ router.get('/', authenticateToken, requireClient, async (req, res) => {
       ['applied', 'in_review', 'interview_requested', 'interview_completed'].includes(app.status)
     ).length || 0;
 
+    // Format 20 Questions status for dashboard display
+    const twentyQuestionsStatus = format20QuestionsStatus(onboarding);
+
     // Determine overall status and next steps
     let overallStatus = 'onboarding_in_progress';
     let statusMessage = 'Onboarding in progress. Please book your strategy call to begin.';
@@ -82,8 +85,8 @@ router.get('/', authenticateToken, requireClient, async (req, res) => {
       statusMessage = 'Strategy call confirmed. Complete your onboarding questionnaire.';
       nextSteps.push({
         action: 'complete_onboarding',
-        title: 'Complete Onboarding Questionnaire',
-        description: 'Complete after your strategy call.',
+        title: 'Complete 20 Questions Assessment',
+        description: 'Complete your detailed career profiling questionnaire after your strategy call.',
         priority: 1,
         required: true
       });
@@ -93,6 +96,17 @@ router.get('/', authenticateToken, requireClient, async (req, res) => {
     } else if (onboardingApproved) {
       statusMessage = 'Setup complete. Applications are being processed.';
       overallStatus = 'active';
+    }
+
+    // Add 20Q specific step if needed
+    if (twentyQuestionsStatus.status === 'not_started' && hasConfirmedStrategyCall) {
+      nextSteps.push({
+        action: 'complete_20q',
+        title: 'Complete 20 Questions Assessment',
+        description: 'Complete your detailed career profiling questionnaire.',
+        priority: 1,
+        required: true
+      });
     }
 
     // Add optional steps
@@ -146,6 +160,7 @@ router.get('/', authenticateToken, requireClient, async (req, res) => {
           onboardingApproved
         )
       },
+      twenty_questions: twentyQuestionsStatus,
       strategy_call: {
         has_booked: latestStrategyCall !== null,
         has_confirmed: hasConfirmedStrategyCall,
@@ -189,6 +204,71 @@ function calculateProgressPercentage(hasConfirmedStrategyCall, hasCompletedOnboa
   if (onboardingApproved) progress += 34;
   
   return Math.min(progress, 100);
+}
+
+// Helper function to format 20 Questions status for dashboard display
+function format20QuestionsStatus(onboarding20q) {
+  if (!onboarding20q) {
+    return {
+      status: 'not_started',
+      display_status: 'Not Yet Started',
+      description: 'Complete your 20-question career assessment',
+      color: 'gray',
+      progress: 0,
+      completed_at: null,
+      approved_at: null,
+      can_edit: true
+    };
+  }
+
+  const statusMap = {
+    'pending_approval': {
+      display_status: 'Pending Review',
+      description: 'Your assessment is being reviewed by our career experts',
+      color: 'yellow',
+      progress: 75,
+      can_edit: false
+    },
+    'active': {
+      display_status: 'Active & Approved',
+      description: 'Your career profile is optimized and active',
+      color: 'green',
+      progress: 100,
+      can_edit: true
+    },
+    'paused': {
+      display_status: 'Temporarily Paused',
+      description: 'Your profile is paused - contact support for assistance',
+      color: 'orange',
+      progress: 50,
+      can_edit: false
+    },
+    'completed': {
+      display_status: 'Completed',
+      description: 'Assessment completed successfully',
+      color: 'blue',
+      progress: 100,
+      can_edit: false
+    }
+  };
+
+  const statusInfo = statusMap[onboarding20q.execution_status] || statusMap['pending_approval'];
+
+  return {
+    status: onboarding20q.execution_status,
+    display_status: statusInfo.display_status,
+    description: statusInfo.description,
+    color: statusInfo.color,
+    progress: statusInfo.progress,
+    completed_at: onboarding20q.completed_at,
+    approved_at: onboarding20q.approved_at,
+    approved_by: onboarding20q.approved_by,
+    can_edit: statusInfo.can_edit,
+    target_roles: onboarding20q.target_job_titles || [],
+    target_industries: onboarding20q.target_industries || [],
+    experience_years: onboarding20q.years_of_experience,
+    job_search_timeline: onboarding20q.job_search_timeline
+  };
 }
 
 // GET /api/client/dashboard/status - Get simplified status for status bar

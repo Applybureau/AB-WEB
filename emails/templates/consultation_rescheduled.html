@@ -1,0 +1,65 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Consultation Time Adjustment — Apply Bureau</title>
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+            line-height: 1.6;
+            color: #333;
+            max-width: 600px;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: #f9f9f9;
+        }
+        .container {
+            background-color: white;
+            padding: 40px;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        .header {
+            text-align: center;
+            margin-bottom: 30px;
+        }
+        .logo {
+            font-size: 24px;
+            font-weight: bold;
+            color: #2c3e50;
+        }
+        .content {
+            margin-bottom: 30px;
+        }
+        .footer {
+            margin-top: 40px;
+            padding-top: 20px;
+            border-top: 1px solid #eee;
+            color: #666;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <div class="logo">Apply Bureau</div>
+        </div>
+        
+        <div class="content">
+            <p>Hi {{client_name}},</p>
+            
+            <p>We need to adjust your scheduled consultation due to a timing conflict. We apologize for the inconvenience this may cause and appreciate your flexibility.</p>
+            
+            <p><strong>Proposed new time:</strong> Saturday, March 16 at 11:30 AM (EST)</p>
+            
+            <p>Please reply to this email to confirm if this works for you, and we will finalize the consultation.</p>
+        </div>
+        
+        <div class="footer">
+            <p>Best regards,<br>
+            Apply Bureau Client Operations Team</p>
+        </div>
+    </div>
+</body>
+</html>

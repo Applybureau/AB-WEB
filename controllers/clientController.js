@@ -198,7 +198,7 @@ class ClientController {
 
       // Verify current password (unless it's a temporary password)
       if (!client.temporary_password) {
-        const validPassword = await bcrypt.compare(current_password, client.password);
+        const validPassword = await bcrypt.compare(current_password, client.password_hash);
         if (!validPassword) {
           logger.security('invalid_password_change_attempt', { clientId });
           return res.status(400).json({ error: 'Current password is incorrect' });

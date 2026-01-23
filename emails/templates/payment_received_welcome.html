@@ -3,119 +3,77 @@
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Payment Received - Welcome to Apply Bureau</title>
+    <title>Apply Bureau — Payment Confirmed & Next Steps</title>
     <style>
-        body { font-family: Arial, sans-serif; line-height: 1.6; color: #333; margin: 0; padding: 20px; background-color: #f4f4f4; }
-        .container { max-width: 600px; margin: 0 auto; background: white; padding: 30px; border-radius: 10px; box-shadow: 0 0 10px rgba(0,0,0,0.1); }
-        .header { text-align: center; margin-bottom: 30px; }
-        .logo { font-size: 24px; font-weight: bold; color: #2c3e50; margin-bottom: 10px; }
-        .title { color: #27ae60; font-size: 20px; margin-bottom: 20px; }
-        .welcome-banner { background: linear-gradient(135deg, #27ae60, #2ecc71); color: white; padding: 20px; border-radius: 10px; text-align: center; margin-bottom: 25px; }
-        .section { margin-bottom: 25px; }
-        .section h3 { color: #2c3e50; border-bottom: 2px solid #3498db; padding-bottom: 5px; }
-        .info-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; margin: 15px 0; }
-        .info-item { background: #f8f9fa; padding: 10px; border-radius: 5px; }
-        .info-label { font-weight: bold; color: #2c3e50; }
-        .next-steps { background: #e8f5e8; padding: 20px; border-radius: 8px; margin: 20px 0; }
-        .step { background: white; padding: 15px; margin: 10px 0; border-radius: 5px; border-left: 4px solid #3498db; }
-        .step-number { background: #3498db; color: white; width: 25px; height: 25px; border-radius: 50%; display: inline-flex; align-items: center; justify-content: center; margin-right: 10px; font-weight: bold; }
-        .action-button { display: inline-block; background: #27ae60; color: white; padding: 15px 30px; text-decoration: none; border-radius: 5px; margin: 10px 5px; font-weight: bold; }
-        .portal-features { background: #f8f9fa; padding: 20px; border-radius: 8px; margin: 20px 0; }
-        .feature { padding: 8px 0; border-bottom: 1px solid #eee; }
-        .feature:last-child { border-bottom: none; }
-        .footer { text-align: center; margin-top: 30px; padding-top: 20px; border-top: 1px solid #eee; color: #666; }
-        .token-info { background: #fff3cd; border: 1px solid #ffeaa7; padding: 15px; border-radius: 8px; margin: 15px 0; }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+            line-height: 1.6;
+            color: #333;
+            max-width: 600px;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: #f9f9f9;
+        }
+        .container {
+            background-color: white;
+            padding: 40px;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        .header {
+            text-align: center;
+            margin-bottom: 30px;
+        }
+        .logo {
+            font-size: 24px;
+            font-weight: bold;
+            color: #2c3e50;
+        }
+        .content {
+            margin-bottom: 30px;
+        }
+        .dashboard-link {
+            background-color: #007bff;
+            color: white;
+            padding: 12px 24px;
+            text-decoration: none;
+            border-radius: 6px;
+            display: inline-block;
+            margin: 10px 0;
+        }
+        .footer {
+            margin-top: 40px;
+            padding-top: 20px;
+            border-top: 1px solid #eee;
+            color: #666;
+        }
     </style>
 </head>
 <body>
     <div class="container">
         <div class="header">
             <div class="logo">Apply Bureau</div>
-            <div class="title">🎉 Payment Received - Welcome!</div>
         </div>
-
-        <div class="welcome-banner">
-            <h2 style="margin: 0;">Welcome to Apply Bureau, {{client_name}}!</h2>
-            <p style="margin: 10px 0 0 0;">Your payment has been received and your client portal is ready.</p>
+        
+        <div class="content">
+            <p>Hi {{client_name}},</p>
+            
+            <p>Thank you for your payment. We have received it successfully for Tier 2.</p>
+            
+            <p>Your next step is to access your private client dashboard. This is where you will book your strategy call, share required materials, and track progress throughout the process.</p>
+            
+            <p>Please use the link below to create your account and get started:</p>
+            
+            <p><a href="{{registration_link}}" class="dashboard-link">Access your dashboard</a></p>
+            
+            <p>When you access your dashboard, your first step is to book your strategy call. We will guide you through the process from there.</p>
+            
+            <p>We are looking forward to working with you.</p>
         </div>
-
-        <div class="section">
-            <h3>💳 Payment Confirmation</h3>
-            <div class="info-grid">
-                <div class="info-item">
-                    <div class="info-label">Amount:</div>
-                    ${{payment_amount}}
-                </div>
-                <div class="info-item">
-                    <div class="info-label">Method:</div>
-                    {{payment_method}}
-                </div>
-                <div class="info-item">
-                    <div class="info-label">Package:</div>
-                    {{selected_tier}}
-                </div>
-                <div class="info-item">
-                    <div class="info-label">Target Role:</div>
-                    {{role_targets}}
-                </div>
-            </div>
-        </div>
-
-        <div class="section">
-            <h3>🚀 Next Steps</h3>
-            <div class="next-steps">
-                <div class="step">
-                    <span class="step-number">1</span>
-                    <strong>Create Your Account:</strong> Click the registration link below to set up your client portal account.
-                </div>
-                <div class="step">
-                    <span class="step-number">2</span>
-                    <strong>Complete Onboarding:</strong> Fill out your detailed onboarding questionnaire.
-                </div>
-                <div class="step">
-                    <span class="step-number">3</span>
-                    <strong>Upload Documents:</strong> Upload your resume and any additional documents.
-                </div>
-                <div class="step">
-                    <span class="step-number">4</span>
-                    <strong>Schedule Strategy Call:</strong> Book your Strategy & Role Alignment Call.
-                </div>
-            </div>
-        </div>
-
-        <div class="token-info">
-            <strong>⏰ Important:</strong> Your registration link expires in {{token_expires}}. Please complete your registration as soon as possible.
-        </div>
-
-        <div class="section" style="text-align: center;">
-            <a href="{{registration_link}}" class="action-button">
-                🔐 Create Your Account
-            </a>
-        </div>
-
-        <div class="section">
-            <h3>🎯 What's Included in Your Portal</h3>
-            <div class="portal-features">
-                <div class="feature">✅ {{portal_features}}</div>
-            </div>
-        </div>
-
-        <div class="section">
-            <h3>📞 What Happens Next?</h3>
-            <p>{{next_steps}}</p>
-            <p>Once you complete the onboarding process, you'll be able to schedule your Strategy & Role Alignment Call where we'll:</p>
-            <ul>
-                <li>Finalize your resume direction and positioning</li>
-                <li>Develop your role strategy and target companies</li>
-                <li>Set search boundaries and application criteria</li>
-                <li>Kickoff your application execution process</li>
-            </ul>
-        </div>
-
+        
         <div class="footer">
-            <p><strong>Apply Bureau Client Portal</strong></p>
-            <p>Need help? Contact us at support@applybureau.com</p>
-            <p>This email contains your secure registration link. Please do not share it with others.</p>
+            <p>Warm regards,<br>
+            Apply Bureau Onboarding Team</p>
         </div>
     </div>
 </body>

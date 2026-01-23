@@ -1,28 +1,52 @@
 const express = require('express');
-const LeadController = require('../controllers/leadController');
-const { authenticateToken, requireAdmin } = require('../utils/auth');
-const { upload } = require('../utils/upload');
+const { authenticateToken, requireAdmin } = require('../middleware/auth');
+const { supabaseAdmin } = require('../utils/supabase');
 
 const router = express.Router();
 
-// Public routes
-// POST /api/leads - Submit a new lead with optional PDF resume
-router.post('/', upload.single('resume'), LeadController.submitLead);
+// GET /api/leads - Get all leads (Admin only)
+router.get('/', authenticateToken, requireAdmin, async (req, res) => {
+  try {
+    const { data: leads, error } = await supabaseAdmin
+      .from('leads')
+      .select('*')
+      .order('created_at', { ascending: false });
 
-// Admin routes (protected)
-// GET /api/leads - Get all leads with pagination
-router.get('/', authenticateToken, requireAdmin, LeadController.getAllLeads);
+    if (error) throw error;
 
-// GET /api/leads/:id - Get lead details with PDF URL
-router.get('/:id', authenticateToken, requireAdmin, LeadController.getLeadById);
+    res.json({ leads: leads || [] });
+  } catch (error) {
+    console.error('Error fetching leads:', error);
+    res.status(500).json({ error: 'Failed to fetch leads' });
+  }
+});
 
-// PATCH /api/leads/:id/review - Mark lead as under review (triggers Email #1)
-router.patch('/:id/review', authenticateToken, requireAdmin, LeadController.markUnderReview);
+// POST /api/leads - Create new lead
+router.post('/', async (req, res) => {
+  try {
+    const { name, email, phone, source, notes } = req.body;
 
-// PATCH /api/leads/:id/approve - Approve lead (triggers Email #2 with registration link)
-router.patch('/:id/approve', authenticateToken, requireAdmin, LeadController.approveLead);
+    const { data: lead, error } = await supabaseAdmin
+      .from('leads')
+      .insert({
+        name,
+        email,
+        phone,
+        source,
+        notes,
+        status: 'new',
+        created_at: new Date().toISOString()
+      })
+      .select()
+      .single();
 
-// PATCH /api/leads/:id/reject - Reject a lead
-router.patch('/:id/reject', authenticateToken, requireAdmin, LeadController.rejectLead);
+    if (error) throw error;
+
+    res.status(201).json({ lead });
+  } catch (error) {
+    console.error('Error creating lead:', error);
+    res.status(500).json({ error: 'Failed to create lead' });
+  }
+});
 
 module.exports = router;

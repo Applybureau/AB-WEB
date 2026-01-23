@@ -1,5 +1,5 @@
 const express = require('express');
-const { authenticateToken, requireAdmin } = require('../utils/auth');
+const { authenticateToken, requireAdmin } = require('../middleware/auth');
 const { supabaseAdmin } = require('../utils/supabase');
 
 const router = express.Router();
