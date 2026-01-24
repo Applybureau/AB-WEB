@@ -4,7 +4,7 @@ const cors = require('cors');
 const helmet = require('helmet');
 const morgan = require('morgan');
 const compression = require('compression');
-const rateLimit = require('express-rate-limit');
+// Rate limiting removed for 24/7 operation
 const bodyParser = require('body-parser');
 
 // Import advanced utilities
@@ -103,18 +103,8 @@ app.use(helmet({
 }));
 app.use(compression());
 
-// Zero-Trust Rate Limiting Configuration
-const { authRateLimit, onboardingRateLimit, generalRateLimit, createZeroTrustRateLimit } = require('./middleware/auth');
-
-// Apply specific rate limits for different endpoint types
-app.use('/api/auth/login', authRateLimit);
-app.use('/api/auth/register', authRateLimit);
-app.use('/api/auth/invite', createZeroTrustRateLimit(60 * 60 * 1000, 10, 'Too many invitations sent'));
-app.use('/api/client/onboarding-20q', onboardingRateLimit);
-app.use('/api/onboarding-workflow', onboardingRateLimit);
-app.use('/api/onboarding', onboardingRateLimit); // Secure onboarding endpoint
-app.use('/api/upload', createZeroTrustRateLimit(60 * 60 * 1000, 20, 'Too many file uploads'));
-app.use('/api/', generalRateLimit);
+// Rate limiting disabled for 24/7 uninterrupted operation
+// const { authRateLimit, onboardingRateLimit, generalRateLimit, createZeroTrustRateLimit } = require('./middleware/auth');
 
 // Enhanced CORS configuration for Zero-Trust architecture
 const corsOptions = {

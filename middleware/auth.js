@@ -84,47 +84,12 @@ const requireClient = (req, res, next) => {
   next();
 };
 
-// Enhanced rate limiting for Zero-Trust architecture
-const createZeroTrustRateLimit = (windowMs, max, message, skipSuccessfulRequests = false) => {
-  return require('express-rate-limit')({
-    windowMs,
-    max,
-    message: { error: message, retryAfter: Math.ceil(windowMs / 1000) },
-    standardHeaders: true,
-    legacyHeaders: false,
-    skipSuccessfulRequests,
-    keyGenerator: (req) => {
-      // Use user ID if authenticated, otherwise IP
-      return req.user?.id || req.ip;
-    },
-    handler: (req, res) => {
-      const identifier = req.user?.id || req.ip;
-      logger.security('rate_limit_exceeded', { 
-        identifier, 
-        endpoint: req.path, 
-        userAgent: req.get('User-Agent'),
-        userId: req.user?.id 
-      });
-      res.status(429).json({ 
-        error: message, 
-        retryAfter: Math.ceil(windowMs / 1000) 
-      });
-    }
-  });
-};
-
-// Specific rate limiters for different endpoint types
-const authRateLimit = createZeroTrustRateLimit(15 * 60 * 1000, 5, 'Too many authentication attempts');
-const onboardingRateLimit = createZeroTrustRateLimit(60 * 60 * 1000, 3, 'Too many onboarding submissions');
-const generalRateLimit = createZeroTrustRateLimit(15 * 60 * 1000, 100, 'Too many requests');
+// Rate limiting removed for 24/7 uninterrupted operation
+// Enhanced rate limiting functions disabled
 
 module.exports = {
   generateToken,
   authenticateToken,
   requireAdmin,
-  requireClient,
-  authRateLimit,
-  onboardingRateLimit,
-  generalRateLimit,
-  createZeroTrustRateLimit
+  requireClient
 };

@@ -9,11 +9,11 @@ const axios = require('axios');
 const FormData = require('form-data');
 
 // Production configuration
-const BASE_URL = 'https://apply-bureau-backend.vercel.app';
+const BASE_URL = 'https://jellyfish-app-t4m35.ondigitalocean.app';
 const TEST_EMAIL = 'test@example.com';
 const TEST_PASSWORD = 'TestPassword123!';
-const ADMIN_EMAIL = 'admin@example.com';
-const ADMIN_PASSWORD = 'AdminPassword123!';
+const ADMIN_EMAIL = 'admin@applybureau.com';
+const ADMIN_PASSWORD = 'Admin123@#';
 
 // Test state
 let testResults = {
