@@ -160,7 +160,7 @@ const testAdminEndpoints = async () => {
   }
 
   await test('Admin Dashboard Access', async () => {
-    const response = await makeRequest('GET', '/api/admin/dashboard', null, {
+    const response = await makeRequest('GET', '/api/admin-dashboard', null, {
       'Authorization': `Bearer ${authTokens.admin}`
     });
     
