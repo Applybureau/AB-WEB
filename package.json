@@ -1,25 +1,28 @@
 {
-  "name": "apply-bureau-backend-root",
+  "name": "apply-bureau-monorepo",
   "version": "1.0.0",
-  "description": "Apply Bureau Backend - Root deployment configuration",
-  "main": "server.js",
+  "description": "Apply Bureau Full Stack Application",
+  "private": true,
   "scripts": {
     "start": "cd backend && npm start",
-    "dev": "cd backend && npm run dev",
     "build": "cd backend && npm install",
     "install-backend": "cd backend && npm install",
-    "postinstall": "npm run install-backend"
+    "dev": "cd backend && npm run dev",
+    "test": "cd backend && npm test",
+    "deploy": "cd backend && npm run deploy-production"
   },
-  "dependencies": {},
+  "workspaces": [
+    "backend"
+  ],
   "engines": {
     "node": ">=20.0.0",
     "npm": ">=9.0.0"
   },
   "keywords": [
-    "express",
+    "apply-bureau",
     "backend",
-    "api",
-    "digitalocean"
+    "frontend",
+    "monorepo"
   ],
   "author": "Apply Bureau",
   "license": "MIT"
