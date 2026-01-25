@@ -106,61 +106,36 @@ app.use(compression());
 // Rate limiting disabled for 24/7 uninterrupted operation
 // const { authRateLimit, onboardingRateLimit, generalRateLimit, createZeroTrustRateLimit } = require('./middleware/auth');
 
-// Permissive CORS configuration for 24/7 operation
-const corsOptions = {
-  origin: true, // Allow all origins for 24/7 uninterrupted operation
-  credentials: true,
-  methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
-  allowedHeaders: [
-    'Content-Type', 
-    'Authorization', 
-    'X-Requested-With', 
-    'Accept', 
-    'Origin',
-    'Access-Control-Allow-Origin',
-    'Access-Control-Allow-Headers',
-    'Access-Control-Allow-Methods',
-    'Access-Control-Allow-Credentials'
-  ],
-  exposedHeaders: [
-    'Content-Type', 
-    'Authorization', 
-    'X-Total-Count', 
-    'X-Page', 
-    'X-Per-Page',
-    'Access-Control-Allow-Origin',
-    'Access-Control-Allow-Credentials'
-  ],
-  optionsSuccessStatus: 200,
-  preflightContinue: false
-};
+// Ultra-permissive CORS configuration for 24/7 operation - Allow everything
 
-app.use(cors(corsOptions));
-
-// Permissive CORS headers middleware for 24/7 operation
+// Ultra-permissive CORS configuration for 24/7 operation - Allow everything
 app.use((req, res, next) => {
-  const origin = req.headers.origin;
-  
-  // Allow all origins for 24/7 uninterrupted operation
-  if (origin) {
-    res.header('Access-Control-Allow-Origin', origin);
-  } else {
-    res.header('Access-Control-Allow-Origin', '*');
-  }
-  
+  // Set permissive CORS headers for all requests
+  res.header('Access-Control-Allow-Origin', '*');
   res.header('Access-Control-Allow-Credentials', 'true');
-  res.header('Access-Control-Allow-Methods', 'GET, POST, PUT, PATCH, DELETE, OPTIONS, HEAD');
-  res.header('Access-Control-Allow-Headers', 'Content-Type, Authorization, X-Requested-With, Accept, Origin, Access-Control-Allow-Origin, Access-Control-Allow-Headers, Access-Control-Allow-Methods, Access-Control-Allow-Credentials');
-  res.header('Access-Control-Expose-Headers', 'Content-Type, Authorization, X-Total-Count, X-Page, X-Per-Page, Access-Control-Allow-Origin, Access-Control-Allow-Credentials');
+  res.header('Access-Control-Allow-Methods', '*');
+  res.header('Access-Control-Allow-Headers', '*');
+  res.header('Access-Control-Expose-Headers', '*');
+  res.header('Access-Control-Max-Age', '86400'); // 24 hours
   
-  // Handle preflight requests
+  // Handle preflight requests immediately
   if (req.method === 'OPTIONS') {
-    logger.info('Preflight request received and allowed', { origin });
+    logger.info('Preflight request handled', { origin: req.headers.origin });
     return res.status(200).end();
   }
   
   next();
 });
+
+app.use(cors({
+  origin: '*',
+  credentials: true,
+  methods: '*',
+  allowedHeaders: '*',
+  exposedHeaders: '*',
+  optionsSuccessStatus: 200,
+  preflightContinue: false
+}));
 
 
 // Body parsing middleware
