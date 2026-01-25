@@ -1,0 +1,26 @@
+{
+  "name": "apply-bureau-backend-root",
+  "version": "1.0.0",
+  "description": "Apply Bureau Backend - Root deployment configuration",
+  "main": "server.js",
+  "scripts": {
+    "start": "cd backend && npm start",
+    "dev": "cd backend && npm run dev",
+    "build": "cd backend && npm install",
+    "install-backend": "cd backend && npm install",
+    "postinstall": "npm run install-backend"
+  },
+  "dependencies": {},
+  "engines": {
+    "node": ">=20.0.0",
+    "npm": ">=9.0.0"
+  },
+  "keywords": [
+    "express",
+    "backend",
+    "api",
+    "digitalocean"
+  ],
+  "author": "Apply Bureau",
+  "license": "MIT"
+}
