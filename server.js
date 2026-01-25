@@ -106,45 +106,9 @@ app.use(compression());
 // Rate limiting disabled for 24/7 uninterrupted operation
 // const { authRateLimit, onboardingRateLimit, generalRateLimit, createZeroTrustRateLimit } = require('./middleware/auth');
 
-// Enhanced CORS configuration for Zero-Trust architecture
+// Permissive CORS configuration for 24/7 operation
 const corsOptions = {
-  origin: function (origin, callback) {
-    // Production-only allowed origins for Zero-Trust
-    const allowedOrigins = process.env.NODE_ENV === 'production' 
-      ? [
-          process.env.FRONTEND_URL,
-          'https://apply-bureau.vercel.app',
-          'https://applybureau.com',
-          'https://www.applybureau.com'
-        ].filter(Boolean)
-      : [
-          process.env.FRONTEND_URL,
-          'https://apply-bureau.vercel.app',
-          'https://apply-bureau-frontend.vercel.app',
-          'https://applybureau.com',
-          'https://www.applybureau.com',
-          'http://localhost:3000',
-          'http://localhost:3001',
-          'http://localhost:5173',
-          'http://localhost:5174',
-          'http://127.0.0.1:3000',
-          'http://127.0.0.1:5173'
-        ].filter(Boolean);
-    
-    // Allow requests with no origin (mobile apps, server-to-server)
-    if (!origin) return callback(null, true);
-    
-    // Strict origin checking for Zero-Trust
-    if (allowedOrigins.includes(origin)) {
-      callback(null, true);
-    } else {
-      logger.security('cors_blocked', { 
-        origin, 
-        allowedOrigins
-      });
-      callback(new Error('Not allowed by CORS'), false);
-    }
-  },
+  origin: true, // Allow all origins for 24/7 uninterrupted operation
   credentials: true,
   methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
   allowedHeaders: [
@@ -152,14 +116,20 @@ const corsOptions = {
     'Authorization', 
     'X-Requested-With', 
     'Accept', 
-    'Origin'
+    'Origin',
+    'Access-Control-Allow-Origin',
+    'Access-Control-Allow-Headers',
+    'Access-Control-Allow-Methods',
+    'Access-Control-Allow-Credentials'
   ],
   exposedHeaders: [
     'Content-Type', 
     'Authorization', 
     'X-Total-Count', 
     'X-Page', 
-    'X-Per-Page'
+    'X-Per-Page',
+    'Access-Control-Allow-Origin',
+    'Access-Control-Allow-Credentials'
   ],
   optionsSuccessStatus: 200,
   preflightContinue: false
@@ -167,11 +137,11 @@ const corsOptions = {
 
 app.use(cors(corsOptions));
 
-// Enhanced CORS headers middleware
+// Permissive CORS headers middleware for 24/7 operation
 app.use((req, res, next) => {
   const origin = req.headers.origin;
   
-  // Set CORS headers
+  // Allow all origins for 24/7 uninterrupted operation
   if (origin) {
     res.header('Access-Control-Allow-Origin', origin);
   } else {
@@ -185,7 +155,7 @@ app.use((req, res, next) => {
   
   // Handle preflight requests
   if (req.method === 'OPTIONS') {
-    logger.info('Preflight request received', { origin });
+    logger.info('Preflight request received and allowed', { origin });
     return res.status(200).end();
   }
   
@@ -409,15 +379,6 @@ app.use((err, req, res, next) => {
     body: req.body,
     query: req.query
   });
-  
-  // Handle CORS errors
-  if (err.message === 'Not allowed by CORS') {
-    return res.status(403).json({ 
-      error: 'CORS policy violation',
-      message: 'Origin not allowed',
-      errorId
-    });
-  }
   
   // Handle validation errors
   if (err.name === 'ValidationError') {
