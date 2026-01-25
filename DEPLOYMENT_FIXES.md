@@ -10,7 +10,7 @@
 ### 2. **Email System Fixes**
 - ✅ Fixed email parameter order in `authController.js`
 - ✅ Fixed email parameter order in `contact.js` route
-- ✅ Set correct "from" email address: `hello@applybureau.com`
+- ✅ Set correct "from" email address: `admin@applybureau.com`
 - ✅ Added application update email functionality with reply-to
 - ✅ Made logo loading deployment-friendly with multiple fallback paths
 
@@ -55,7 +55,7 @@ The app is configured to:
 ## Email System
 
 Now properly configured with:
-- From: `Apply Bureau <hello@applybureau.com>`
+- From: `Apply Bureau <admin@applybureau.com>`
 - Reply-to functionality for application updates
 - Proper template parameter passing
 - Fallback logo loading for deployment environments
