@@ -85,26 +85,17 @@ async function sendAdminActionEmail(targetEmail, action, details) {
           contact_email: SUPER_ADMIN_EMAIL
         }
       },
-      'account_deleted': {
-        subject: 'Account Deleted - Apply Bureau',
-        template: 'admin_account_deleted',
-        data: {
-          admin_name: details.admin_name,
-          deleted_by: details.deleted_by,
-          reason: details.reason || 'Administrative action',
-          contact_email: SUPER_ADMIN_EMAIL
-        }
-      },
       'password_reset': {
         subject: 'Password Reset - Apply Bureau',
         template: 'admin_password_reset',
         data: {
           admin_name: details.admin_name,
-          new_password: details.new_password,
           reset_by: details.reset_by,
-          login_url: `${process.env.FRONTEND_URL}/admin/login`
+          new_password: details.new_password,
+          login_url: details.login_url,
+          contact_email: SUPER_ADMIN_EMAIL
         }
-      }
+      },
     };
 
     const emailConfig = emailTemplates[action];
@@ -664,6 +655,196 @@ router.get('/settings', authenticateToken, requireAdmin, async (req, res) => {
   } catch (error) {
     console.error('Get settings error:', error);
     res.status(500).json({ error: 'Failed to get settings' });
+  }
+});
+
+// POST /api/admin-management/reset-password - Reset admin password (super admin only)
+router.post('/reset-password', authenticateToken, requireAdmin, async (req, res) => {
+  try {
+    const currentAdminId = req.user.id;
+    const { admin_email, new_password, send_email = true } = req.body;
+
+    // Check if current user is super admin
+    const isSuper = await isSuperAdmin(currentAdminId);
+    if (!isSuper) {
+      return res.status(403).json({ error: 'Only super admin can reset passwords' });
+    }
+
+    // Validate input
+    if (!admin_email || !new_password) {
+      return res.status(400).json({ error: 'Admin email and new password are required' });
+    }
+
+    // Validate password strength
+    if (new_password.length < 8) {
+      return res.status(400).json({ error: 'Password must be at least 8 characters long' });
+    }
+
+    // Find admin in both tables
+    let targetAdmin = null;
+    let adminTable = null;
+
+    // Check admins table first
+    const { data: adminFromAdminsTable } = await supabaseAdmin
+      .from('admins')
+      .select('*')
+      .eq('email', admin_email)
+      .single();
+
+    if (adminFromAdminsTable) {
+      targetAdmin = adminFromAdminsTable;
+      adminTable = 'admins';
+    } else {
+      // Check clients table (legacy admin system)
+      const { data: adminFromClientsTable } = await supabaseAdmin
+        .from('clients')
+        .select('*')
+        .eq('email', admin_email)
+        .eq('role', 'admin')
+        .single();
+
+      if (adminFromClientsTable) {
+        targetAdmin = adminFromClientsTable;
+        adminTable = 'clients';
+      }
+    }
+
+    if (!targetAdmin) {
+      return res.status(404).json({ error: 'Admin not found' });
+    }
+
+    // Prevent super admin from resetting their own password through this endpoint
+    if (targetAdmin.email === SUPER_ADMIN_EMAIL && targetAdmin.id === currentAdminId) {
+      return res.status(400).json({ error: 'Use change-password endpoint to change your own password' });
+    }
+
+    // Hash the new password
+    const bcrypt = require('bcrypt');
+    const hashedPassword = await bcrypt.hash(new_password, 12);
+
+    // Update password in the appropriate table
+    const { error: updateError } = await supabaseAdmin
+      .from(adminTable)
+      .update({
+        password: hashedPassword,
+        updated_at: new Date().toISOString()
+      })
+      .eq('email', admin_email);
+
+    if (updateError) {
+      console.error('Error updating admin password:', updateError);
+      return res.status(500).json({ error: 'Failed to reset password' });
+    }
+
+    // Send password reset notification email if requested
+    if (send_email) {
+      try {
+        await sendAdminActionEmail(admin_email, 'password_reset', {
+          admin_name: targetAdmin.full_name,
+          reset_by: req.user.email,
+          new_password: new_password, // Include new password in email
+          login_url: `${process.env.FRONTEND_URL}/admin/login`
+        });
+      } catch (emailError) {
+        console.error('Failed to send password reset email:', emailError);
+        // Don't fail the password reset if email fails
+      }
+    }
+
+    console.log(`Password reset for admin ${admin_email} by super admin ${req.user.email}`);
+
+    res.json({
+      message: 'Password reset successfully',
+      admin_email: admin_email,
+      email_sent: send_email
+    });
+  } catch (error) {
+    console.error('Reset password error:', error);
+    res.status(500).json({ error: 'Failed to reset password' });
+  }
+});
+
+// POST /api/admin-management/change-password - Change own password
+router.post('/change-password', authenticateToken, requireAdmin, async (req, res) => {
+  try {
+    const adminId = req.user.id;
+    const { current_password, new_password } = req.body;
+
+    // Validate input
+    if (!current_password || !new_password) {
+      return res.status(400).json({ error: 'Current password and new password are required' });
+    }
+
+    // Validate new password strength
+    if (new_password.length < 8) {
+      return res.status(400).json({ error: 'New password must be at least 8 characters long' });
+    }
+
+    // Find admin in both tables
+    let targetAdmin = null;
+    let adminTable = null;
+
+    // Check admins table first
+    const { data: adminFromAdminsTable } = await supabaseAdmin
+      .from('admins')
+      .select('*')
+      .eq('id', adminId)
+      .single();
+
+    if (adminFromAdminsTable) {
+      targetAdmin = adminFromAdminsTable;
+      adminTable = 'admins';
+    } else {
+      // Check clients table (legacy admin system)
+      const { data: adminFromClientsTable } = await supabaseAdmin
+        .from('clients')
+        .select('*')
+        .eq('id', adminId)
+        .single();
+
+      if (adminFromClientsTable) {
+        targetAdmin = adminFromClientsTable;
+        adminTable = 'clients';
+      }
+    }
+
+    if (!targetAdmin) {
+      return res.status(404).json({ error: 'Admin not found' });
+    }
+
+    // Verify current password
+    const bcrypt = require('bcrypt');
+    const isCurrentPasswordValid = await bcrypt.compare(current_password, targetAdmin.password);
+    
+    if (!isCurrentPasswordValid) {
+      return res.status(400).json({ error: 'Current password is incorrect' });
+    }
+
+    // Hash the new password
+    const hashedPassword = await bcrypt.hash(new_password, 12);
+
+    // Update password
+    const { error: updateError } = await supabaseAdmin
+      .from(adminTable)
+      .update({
+        password: hashedPassword,
+        updated_at: new Date().toISOString()
+      })
+      .eq('id', adminId);
+
+    if (updateError) {
+      console.error('Error changing admin password:', updateError);
+      return res.status(500).json({ error: 'Failed to change password' });
+    }
+
+    console.log(`Password changed for admin ${targetAdmin.email}`);
+
+    res.json({
+      message: 'Password changed successfully'
+    });
+  } catch (error) {
+    console.error('Change password error:', error);
+    res.status(500).json({ error: 'Failed to change password' });
   }
 });
 

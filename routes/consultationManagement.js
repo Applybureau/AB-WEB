@@ -181,7 +181,10 @@ router.patch('/:id', authenticateToken, requireAdmin, async (req, res) => {
         case 'awaiting_new_times':
           await sendEmail(clientEmail, 'consultation_reschedule_request', {
             client_name: clientName,
-            admin_message: admin_message || 'Please provide new availability for your consultation.',
+            admin_message: admin_message || 'We need to reschedule your consultation. Please provide new availability that works for you.',
+            reason: req.body.reason || 'Schedule conflict',
+            new_proposed_times: req.body.new_proposed_times,
+            new_date_time: req.body.new_date_time,
             reschedule_link: buildUrl(`/consultation/reschedule/${id}`),
             current_year: new Date().getFullYear()
           });
@@ -385,9 +388,12 @@ router.post('/:id/request-new-times', authenticateToken, requireAdmin, async (re
     try {
       await sendEmail(clientEmail, 'consultation_reschedule_request', {
         client_name: clientName,
-        admin_message: admin_message || 'Unfortunately, none of your selected times work for our schedule. Please provide new availability.',
+        admin_message: admin_message || 'We need to reschedule your consultation. Please provide new availability that works for you.',
         reason: reason || 'Schedule conflict',
-        reschedule_link: buildUrl(`/consultation/reschedule/${id}`)
+        new_proposed_times: req.body.new_proposed_times,
+        new_date_time: req.body.new_date_time,
+        reschedule_link: buildUrl(`/consultation/reschedule/${id}`),
+        current_year: new Date().getFullYear()
       });
     } catch (emailError) {
       console.error('Failed to send reschedule request email:', emailError);

@@ -67,15 +67,41 @@ const getEmailTemplate = async (templateName) => {
 const replaceTemplateVariables = (template, variables) => {
   let result = template;
   
-  // Handle Handlebars-style conditionals
+  // Handle Handlebars-style conditionals with else
+  result = result.replace(/\{\{#if\s+(\w+)\}\}([\s\S]*?)\{\{else\}\}([\s\S]*?)\{\{\/if\}\}/g, (match, condition, ifContent, elseContent) => {
+    const value = variables[condition];
+    const shouldShow = value && value !== '' && value !== null && value !== undefined;
+    return shouldShow ? ifContent : elseContent;
+  });
+  
+  // Handle Handlebars-style conditionals without else
   result = result.replace(/\{\{#if\s+(\w+)\}\}([\s\S]*?)\{\{\/if\}\}/g, (match, condition, content) => {
-    return variables[condition] ? content : '';
+    const value = variables[condition];
+    // Check if value exists and is not empty string
+    const shouldShow = value && value !== '' && value !== null && value !== undefined;
+    return shouldShow ? content : '';
   });
   
   // Handle regular variable replacements
   Object.keys(variables).forEach(key => {
     const regex = new RegExp(`\\{\\{${key}\\}\\}`, 'g');
-    result = result.replace(regex, variables[key] || '');
+    let value = variables[key];
+    
+    // Handle object serialization properly
+    if (typeof value === 'object' && value !== null) {
+      if (Array.isArray(value)) {
+        value = value.join(', ');
+      } else {
+        value = JSON.stringify(value, null, 2);
+      }
+    }
+    
+    // Convert undefined/null to empty string
+    if (value === undefined || value === null) {
+      value = '';
+    }
+    
+    result = result.replace(regex, value);
   });
   
   return result;
