@@ -12,7 +12,7 @@ The Apply Bureau backend provides secure authentication for both administrators 
 
 ### Admin Credentials
 ```
-Email: admin@applybureau.com
+Email: applybureau@gmail.com
 Password: Admin123@#
 ```
 
@@ -30,7 +30,7 @@ Password: Admin123@#
 **Request Body:**
 ```json
 {
-  "email": "admin@applybureau.com",
+  "email": "applybureau@gmail.com",
   "password": "Admin123@#"
 }
 ```
@@ -42,7 +42,7 @@ Password: Admin123@#
   "token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...",
   "user": {
     "id": "f25f8ce9-3673-41f1-9235-72488531d5ec",
-    "email": "admin@applybureau.com",
+    "email": "applybureau@gmail.com",
     "full_name": "Super Admin",
     "role": "admin",
     "is_super_admin": true,
@@ -77,10 +77,10 @@ Password: Admin123@#
   "admin": {
     "id": "f25f8ce9-3673-41f1-9235-72488531d5ec",
     "full_name": "Super Admin",
-    "email": "admin@applybureau.com",
+    "email": "applybureau@gmail.com",
     "role": "admin",
     "permissions": {...}
-  },
+  },the frontend is 
   "dashboard_type": "admin",
   "stats": {
     "clients": {

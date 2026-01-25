@@ -9,7 +9,7 @@ const axios = require('axios');
 
 // Configuration
 const BASE_URL = process.env.TEST_BASE_URL || 'https://apply-bureau-backend.vercel.app';
-const SUPER_ADMIN_EMAIL = 'admin@applybureau.com';
+const SUPER_ADMIN_EMAIL = 'applybureau@gmail.com';
 const SUPER_ADMIN_PASSWORD = 'Admin123@#';
 
 // Test state

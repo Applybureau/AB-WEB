@@ -9,7 +9,7 @@ const testApiLogin = async () => {
   
   try {
     const response = await axios.post(`${BASE_URL}/api/auth/login`, {
-      email: 'admin@applybureau.com',
+      email: 'applybureau@gmail.com',
       password: 'Admin123@#'
     }, {
       headers: { 'Content-Type': 'application/json' },

@@ -10,7 +10,7 @@ const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
 const { supabaseAdmin } = require('../utils/supabase');
 
-const ADMIN_EMAIL = 'admin@applybureau.com';
+const ADMIN_EMAIL = 'applybureau@gmail.com';
 const ADMIN_PASSWORD = 'Admin123@#';
 
 const testLocalAuth = async () => {

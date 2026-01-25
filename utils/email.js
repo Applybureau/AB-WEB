@@ -25,12 +25,31 @@ const loadLogoBase64 = async () => {
   if (LOGO_BASE64) return LOGO_BASE64;
   
   try {
-    const logoPath = path.join(__dirname, '..', '..', 'logo.png');
-    const logoBuffer = await fs.readFile(logoPath);
-    LOGO_BASE64 = logoBuffer.toString('base64');
-    return LOGO_BASE64;
+    // Try multiple possible logo locations for deployment flexibility
+    const possiblePaths = [
+      path.join(__dirname, '..', '..', 'logo.png'),
+      path.join(__dirname, '..', 'assets', 'logo.png'),
+      path.join(process.cwd(), 'logo.png'),
+      path.join(process.cwd(), 'backend', 'assets', 'logo.png')
+    ];
+    
+    for (const logoPath of possiblePaths) {
+      try {
+        const logoBuffer = await fs.readFile(logoPath);
+        LOGO_BASE64 = logoBuffer.toString('base64');
+        console.log(`Logo loaded successfully from: ${logoPath}`);
+        return LOGO_BASE64;
+      } catch (pathError) {
+        // Continue to next path
+        continue;
+      }
+    }
+    
+    // If no logo found, log warning but don't fail
+    console.warn('Could not load logo.png from any location, using external URL fallback');
+    return null;
   } catch (error) {
-    console.warn('Could not load logo.png for Base64 encoding, using external URL fallback');
+    console.warn('Logo loading error:', error.message);
     return null;
   }
 };
@@ -90,7 +109,7 @@ const createSecureEmailContent = async (templateName, variables, userId) => {
     // Default secure variables
     const defaultVariables = {
       dashboard_link: buildUrl('/dashboard'),
-      support_email: 'support@applybureau.com',
+      support_email: 'applybureau@gmail.com',
       company_name: 'Apply Bureau',
       current_year: new Date().getFullYear(),
       logo_base64: logoBase64,
@@ -131,7 +150,7 @@ const createSecureEmailContent = async (templateName, variables, userId) => {
   }
 };
 
-const sendEmail = async (to, subject, templateName, variables = {}) => {
+const sendEmail = async (to, templateName, variables = {}) => {
   try {
     // Extract user ID for security features
     const userId = variables.user_id || variables.client_id || 'unknown';
@@ -141,13 +160,11 @@ const sendEmail = async (to, subject, templateName, variables = {}) => {
 
     // Extract subject from template or use provided subject
     const subjectMatch = htmlContent.match(/<!-- SUBJECT: (.*?) -->/);
-    const finalSubject = subject || 
+    const finalSubject = variables.subject || 
                         (subjectMatch ? subjectMatch[1] : `Notification from Apply Bureau`);
 
-    // Use verified domain or default Resend domain for testing
-    const fromEmail = process.env.VERIFIED_EMAIL_DOMAIN 
-      ? `Apply Bureau <noreply@${process.env.VERIFIED_EMAIL_DOMAIN}>`
-      : 'Apply Bureau <onboarding@resend.dev>'; // Default Resend domain for testing
+    // Use the verified domain for production emails
+    const fromEmail = 'Apply Bureau <admin@applybureau.com>';
 
     // Only redirect emails in explicit testing mode
     const isExplicitTestMode = process.env.EMAIL_TESTING_MODE === 'true';
@@ -168,11 +185,13 @@ const sendEmail = async (to, subject, templateName, variables = {}) => {
         </div>
       `;
       
-      // Add testing notice to email content
-      htmlContent = htmlContent.replace(
-        '{{main_content}}', 
-        testingNotice + (variables.main_content || variables.message || '')
-      );
+      // Add testing notice to email content if main_content placeholder exists
+      if (htmlContent.includes('{{main_content}}')) {
+        htmlContent = htmlContent.replace(
+          '{{main_content}}', 
+          testingNotice + (variables.main_content || variables.message || '')
+        );
+      }
     } else {
       console.log(`📧 Sending email to intended recipient: ${to}`);
     }
@@ -185,13 +204,9 @@ const sendEmail = async (to, subject, templateName, variables = {}) => {
       to: [actualRecipient],
       subject: finalSubject,
       html: htmlContent,
-      headers: headers
+      headers: headers,
+      reply_to: variables.reply_to || 'applybureau@gmail.com' // Default reply-to
     };
-
-    // Add reply-to if specified
-    if (variables.reply_to) {
-      emailData.reply_to = variables.reply_to;
-    }
 
     const { data, error } = await resend.emails.send(emailData);
 
@@ -203,7 +218,7 @@ const sendEmail = async (to, subject, templateName, variables = {}) => {
     console.log('✅ Email sent successfully:', {
       id: data.id,
       to: actualRecipient,
-      subject: subject,
+      subject: finalSubject,
       template: templateName
     });
     
@@ -226,9 +241,61 @@ const sendSimpleEmail = async (to, subject, message, userId = 'unknown') => {
   return sendEmail(to, '_secure_base_template', variables);
 };
 
+// Send application update email with reply-to functionality
+const sendApplicationUpdateEmail = async (clientEmail, applicationData, options = {}) => {
+  try {
+    const {
+      client_name,
+      company_name,
+      position_title,
+      application_status,
+      message,
+      next_steps,
+      consultant_email = 'applybureau@gmail.com', // Default consultant email for replies
+      user_id
+    } = applicationData;
+
+    // Determine subject based on status or use custom
+    let subject = options.subject || 'Updates on your Application';
+    
+    if (application_status) {
+      const statusSubjects = {
+        'review': 'Your Application is Under Review',
+        'interview': 'Interview Scheduled - Application Update',
+        'offer': '🎉 Great News About Your Application!',
+        'rejected': 'Application Status Update',
+        'withdrawn': 'Application Withdrawal Confirmed'
+      };
+      subject = statusSubjects[application_status] || subject;
+    }
+
+    const variables = {
+      subject,
+      client_name,
+      company_name,
+      position_title,
+      application_status,
+      message: message || 'Your application is being reviewed and we will keep you updated on any progress.',
+      next_steps,
+      dashboard_url: buildUrl('/dashboard'),
+      user_id: user_id || 'unknown',
+      reply_to: consultant_email, // This enables the reply-to functionality
+      current_year: new Date().getFullYear()
+    };
+
+    console.log(`📧 Sending application update email to ${clientEmail} with reply-to: ${consultant_email}`);
+    
+    return await sendEmail(clientEmail, 'application_update', variables);
+  } catch (error) {
+    console.error('❌ Failed to send application update email:', error);
+    throw error;
+  }
+};
+
 module.exports = {
   sendEmail,
   sendSimpleEmail,
+  sendApplicationUpdateEmail,
   getEmailTemplate,
   replaceTemplateVariables,
   loadLogoBase64,

@@ -3,7 +3,7 @@ const { authenticateToken, requireAdmin, requireClient } = require('../middlewar
 const { isProfileUnlocked, discoveryModeInfo } = require('../middleware/profileGuard');
 const { supabaseAdmin } = require('../utils/supabase');
 const ApplicationTrackingController = require('../controllers/applicationTrackingController');
-const { sendEmail } = require('../utils/email');
+const { sendEmail, sendApplicationUpdateEmail } = require('../utils/email');
 const { NotificationHelpers } = require('../utils/notifications');
 const { 
   createSuccessResponse, 
@@ -404,5 +404,104 @@ router.patch('/:id', authenticateToken, async (req, res) => {
 
 // GET /api/applications/stats - Get application statistics
 router.get('/stats', authenticateToken, isProfileUnlocked, ApplicationTrackingController.getApplicationStats);
+
+// POST /api/applications/:id/send-update - Send application update email (ADMIN ONLY)
+router.post('/:id/send-update', authenticateToken, requireAdmin, async (req, res) => {
+  try {
+    const { id } = req.params;
+    const {
+      message,
+      next_steps,
+      consultant_email = 'applybureau@gmail.com',
+      custom_subject
+    } = req.body;
+
+    // Get application details
+    const { data: application, error: appError } = await supabaseAdmin
+      .from('applications')
+      .select(`
+        *,
+        clients:user_id (
+          id,
+          email,
+          full_name
+        )
+      `)
+      .eq('id', id)
+      .single();
+
+    if (appError || !application) {
+      return res.status(404).json({ error: 'Application not found' });
+    }
+
+    // Get client details (fallback if join didn't work)
+    let clientData = application.clients;
+    if (!clientData) {
+      const { data: client } = await supabaseAdmin
+        .from('clients')
+        .select('id, email, full_name')
+        .eq('id', application.user_id)
+        .single();
+      clientData = client;
+    }
+
+    if (!clientData) {
+      return res.status(404).json({ error: 'Client not found for this application' });
+    }
+
+    // Prepare application data for email
+    const applicationData = {
+      client_name: clientData.full_name,
+      company_name: application.title?.split(' - ')[0] || 'Company',
+      position_title: application.title?.split(' - ')[1] || application.description,
+      application_status: application.status,
+      message: message || 'Your application is being reviewed and we will keep you updated on any progress.',
+      next_steps,
+      consultant_email,
+      user_id: clientData.id
+    };
+
+    // Send the application update email
+    const emailResult = await sendApplicationUpdateEmail(
+      clientData.email,
+      applicationData,
+      { subject: custom_subject }
+    );
+
+    // Log the email send
+    console.log(`📧 Application update email sent:`, {
+      applicationId: id,
+      clientEmail: clientData.email,
+      consultantEmail: consultant_email,
+      emailId: emailResult.id
+    });
+
+    // Update application with email sent timestamp
+    await supabaseAdmin
+      .from('applications')
+      .update({
+        last_email_sent_at: new Date().toISOString(),
+        admin_notes: application.admin_notes 
+          ? `${application.admin_notes}\n\n[${new Date().toISOString()}] Update email sent to client`
+          : `[${new Date().toISOString()}] Update email sent to client`
+      })
+      .eq('id', id);
+
+    res.json({
+      message: 'Application update email sent successfully',
+      email_id: emailResult.id,
+      sent_to: clientData.email,
+      reply_to: consultant_email,
+      application_id: id
+    });
+
+  } catch (error) {
+    console.error('❌ Failed to send application update email:', error);
+    res.status(500).json({ 
+      error: 'Failed to send application update email',
+      details: error.message 
+    });
+  }
+});
 
 module.exports = router;

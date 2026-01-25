@@ -9,7 +9,7 @@ const { sendEmail } = require('../utils/email');
 const router = express.Router();
 
 // Super Admin Email - Only this admin can manage other admins
-const SUPER_ADMIN_EMAIL = 'admin@applybureau.com';
+const SUPER_ADMIN_EMAIL = 'applybureau@gmail.com';
 
 // Configure multer for file uploads
 const upload = multer({
@@ -381,13 +381,14 @@ router.post('/admins', authenticateToken, requireAdmin, upload.single('profile_p
       return res.status(500).json({ error: 'Failed to create admin' });
     }
 
-    // Send welcome email to new admin
+    // Send welcome email to new admin (without password)
     try {
       await sendEmail(email, 'admin_welcome', {
         admin_name: full_name,
+        admin_email: email,
         login_url: `${process.env.FRONTEND_URL}/admin/login`,
-        temporary_password: password,
-        super_admin_email: SUPER_ADMIN_EMAIL
+        super_admin_email: SUPER_ADMIN_EMAIL,
+        current_year: new Date().getFullYear()
       });
     } catch (emailError) {
       console.error('Welcome email error:', emailError);

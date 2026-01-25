@@ -3,7 +3,7 @@
 const axios = require('axios');
 
 const BASE_URL = 'https://apply-bureau-backend.vercel.app';
-const ADMIN_EMAIL = 'admin@applybureau.com';
+const ADMIN_EMAIL = 'applybureau@gmail.com';
 const ADMIN_PASSWORD = 'Admin123@#';
 
 const debugClientInvitation = async () => {

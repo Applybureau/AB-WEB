@@ -68,11 +68,12 @@ router.post('/', async (req, res) => {
 
     // Send confirmation email to client
     try {
-      await sendEmail(email, 'contact_form_received', {
+      await sendEmail(email, 'Thank you for contacting Apply Bureau', 'contact_form_received', {
         client_name: contactName,
         subject: subject || 'General Inquiry',
         message: message,
-        next_steps: 'We will respond to your inquiry within 24 hours.'
+        next_steps: 'We will respond to your inquiry within 24 hours.',
+        user_id: contact.id
       });
     } catch (emailError) {
       console.error('Failed to send contact confirmation email:', emailError);
@@ -80,13 +81,14 @@ router.post('/', async (req, res) => {
 
     // Send notification email to admin
     try {
-      await sendEmail('admin@applybureau.com', 'new_contact_submission', {
+      await sendEmail('admin@applybureau.com', 'New Contact Form Submission', 'new_contact_submission', {
         client_name: contactName,
         client_email: email,
         subject: subject || 'General Inquiry',
         message: message,
         phone: phone || 'Not provided',
-        company: company || 'Not provided'
+        company: company || 'Not provided',
+        user_id: contact.id
       });
     } catch (emailError) {
       console.error('Failed to send admin contact notification:', emailError);

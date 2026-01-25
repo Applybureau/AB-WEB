@@ -74,7 +74,7 @@ const resourcesRoutes = require('./routes/resources');
 const { globalErrorHandler } = require('./middleware/errorHandler');
 
 const app = express();
-const PORT = process.env.PORT || 3000;
+const PORT = process.env.PORT || 8080;
 
 // Security middleware (must be first)
 app.use(securityManager.securityMiddleware());
@@ -405,7 +405,7 @@ app.use((err, req, res, next) => {
   });
 });
 
-// Graceful shutdown
+// Graceful shutdown handlers
 process.on('SIGTERM', () => {
   logger.info('SIGTERM received, shutting down gracefully');
   process.exit(0);
@@ -416,67 +416,64 @@ process.on('SIGINT', () => {
   process.exit(0);
 });
 
-app.listen(PORT, () => {
+// Start server with proper port binding for DigitalOcean
+const server = app.listen(PORT, '0.0.0.0', () => {
   logger.info(`Apply Bureau Backend started successfully`, {
     port: PORT,
+    host: '0.0.0.0',
     environment: process.env.NODE_ENV,
     frontendUrl: process.env.FRONTEND_URL,
     nodeVersion: process.version,
     pid: process.pid
   });
   
-  // Initialize real-time WebSocket server
-  const realtimeManager = require('./utils/realtime');
-  const http = require('http');
-  const server = http.createServer(app);
-  
-  try {
-    realtimeManager.initialize(server);
-    
-    // Start server with WebSocket support
-    server.listen(PORT + 1, () => {
-      logger.info('Real-time WebSocket server started', { port: PORT + 1 });
-    });
-    
-    server.on('error', (error) => {
-      if (error.code === 'EADDRINUSE') {
-        logger.warn('WebSocket port in use, continuing without real-time features', { port: PORT + 1 });
-      } else {
-        logger.error('WebSocket server error', { error: error.message });
-      }
-    });
-  } catch (error) {
-    logger.warn('Failed to initialize WebSocket server, continuing without real-time features', { error: error.message });
-  }
-  
-  // Start monitoring in production
-  if (process.env.NODE_ENV === 'production') {
-    logger.info('Starting production monitoring and security features');
-    performanceMonitor.startMonitoring();
-    dbMonitor.startHealthCheck();
-    
-    // Log system info
-    const systemInfo = SystemMonitor.getSystemInfo();
-    logger.info('System information', {
-      platform: systemInfo.platform,
-      arch: systemInfo.arch,
-      memory: `${Math.round(systemInfo.memory.process.rss / 1024 / 1024)}MB`,
-      cpuCores: systemInfo.cpu.cores
-    });
-  }
-  
-  // Periodic cache cleanup and stats logging
-  setInterval(() => {
-    cache.cleanup();
-    if (process.env.NODE_ENV === 'production') {
-      logger.info('Periodic system check', {
-        cacheStats: cache.getStats(),
-        securityStats: securityManager.getStats(),
-        memory: `${Math.round(process.memoryUsage().rss / 1024 / 1024)}MB`,
-        uptime: `${Math.round(process.uptime() / 3600 * 100) / 100}h`
-      });
+  // Only initialize WebSocket in development or if explicitly enabled
+  if (process.env.NODE_ENV !== 'production' || process.env.ENABLE_WEBSOCKET === 'true') {
+    try {
+      const realtimeManager = require('./utils/realtime');
+      realtimeManager.initialize(server);
+      logger.info('Real-time WebSocket initialized on same port', { port: PORT });
+    } catch (error) {
+      logger.warn('Failed to initialize WebSocket, continuing without real-time features', { error: error.message });
     }
-  }, 10 * 60 * 1000); // Every 10 minutes
+  } else {
+    logger.info('WebSocket disabled in production for resource optimization');
+  }
+  
+  // Start monitoring in production (lightweight version)
+  if (process.env.NODE_ENV === 'production') {
+    logger.info('Starting production monitoring');
+    
+    // Only start essential monitoring to reduce resource usage
+    try {
+      performanceMonitor.startMonitoring();
+    } catch (error) {
+      logger.warn('Performance monitoring disabled to save resources', { error: error.message });
+    }
+    
+    // Log basic system info
+    logger.info('System information', {
+      platform: process.platform,
+      arch: process.arch,
+      memory: `${Math.round(process.memoryUsage().rss / 1024 / 1024)}MB`,
+      nodeVersion: process.version
+    });
+  }
+  
+  // Reduced frequency cache cleanup to save resources
+  setInterval(() => {
+    try {
+      cache.cleanup();
+      if (process.env.NODE_ENV === 'production') {
+        logger.info('System check', {
+          memory: `${Math.round(process.memoryUsage().rss / 1024 / 1024)}MB`,
+          uptime: `${Math.round(process.uptime() / 3600 * 100) / 100}h`
+        });
+      }
+    } catch (error) {
+      logger.warn('System check error', { error: error.message });
+    }
+  }, 30 * 60 * 1000); // Every 30 minutes instead of 10
 });
 
 module.exports = app;

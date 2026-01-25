@@ -9,7 +9,7 @@ const axios = require('axios');
 
 // Production configuration
 const BASE_URL = 'https://jellyfish-app-t4m35.ondigitalocean.app';
-const ADMIN_EMAIL = 'admin@applybureau.com';
+const ADMIN_EMAIL = 'applybureau@gmail.com';
 const ADMIN_PASSWORD = 'Admin123@#';
 
 const testLogin = async () => {

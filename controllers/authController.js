@@ -58,7 +58,8 @@ class AuthController {
       // Send invitation email
       await sendEmail(email, 'signup_invite', {
         client_name: full_name,
-        registration_link: `${process.env.FRONTEND_URL}/complete-registration?token=${registrationToken}`
+        registration_link: `${process.env.FRONTEND_URL}/complete-registration?token=${registrationToken}`,
+        user_id: client.id
       });
 
       logger.info('Client invitation sent successfully', { 

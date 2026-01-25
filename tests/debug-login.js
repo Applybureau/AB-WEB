@@ -8,9 +8,9 @@ const testLogin = async () => {
   console.log('Testing login with different credentials...');
   
   const credentials = [
-    { email: 'admin@applybureau.com', password: 'Admin123@#' },
+    { email: 'applybureau@gmail.com', password: 'Admin123@#' },
     { email: 'admin@example.com', password: 'AdminPassword123!' },
-    { email: 'admin@applybureau.com', password: 'AdminPassword123!' }
+    { email: 'applybureau@gmail.com', password: 'AdminPassword123!' }
   ];
   
   for (const cred of credentials) {

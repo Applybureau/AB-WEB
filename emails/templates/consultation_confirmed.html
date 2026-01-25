@@ -1,94 +1,85 @@
+<!-- SUBJECT: Consultation Confirmed - Apply Bureau -->
 <!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Consultation Confirmed — Apply Bureau</title>
-    <style>
-        body {
-            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
-            line-height: 1.6;
-            color: #333;
-            max-width: 600px;
-            margin: 0 auto;
-            padding: 20px;
-            background-color: #f9f9f9;
-        }
-        .container {
-            background-color: white;
-            padding: 40px;
-            border-radius: 8px;
-            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
-        }
-        .header {
-            text-align: center;
-            margin-bottom: 30px;
-        }
-        .logo {
-            font-size: 24px;
-            font-weight: bold;
-            color: #2c3e50;
-        }
-        .content {
-            margin-bottom: 30px;
-        }
-        .details {
-            background-color: #f8f9fa;
-            padding: 20px;
-            border-radius: 6px;
-            margin: 20px 0;
-        }
-        .details h3 {
-            margin-top: 0;
-            color: #2c3e50;
-        }
-        .meeting-link {
-            background-color: #007bff;
-            color: white;
-            padding: 12px 24px;
-            text-decoration: none;
-            border-radius: 6px;
-            display: inline-block;
-            margin: 10px 0;
-        }
-        .footer {
-            margin-top: 40px;
-            padding-top: 20px;
-            border-top: 1px solid #eee;
-            color: #666;
-        }
-    </style>
+    <title>Consultation Confirmed</title>
 </head>
-<body>
-    <div class="container">
-        <div class="header">
-            <div class="logo">Apply Bureau</div>
-        </div>
-        
-        <div class="content">
-            <p>Hi {{client_name}},</p>
-            
-            <p>Your consultation with Apply Bureau has been confirmed.</p>
-            
-            <div class="details">
-                <h3>Consultation Details</h3>
-                <p><strong>Date:</strong> {{consultation_date}}</p>
-                <p><strong>Time:</strong> {{consultation_time}}</p>
-                <p><strong>Duration:</strong> 30–45 minutes</p>
-                <p><strong>Meeting Link:</strong> <a href="{{meeting_link}}" class="meeting-link">{{meeting_link}}</a></p>
-            </div>
-            
-            <p>This consultation is a brief conversation to understand your goals, explain how Apply Bureau works, and determine whether there is a mutual fit to move forward.</p>
-            
-            <p>A lead strategist will reach out to you at the scheduled time.</p>
-            
-            <p>If anything changes, we will contact you directly. If you need to make a change, please reply to this email and we will coordinate directly.</p>
-        </div>
-        
-        <div class="footer">
-            <p>Best regards,<br>
-            Apply Bureau Client Operations Team</p>
-        </div>
-    </div>
+<body style="margin: 0; padding: 0; font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif; background-color: #E5E7EB;">
+    <table border="0" cellpadding="0" cellspacing="0" width="100%" style="table-layout: fixed;">
+        <tr>
+            <td align="center" style="padding: 40px 20px;">
+                <table border="0" cellpadding="0" cellspacing="0" width="600" style="max-width: 600px; background-color: #FFFFFF; border-radius: 8px; overflow: hidden;">
+                    <!-- Logo Header -->
+                    <tr>
+                        <td align="center" style="padding: 40px 40px 30px 40px; background-color: #FFFFFF;">
+                            <img src="https://res.cloudinary.com/dbehg8jsv/image/upload/v1767902182/AB_Logo-removebg-preview_mlji6p.png" alt="Apply Bureau" width="220" height="auto" style="display: block; border: 0; max-width: 100%;">
+                        </td>
+                    </tr>
+                    <!-- Main Content -->
+                    <tr>
+                        <td style="padding: 0 40px 40px 40px; background-color: #FFFFFF;">
+                            <h1 style="color: #1A1A1A; font-size: 24px; font-weight: 600; margin: 0 0 24px 0; text-align: center; line-height: 1.3;">
+                                Consultation Confirmed
+                            </h1>
+                            <p style="color: #1A1A1A; font-size: 16px; line-height: 1.7; margin: 0 0 20px 0;">
+                                Hi {{client_name}},
+                            </p>
+                            <p style="color: #1A1A1A; font-size: 16px; line-height: 1.7; margin: 0 0 20px 0;">
+                                Your consultation with Apply Bureau has been confirmed.
+                            </p>
+                            <!-- Consultation Details Box -->
+                            <table border="0" cellpadding="0" cellspacing="0" width="100%" style="margin: 0 0 24px 0; background-color: #F8FAFC; border-radius: 6px; border: 1px solid #E2E8F0;">
+                                <tr>
+                                    <td style="padding: 24px;">
+                                        <h3 style="color: #1A1A1A; font-size: 18px; font-weight: 600; margin: 0 0 16px 0;">Consultation Details</h3>
+                                        <p style="color: #64748B; font-size: 14px; margin: 0 0 8px 0;"><strong>Date:</strong> {{consultation_date}}</p>
+                                        <p style="color: #64748B; font-size: 14px; margin: 0 0 8px 0;"><strong>Time:</strong> {{consultation_time}}</p>
+                                        <p style="color: #64748B; font-size: 14px; margin: 0 0 16px 0;"><strong>Duration:</strong> 30–45 minutes</p>
+                                        {{#if meeting_link}}
+                                        <table border="0" cellpadding="0" cellspacing="0" style="margin: 16px 0 0 0;">
+                                            <tr>
+                                                <td align="left">
+                                                    <a href="{{meeting_link}}" style="display: inline-block; background-color: #16A34A; color: #FFFFFF; padding: 12px 24px; text-decoration: none; border-radius: 6px; font-weight: 600; font-size: 14px;">
+                                                        Join Meeting
+                                                    </a>
+                                                </td>
+                                            </tr>
+                                        </table>
+                                        {{/if}}
+                                    </td>
+                                </tr>
+                            </table>
+                            <p style="color: #1A1A1A; font-size: 16px; line-height: 1.7; margin: 0 0 20px 0;">
+                                This consultation is a brief conversation to understand your goals, explain how Apply Bureau works, and determine whether there is a mutual fit to move forward.
+                            </p>
+                            <p style="color: #1A1A1A; font-size: 16px; line-height: 1.7; margin: 0 0 20px 0;">
+                                A lead strategist will reach out to you at the scheduled time.
+                            </p>
+                            <p style="color: #1A1A1A; font-size: 16px; line-height: 1.7; margin: 0 0 20px 0;">
+                                If anything changes, we will contact you directly. If you need to make a change, please reply to this email and we will coordinate directly.
+                            </p>
+                            <p style="color: #1A1A1A; font-size: 16px; line-height: 1.7; margin: 0;">
+                                Best regards,<br>
+                                <strong>Apply Bureau Client Operations Team</strong>
+                            </p>
+                        </td>
+                    </tr>
+                    <!-- Footer -->
+                    <tr>
+                        <td style="padding: 30px 40px; background-color: #F1F5F9;">
+                            <p style="color: #64748B; font-size: 14px; line-height: 1.6; margin: 0 0 10px 0; text-align: center;">
+                                Questions? Contact us at <a href="mailto:applybureau@gmail.com" style="color: #475569; text-decoration: underline;">applybureau@gmail.com</a>
+                            </p>
+                            <p style="color: #94A3B8; font-size: 12px; margin: 0; text-align: center;">
+                                &copy; {{current_year}} Apply Bureau. All rights reserved.
+                            </p>
+                        </td>
+                    </tr>
+                </table>
+            </td>
+        </tr>
+    </table>
 </body>
 </html>

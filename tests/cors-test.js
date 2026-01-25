@@ -33,7 +33,7 @@ const testCORS = async () => {
     // Test 2: Actual login request from localhost:5173
     console.log('2. Testing POST login request from localhost:5173...');
     const loginResponse = await axios.post(`${BASE_URL}/api/auth/login`, {
-      email: 'admin@applybureau.com',
+      email: 'applybureau@gmail.com',
       password: 'Admin123@#'
     }, {
       headers: {

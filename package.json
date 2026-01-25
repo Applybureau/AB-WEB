@@ -5,7 +5,9 @@
   "main": "server.js",
   "scripts": {
     "start": "node server.js",
+    "build": "echo 'No build step required for Node.js backend'",
     "dev": "nodemon server.js",
+    "cors-proxy": "node start-cors-proxy.js",
     "test": "jest",
     "test:watch": "jest --watch",
     "test:coverage": "jest --coverage",
@@ -34,7 +36,9 @@
     "production-ready": "npm run test:production",
     "optimize-production": "node scripts/production-optimization.js",
     "deploy-production": "node scripts/deploy-production.js",
-    "final-production-test": "node tests/final-production-test.js"
+    "final-production-test": "node tests/final-production-test.js",
+    "deployment-check": "node scripts/deployment-check.js",
+    "pre-deploy": "npm run deployment-check && npm run test:production"
   },
   "dependencies": {
     "@supabase/supabase-js": "^2.38.4",
@@ -53,6 +57,7 @@
     "form-data": "^4.0.0",
     "googleapis": "^128.0.0",
     "helmet": "^7.1.0",
+    "http-proxy-middleware": "^3.0.5",
     "joi": "^17.11.0",
     "jsonwebtoken": "^9.0.2",
     "morgan": "^1.10.0",

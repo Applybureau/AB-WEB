@@ -12,7 +12,7 @@ const debugAdmin = async () => {
     const { data: clients, error: clientsError } = await supabaseAdmin
       .from('clients')
       .select('id, email, full_name, password, role, status')
-      .eq('email', 'admin@applybureau.com');
+      .eq('email', 'applybureau@gmail.com');
 
     console.log('Clients table query result:');
     console.log('Error:', clientsError);
@@ -39,7 +39,7 @@ const debugAdmin = async () => {
     const { data: admins, error: adminsError } = await supabaseAdmin
       .from('admins')
       .select('id, email, full_name, password, role, is_active')
-      .eq('email', 'admin@applybureau.com');
+      .eq('email', 'applybureau@gmail.com');
 
     console.log('\nAdmins table query result:');
     console.log('Error:', adminsError);

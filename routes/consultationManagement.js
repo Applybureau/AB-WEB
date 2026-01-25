@@ -128,7 +128,7 @@ router.patch('/:id', authenticateToken, requireAdmin, async (req, res) => {
     if (admin_notes !== undefined) updateData.admin_notes = admin_notes;
     if (scheduled_at !== undefined) updateData.scheduled_at = scheduled_at;
     if (meeting_link !== undefined) updateData.meeting_link = meeting_link;
-    if (payment_received !== undefined) updateData.payment_received = payment_received;
+    // Remove payment_received field as it may not exist in the table
     
     updateData.updated_at = new Date().toISOString();
 
@@ -151,7 +151,13 @@ router.patch('/:id', authenticateToken, requireAdmin, async (req, res) => {
 
     if (updateError) {
       console.error('Update consultation error:', updateError);
-      return res.status(500).json({ error: 'Failed to update consultation' });
+      console.error('Update data:', updateData);
+      console.error('Consultation ID:', id);
+      return res.status(500).json({ 
+        error: 'Failed to update consultation',
+        details: updateError.message,
+        updateData: updateData
+      });
     }
 
     // Send appropriate email notifications based on status
@@ -167,7 +173,8 @@ router.patch('/:id', authenticateToken, requireAdmin, async (req, res) => {
             consultation_time: new Date(updatedConsultation.scheduled_at).toLocaleTimeString(),
             meeting_link: updatedConsultation.meeting_link,
             meeting_details: meeting_details || 'Your consultation has been confirmed.',
-            admin_message: admin_message
+            admin_message: admin_message,
+            current_year: new Date().getFullYear()
           });
           break;
         
@@ -175,7 +182,8 @@ router.patch('/:id', authenticateToken, requireAdmin, async (req, res) => {
           await sendEmail(clientEmail, 'consultation_reschedule_request', {
             client_name: clientName,
             admin_message: admin_message || 'Please provide new availability for your consultation.',
-            reschedule_link: buildUrl(`/consultation/reschedule/${id}`)
+            reschedule_link: buildUrl(`/consultation/reschedule/${id}`),
+            current_year: new Date().getFullYear()
           });
           break;
         
@@ -183,7 +191,8 @@ router.patch('/:id', authenticateToken, requireAdmin, async (req, res) => {
           await sendEmail(clientEmail, 'consultation_completed', {
             client_name: clientName,
             admin_message: admin_message || 'Thank you for your consultation. We will be in touch soon.',
-            next_steps: 'Our team will follow up with next steps based on your consultation.'
+            next_steps: 'Our team will follow up with next steps based on your consultation.',
+            current_year: new Date().getFullYear()
           });
           break;
         
@@ -191,7 +200,8 @@ router.patch('/:id', authenticateToken, requireAdmin, async (req, res) => {
           await sendEmail(clientEmail, 'payment_confirmed_welcome_concierge', {
             client_name: clientName,
             admin_message: admin_message || 'Payment received. Welcome to Apply Bureau!',
-            next_steps: 'You will receive registration details shortly.'
+            next_steps: 'You will receive registration details shortly.',
+            current_year: new Date().getFullYear()
           });
           break;
       }
@@ -206,7 +216,7 @@ router.patch('/:id', authenticateToken, requireAdmin, async (req, res) => {
         await supabaseAdmin
           .from('notifications')
           .insert({
-            user_id: updatedConsultation.user_id,
+            user_id: updatedConsultation.client_id,
             type: `consultation_${status}`,
             title: `Consultation ${status.charAt(0).toUpperCase() + status.slice(1)}`,
             message: admin_message || `Your consultation status has been updated to ${status}`,
@@ -236,7 +246,6 @@ router.patch('/:id', authenticateToken, requireAdmin, async (req, res) => {
       scheduled_at: updatedConsultation.scheduled_at,
       admin_notes: updatedConsultation.admin_notes,
       meeting_link: updatedConsultation.meeting_link,
-      payment_received: updatedConsultation.payment_received,
       created_at: updatedConsultation.created_at,
       updated_at: updatedConsultation.updated_at
     };
@@ -313,7 +322,8 @@ router.post('/:id/confirm-time', authenticateToken, requireAdmin, async (req, re
         consultation_time: new Date(scheduledDateTime).toLocaleTimeString(),
         meeting_link: meeting_link,
         meeting_details: meeting_details || 'Your consultation has been confirmed.',
-        meeting_type: meeting_type
+        meeting_type: meeting_type,
+        current_year: new Date().getFullYear()
       });
     } catch (emailError) {
       console.error('Failed to send confirmation email:', emailError);
