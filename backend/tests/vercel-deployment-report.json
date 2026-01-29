@@ -1,0 +1,275 @@
+{
+  "timestamp": "2026-01-23T03:00:45.543Z",
+  "vercel_url": "https://apply-bureau-backend.vercel.app",
+  "local_url": "http://localhost:3000",
+  "results": {
+    "vercel": {
+      "passed": 20,
+      "failed": 4,
+      "tests": [
+        {
+          "name": "Health Check",
+          "status": "FAILED",
+          "environment": "vercel",
+          "error": "Service not healthy"
+        },
+        {
+          "name": "API Health Check",
+          "status": "PASSED",
+          "environment": "vercel"
+        },
+        {
+          "name": "CORS Headers",
+          "status": "PASSED",
+          "environment": "vercel"
+        },
+        {
+          "name": "CORS Origin Validation",
+          "status": "PASSED",
+          "environment": "vercel"
+        },
+        {
+          "name": "Login Endpoint Exists",
+          "status": "PASSED",
+          "environment": "vercel"
+        },
+        {
+          "name": "Registration Endpoint",
+          "status": "PASSED",
+          "environment": "vercel"
+        },
+        {
+          "name": "Token Validation",
+          "status": "PASSED",
+          "environment": "vercel"
+        },
+        {
+          "name": "Rate Limiting Protection",
+          "status": "PASSED",
+          "environment": "vercel"
+        },
+        {
+          "name": "Endpoint GET /api/health",
+          "status": "PASSED",
+          "environment": "vercel"
+        },
+        {
+          "name": "Endpoint GET /api/applications",
+          "status": "PASSED",
+          "environment": "vercel"
+        },
+        {
+          "name": "Endpoint GET /api/consultations",
+          "status": "FAILED",
+          "environment": "vercel",
+          "error": "Unexpected error for protected endpoint: 404: {\"error\":\"Route not found\",\"path\":\"/\",\"method\":\"GET\"}"
+        },
+        {
+          "name": "Endpoint GET /api/notifications",
+          "status": "PASSED",
+          "environment": "vercel"
+        },
+        {
+          "name": "Endpoint GET /api/dashboard",
+          "status": "PASSED",
+          "environment": "vercel"
+        },
+        {
+          "name": "Endpoint POST /api/contact",
+          "status": "PASSED",
+          "environment": "vercel"
+        },
+        {
+          "name": "Endpoint GET /api/admin/stats",
+          "status": "PASSED",
+          "environment": "vercel"
+        },
+        {
+          "name": "Endpoint GET /api/client/profile",
+          "status": "PASSED",
+          "environment": "vercel"
+        },
+        {
+          "name": "File Upload Endpoint Security",
+          "status": "FAILED",
+          "environment": "vercel",
+          "error": "Wrong error type for unauthorized upload"
+        },
+        {
+          "name": "Contact Form Endpoint",
+          "status": "PASSED",
+          "environment": "vercel"
+        },
+        {
+          "name": "Email Action Endpoints",
+          "status": "FAILED",
+          "environment": "vercel",
+          "error": "Email action endpoint not found"
+        },
+        {
+          "name": "Database Connection",
+          "status": "PASSED",
+          "environment": "vercel"
+        },
+        {
+          "name": "Response Time Performance",
+          "status": "PASSED",
+          "environment": "vercel"
+        },
+        {
+          "name": "Concurrent Request Handling",
+          "status": "PASSED",
+          "environment": "vercel"
+        },
+        {
+          "name": "Security Headers",
+          "status": "PASSED",
+          "environment": "vercel"
+        },
+        {
+          "name": "Environment Configuration",
+          "status": "PASSED",
+          "environment": "vercel"
+        }
+      ]
+    },
+    "local": {
+      "passed": 18,
+      "failed": 6,
+      "tests": [
+        {
+          "name": "Health Check",
+          "status": "FAILED",
+          "environment": "local",
+          "error": "Service not healthy"
+        },
+        {
+          "name": "API Health Check",
+          "status": "PASSED",
+          "environment": "local"
+        },
+        {
+          "name": "CORS Headers",
+          "status": "PASSED",
+          "environment": "local"
+        },
+        {
+          "name": "CORS Origin Validation",
+          "status": "FAILED",
+          "environment": "local",
+          "error": "500: {\"error\":\"Internal server error\",\"errorId\":\"ca2e24227656b13b\"}"
+        },
+        {
+          "name": "Login Endpoint Exists",
+          "status": "FAILED",
+          "environment": "local",
+          "error": "Unexpected error type for login"
+        },
+        {
+          "name": "Registration Endpoint",
+          "status": "PASSED",
+          "environment": "local"
+        },
+        {
+          "name": "Token Validation",
+          "status": "PASSED",
+          "environment": "local"
+        },
+        {
+          "name": "Rate Limiting Protection",
+          "status": "PASSED",
+          "environment": "local"
+        },
+        {
+          "name": "Endpoint GET /api/health",
+          "status": "PASSED",
+          "environment": "local"
+        },
+        {
+          "name": "Endpoint GET /api/applications",
+          "status": "PASSED",
+          "environment": "local"
+        },
+        {
+          "name": "Endpoint GET /api/consultations",
+          "status": "FAILED",
+          "environment": "local",
+          "error": "Unexpected error for protected endpoint: 404: {\"error\":\"Route not found\",\"path\":\"/\",\"method\":\"GET\"}"
+        },
+        {
+          "name": "Endpoint GET /api/notifications",
+          "status": "PASSED",
+          "environment": "local"
+        },
+        {
+          "name": "Endpoint GET /api/dashboard",
+          "status": "PASSED",
+          "environment": "local"
+        },
+        {
+          "name": "Endpoint POST /api/contact",
+          "status": "PASSED",
+          "environment": "local"
+        },
+        {
+          "name": "Endpoint GET /api/admin/stats",
+          "status": "PASSED",
+          "environment": "local"
+        },
+        {
+          "name": "Endpoint GET /api/client/profile",
+          "status": "PASSED",
+          "environment": "local"
+        },
+        {
+          "name": "File Upload Endpoint Security",
+          "status": "FAILED",
+          "environment": "local",
+          "error": "Wrong error type for unauthorized upload"
+        },
+        {
+          "name": "Contact Form Endpoint",
+          "status": "FAILED",
+          "environment": "local",
+          "error": "500: {\"error\":\"Failed to submit contact form\"}"
+        },
+        {
+          "name": "Email Action Endpoints",
+          "status": "PASSED",
+          "environment": "local"
+        },
+        {
+          "name": "Database Connection",
+          "status": "PASSED",
+          "environment": "local"
+        },
+        {
+          "name": "Response Time Performance",
+          "status": "PASSED",
+          "environment": "local"
+        },
+        {
+          "name": "Concurrent Request Handling",
+          "status": "PASSED",
+          "environment": "local"
+        },
+        {
+          "name": "Security Headers",
+          "status": "PASSED",
+          "environment": "local"
+        },
+        {
+          "name": "Environment Configuration",
+          "status": "PASSED",
+          "environment": "local"
+        }
+      ]
+    },
+    "comparison": []
+  },
+  "summary": {
+    "vercel_success_rate": 83.33333333333334,
+    "local_success_rate": 75,
+    "deployment_ready": true
+  }
+}
