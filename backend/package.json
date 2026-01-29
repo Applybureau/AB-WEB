@@ -3,6 +3,9 @@
   "version": "1.0.0",
   "description": "Professional Application & Interview Advisory System Backend",
   "main": "server.js",
+  "config": {
+    "unsafe-perm": false
+  },
   "scripts": {
     "start": "node server.js",
     "build": "echo \"No build step required for Node.js backend\"",

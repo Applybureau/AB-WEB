@@ -38,5 +38,7 @@ services:
     value: ${FRONTEND_URL}
   - key: BACKEND_URL
     value: ${BACKEND_URL}
+  - key: NPM_CONFIG_UNSAFE_PERM
+    value: "false"
   - key: ENABLE_WEBSOCKET
     value: "false"
