@@ -1,4 +1,50 @@
 require('dotenv').config();
+
+// Validate critical environment variables before starting server
+const validateCriticalEnvVars = () => {
+  const required = [
+    'SUPABASE_URL',
+    'SUPABASE_ANON_KEY', 
+    'SUPABASE_SERVICE_KEY',
+    'RESEND_API_KEY',
+    'JWT_SECRET'
+  ];
+  
+  const missing = required.filter(envVar => !process.env[envVar]);
+  
+  if (missing.length > 0) {
+    const errorMessage = `
+🚨 CRITICAL STARTUP ERROR: Missing required environment variables
+
+❌ Missing variables:
+${missing.map(v => `   • ${v}`).join('\n')}
+
+🔧 DigitalOcean Fix:
+   1. Go to DigitalOcean App Platform dashboard
+   2. Select your app → Settings → App-Level Environment Variables  
+   3. Add each missing variable with its actual value:
+      • SUPABASE_URL: https://your-project.supabase.co
+      • SUPABASE_ANON_KEY: eyJhbGciOiJIUzI1NiIs...
+      • SUPABASE_SERVICE_KEY: eyJhbGciOiJIUzI1NiIs...
+      • RESEND_API_KEY: re_xxxxxxxxxx
+      • JWT_SECRET: your-secret-key-here
+   4. Click "Save" and redeploy
+
+💡 The app.yaml references \${VARIABLE_NAME} but DigitalOcean needs actual values.
+
+🚫 Application startup aborted.
+`;
+    
+    console.error(errorMessage);
+    process.exit(1);
+  }
+  
+  console.log('✅ All critical environment variables are present');
+};
+
+// Validate environment variables before importing other modules
+validateCriticalEnvVars();
+
 const express = require('express');
 const cors = require('cors');
 const helmet = require('helmet');

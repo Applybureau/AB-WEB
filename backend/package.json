@@ -10,6 +10,9 @@
     "start": "node server.js",
     "build": "echo \"No build step required for Node.js backend\"",
     "dev": "nodemon server.js",
+    "postinstall": "echo \"Dependencies installed successfully\"",
+    "prestart": "node validate-env.js",
+    "validate": "node validate-env.js && node validate-package.js",
     "cors-proxy": "node start-cors-proxy.js",
     "test": "jest",
     "test:watch": "jest --watch",
@@ -41,8 +44,7 @@
     "deploy-production": "node scripts/deploy-production.js",
     "final-production-test": "node tests/final-production-test.js",
     "deployment-check": "node scripts/deployment-check.js",
-    "pre-deploy": "npm run deployment-check && npm run test:production",
-    "postinstall": "echo \"Dependencies installed successfully\""
+    "pre-deploy": "npm run deployment-check && npm run test:production"
   },
   "dependencies": {
     "@supabase/supabase-js": "^2.38.4",

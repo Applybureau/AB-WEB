@@ -4,16 +4,44 @@ const supabaseUrl = process.env.SUPABASE_URL;
 const supabaseAnonKey = process.env.SUPABASE_ANON_KEY;
 const supabaseServiceKey = process.env.SUPABASE_SERVICE_KEY;
 
-// Validate required environment variables
-if (!supabaseUrl) {
-  throw new Error('SUPABASE_URL environment variable is required');
-}
-if (!supabaseAnonKey) {
-  throw new Error('SUPABASE_ANON_KEY environment variable is required');
-}
-if (!supabaseServiceKey) {
-  throw new Error('SUPABASE_SERVICE_KEY environment variable is required');
-}
+// Validate required environment variables with detailed error messages
+const validateEnvironmentVariables = () => {
+  const missing = [];
+  
+  if (!supabaseUrl) {
+    missing.push('SUPABASE_URL');
+  }
+  if (!supabaseAnonKey) {
+    missing.push('SUPABASE_ANON_KEY');
+  }
+  if (!supabaseServiceKey) {
+    missing.push('SUPABASE_SERVICE_KEY');
+  }
+  
+  if (missing.length > 0) {
+    const errorMessage = `
+❌ CRITICAL: Missing required environment variables for Supabase connection:
+   ${missing.map(v => `• ${v}`).join('\n   ')}
+
+🔧 To fix this on DigitalOcean:
+   1. Go to your DigitalOcean App Platform dashboard
+   2. Select your app → Settings → App-Level Environment Variables
+   3. Add the missing variables with their actual values
+   4. Redeploy the application
+
+💡 The app.yaml file references these variables with \${VARIABLE_NAME} syntax,
+   but DigitalOcean needs the actual values set in the dashboard.
+
+🚨 Application cannot start without these database credentials.
+`;
+    
+    console.error(errorMessage);
+    throw new Error(`Missing required environment variables: ${missing.join(', ')}`);
+  }
+};
+
+// Validate environment variables on module load
+validateEnvironmentVariables();
 
 // Zero-Trust, High-Concurrency Configuration
 const zeroTrustConfig = {
