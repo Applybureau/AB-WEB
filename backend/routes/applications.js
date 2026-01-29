@@ -39,7 +39,6 @@ router.get('/',
           .from('applications')
           .select(`
             id,
-            user_id,
             client_id,
             type,
             title,
@@ -70,7 +69,7 @@ router.get('/',
           .range(parseInt(offset), parseInt(offset) + parseInt(limit) - 1);
 
         if (client_id) {
-          query = query.eq('user_id', client_id);
+          query = query.eq('client_id', client_id);
         }
 
         const { data: applications, error } = await query;
@@ -93,7 +92,6 @@ router.get('/',
           .from('applications')
           .select(`
             id,
-            user_id,
             client_id,
             type,
             title,
@@ -120,7 +118,7 @@ router.get('/',
             created_at,
             updated_at
           `)
-          .eq('user_id', userId)
+          .eq('client_id', userId)
           .order('created_at', { ascending: false });
 
         const { data: applications, error } = await baseQuery;
@@ -163,7 +161,7 @@ router.get('/weekly', authenticateToken, isProfileUnlocked, async (req, res) => 
     const { data: applications, error } = await supabaseAdmin
       .from('applications')
       .select('*')
-      .eq('user_id', clientId) // Use user_id instead of client_id
+      .eq('client_id', clientId) // Use client_id instead of user_id
       .order('week_number', { ascending: false })
       .order('date_applied', { ascending: false });
 
@@ -252,8 +250,7 @@ router.post('/', authenticateToken, requireAdmin, async (req, res) => {
     const { data: application, error } = await supabaseAdmin
       .from('applications')
       .insert({
-        user_id: client_id, // Use user_id as primary field
-        client_id: client_id, // Also set client_id for compatibility
+        client_id: client_id, // Use client_id as primary field
         type: 'job_application', // Use job_application instead of consultation
         title: `${finalCompany} - ${finalRole}`,
         description: job_description || `Application for ${finalRole} position at ${finalCompany}`,
@@ -324,7 +321,7 @@ router.patch('/:id', authenticateToken, async (req, res) => {
     }
 
     // Check if user can update this application
-    if (req.user.role !== 'admin' && currentApp.user_id !== req.user.id) {
+    if (req.user.role !== 'admin' && currentApp.client_id !== req.user.id) {
       return res.status(403).json({ error: 'Access denied' });
     }
 
@@ -363,9 +360,9 @@ router.patch('/:id', authenticateToken, async (req, res) => {
       try {
         // Get client details
         const { data: client } = await supabaseAdmin
-          .from('registered_users')
+          .from('clients')
           .select('email, full_name, job_search_email')
-          .eq('id', currentApp.user_id)
+          .eq('id', currentApp.client_id)
           .single();
 
         if (client) {
@@ -383,7 +380,7 @@ router.patch('/:id', authenticateToken, async (req, res) => {
           });
 
           // Create notification
-          await NotificationHelpers.interviewRequestReceived(currentApp.user_id, application);
+          await NotificationHelpers.interviewRequestReceived(currentApp.client_id, application);
         }
       } catch (emailError) {
         console.error('Failed to send interview update email:', emailError);
@@ -394,7 +391,7 @@ router.patch('/:id', authenticateToken, async (req, res) => {
     // Create general status update notification
     if (status && status !== currentApp.status) {
       try {
-        await NotificationHelpers.applicationStatusUpdated(currentApp.user_id, application, currentApp.status, status);
+        await NotificationHelpers.applicationStatusUpdated(currentApp.client_id, application, currentApp.status, status);
       } catch (notificationError) {
         console.error('Failed to create status update notification:', notificationError);
       }
@@ -432,7 +429,7 @@ router.post('/:id/send-update', authenticateToken, requireAdmin, async (req, res
       .from('applications')
       .select(`
         *,
-        clients:user_id (
+        clients:client_id (
           id,
           email,
           full_name
@@ -451,7 +448,7 @@ router.post('/:id/send-update', authenticateToken, requireAdmin, async (req, res
       const { data: client } = await supabaseAdmin
         .from('clients')
         .select('id, email, full_name')
-        .eq('id', application.user_id)
+        .eq('id', application.client_id)
         .single();
       clientData = client;
     }

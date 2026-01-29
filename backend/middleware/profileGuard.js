@@ -10,10 +10,10 @@ const isProfileUnlocked = async (req, res, next) => {
 
     const userId = req.user.id;
 
-    // Get user profile status
+    // Get user profile status from clients table (primary source)
     const { data: user, error: userError } = await supabaseAdmin
-      .from('registered_users')
-      .select('profile_unlocked, payment_confirmed')
+      .from('clients')
+      .select('profile_unlocked, payment_verified, is_active, onboarding_complete')
       .eq('id', userId)
       .single();
 
@@ -28,20 +28,26 @@ const isProfileUnlocked = async (req, res, next) => {
         error: 'Profile locked',
         message: 'Your profile is currently locked. Please complete onboarding and wait for admin approval.',
         discovery_mode: true,
-        next_steps: user.payment_confirmed 
+        next_steps: user.payment_verified 
           ? 'Complete your onboarding questionnaire and wait for approval.'
           : 'Payment confirmation pending. Please contact support.'
       });
     }
 
-    // Get onboarding execution status
+    // Get onboarding execution status (if exists)
     const { data: onboarding, error: onboardingError } = await supabaseAdmin
       .from('client_onboarding_20q')
       .select('execution_status')
       .eq('user_id', userId)
       .single();
 
-    if (onboardingError || !onboarding || onboarding.execution_status !== 'active') {
+    // If onboarding doesn't exist or isn't active, but profile is unlocked, allow access
+    if (onboardingError || !onboarding) {
+      console.log('No onboarding record found, but profile is unlocked - allowing access');
+      return next();
+    }
+
+    if (onboarding.execution_status !== 'active') {
       return res.status(403).json({
         error: 'Profile not active',
         message: 'Your onboarding is not yet approved. Please wait for admin approval.',
@@ -69,10 +75,10 @@ const discoveryModeInfo = async (req, res, next) => {
 
     const userId = req.user.id;
 
-    // Get profile status
+    // Get profile status from clients table (primary source)
     const { data: user, error: userError } = await supabaseAdmin
-      .from('registered_users')
-      .select('profile_unlocked, payment_confirmed')
+      .from('clients')
+      .select('profile_unlocked, payment_verified, is_active, onboarding_complete')
       .eq('id', userId)
       .single();
 
@@ -95,7 +101,7 @@ const discoveryModeInfo = async (req, res, next) => {
       next_steps: ''
     };
 
-    if (!user.payment_confirmed) {
+    if (!user.payment_verified) {
       discoveryMode = {
         active: true,
         message: 'Payment Confirmation Pending',

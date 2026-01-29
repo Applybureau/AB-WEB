@@ -12,7 +12,7 @@ class ApplicationTrackingController {
       let query = supabaseAdmin
         .from('applications')
         .select('*')
-        .eq('user_id', clientId) // Use user_id instead of client_id
+        .eq('client_id', clientId) // Use client_id instead of user_id
         .order('created_at', { ascending: false })
         .range(offset, offset + limit - 1);
 
@@ -76,8 +76,7 @@ class ApplicationTrackingController {
       }
 
       const applicationData = {
-        user_id: client_id, // Use user_id as primary field
-        client_id, // Keep client_id for compatibility
+        client_id: client_id, // Use client_id as primary field
         company_name,
         job_title,
         job_url,
@@ -166,7 +165,7 @@ class ApplicationTrackingController {
         await supabaseAdmin
           .from('notifications')
           .insert({
-            user_id: application.user_id, // Use user_id instead of client_id
+            user_id: application.client_id, // Use client_id instead of user_id
             user_type: 'client',
             type: 'application_status_update',
             title: 'Application Status Updated',
@@ -244,7 +243,7 @@ class ApplicationTrackingController {
       const allApplications = applications || [];
       
       // Get unique client count
-      const uniqueClients = new Set(allApplications.map(app => app.user_id || app.client_id));
+      const uniqueClients = new Set(allApplications.map(app => app.client_id));
       
       // Calculate status counts
       const statusCounts = allApplications.reduce((acc, app) => {
@@ -293,7 +292,7 @@ class ApplicationTrackingController {
       const { data: applications, error } = await supabaseAdmin
         .from('applications')
         .select('*')
-        .eq('user_id', clientId); // Use user_id instead of client_id
+        .eq('client_id', clientId); // Use client_id instead of user_id
 
       if (error && error.code === '42P01') {
         return this.getDefaultStats(weeklyTarget, tier);

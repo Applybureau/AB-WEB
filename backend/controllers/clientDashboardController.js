@@ -8,9 +8,9 @@ class ClientDashboardController {
     try {
       const clientId = req.user.userId || req.user.id;
 
-      // Get client profile and completion status
+      // Get client profile and completion status from clients table
       const { data: client } = await supabaseAdmin
-        .from('registered_users')
+        .from('clients')
         .select('*')
         .eq('id', clientId)
         .single();
