@@ -19,18 +19,9 @@ class ClientDashboardController {
         return res.status(404).json({ error: 'Client not found' });
       }
 
-      // Get consultation data (with error handling)
+      // Skip consultation data query since table doesn't exist
+      console.log('Skipping consultation query - table does not exist');
       let consultation = null;
-      try {
-        const { data: consultationData } = await supabaseAdmin
-          .from('consultation_requests')
-          .select('*')
-          .eq('user_id', clientId)
-          .single();
-        consultation = consultationData;
-      } catch (consultationError) {
-        console.log('No consultation found for client:', consultationError.message);
-      }
 
       // Get 20 Questions onboarding status (with error handling)
       let onboarding20q = null;

@@ -278,25 +278,12 @@ class ApplicationTrackingController {
   // Helper method to calculate application statistics
   static async calculateApplicationStats(clientId) {
     try {
-      // Get consultation data for tier information (with fallback)
+      // Get consultation data for tier information (with fallback for missing table)
       let tier = 'Tier 1';
       let weeklyTarget = this.getWeeklyTarget(tier);
 
-      try {
-        const { data: consultation } = await supabaseAdmin
-          .from('consultation_requests')
-          .select('package_interest, registered_at')
-          .eq('user_id', clientId)
-          .single();
-
-        if (consultation?.package_interest) {
-          tier = consultation.package_interest;
-          weeklyTarget = this.getWeeklyTarget(tier);
-        }
-      } catch (consultationError) {
-        // If no consultation found, use defaults
-        console.log('No consultation found for client, using defaults:', consultationError.message);
-      }
+      // Skip consultation query since table doesn't exist
+      console.log('Skipping consultation query - table does not exist');
 
       // Try to get applications, return default stats if table doesn't exist
       const { data: applications, error } = await supabaseAdmin
