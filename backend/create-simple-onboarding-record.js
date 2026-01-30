@@ -25,12 +25,32 @@ async function createSimpleOnboardingRecord() {
 
     console.log('✅ Cleared existing onboarding records');
 
-    // Create minimal onboarding record with only basic fields
+    // Create comprehensive onboarding record with all likely required fields
     const { data: onboarding, error: onboardingError } = await supabaseAdmin
       .from('client_onboarding_20q')
       .insert({
         user_id: CLIENT_ID,
         execution_status: 'active',
+        
+        // Basic career info (likely required)
+        target_job_titles: ['Software Engineer', 'Product Manager'],
+        target_industries: ['Technology', 'Software Development'],
+        target_locations: ['Remote', 'San Francisco', 'New York'],
+        target_salary_range: '$100,000 - $150,000',
+        years_of_experience: 5,
+        job_search_timeline: '1-3 months',
+        
+        // Technical skills (likely required)
+        key_technical_skills: ['JavaScript', 'React', 'Node.js', 'Python'],
+        
+        // Additional fields that might be required
+        current_employment_status: 'employed',
+        education_level: 'bachelors',
+        preferred_work_arrangement: 'remote',
+        career_goals: 'Advance to senior engineering role',
+        biggest_career_challenges: 'Finding the right company culture',
+        
+        // Timestamps
         completed_at: new Date().toISOString(),
         approved_at: new Date().toISOString(),
         created_at: new Date().toISOString()
@@ -39,27 +59,12 @@ async function createSimpleOnboardingRecord() {
       .single();
 
     if (onboardingError) {
-      console.log('❌ Minimal onboarding failed:', onboardingError.message);
-      
-      // Try ultra minimal - just user_id and status
-      const { data: ultraMinimal, error: ultraError } = await supabaseAdmin
-        .from('client_onboarding_20q')
-        .insert({
-          user_id: CLIENT_ID,
-          execution_status: 'active'
-        })
-        .select()
-        .single();
-
-      if (ultraError) {
-        console.log('❌ Ultra minimal also failed:', ultraError.message);
-        return { success: false, error: ultraError.message };
-      } else {
-        console.log('✅ Ultra minimal onboarding created');
-        return { success: true, onboarding: ultraMinimal };
-      }
+      console.log('❌ Onboarding creation failed:', onboardingError.message);
+      return { success: false, error: onboardingError.message };
     } else {
-      console.log('✅ Minimal onboarding record created');
+      console.log('✅ Onboarding record created successfully');
+      console.log('   Status:', onboarding.execution_status);
+      console.log('   Target Job Titles:', onboarding.target_job_titles);
       return { success: true, onboarding };
     }
 

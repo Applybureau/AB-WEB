@@ -1,51 +1,79 @@
-# Backend URLs for Frontend Configuration
+# Frontend and Backend URLs Configuration
 
 ## Current Status
 
-### ✅ Vercel Backend (CORS Fixed - Ready to Use)
-- **URL**: `https://apply-bureau-backend.vercel.app`
-- **Status**: ✅ CORS working perfectly
-- **CORS Headers**: 
-  - `Access-Control-Allow-Origin: *`
-  - `Access-Control-Allow-Methods: *`
-  - `Access-Control-Allow-Headers: *`
-  - `Access-Control-Allow-Credentials: true`
-- **Frontend Compatibility**: ✅ Works with `http://localhost:5173`
+### ✅ Production Frontend
+- **Primary URL**: `https://www.applybureau.com`
+- **Secondary URL**: `https://applybureau.com`
+- **Development URL**: `https://apply-bureau.vercel.app`
+- **Status**: ✅ Production ready
 
-### ⏳ DigitalOcean Backend (Deployment Pending)
+### ✅ DigitalOcean Backend (Primary)
 - **URL**: `https://jellyfish-app-t4m35.ondigitalocean.app`
-- **Status**: ⏳ Still has old CORS configuration
-- **Issue**: Deployment hasn't updated with new CORS settings yet
+- **Status**: ✅ CORS configured for all frontend URLs
+- **CORS Headers**: 
+  - `Access-Control-Allow-Origin: https://www.applybureau.com` (and others)
+  - `Access-Control-Allow-Methods: GET, POST, PUT, PATCH, DELETE, OPTIONS`
+  - `Access-Control-Allow-Headers: Origin, X-Requested-With, Content-Type, Accept, Authorization, Cache-Control, Pragma`
+  - `Access-Control-Allow-Credentials: true`
+- **Frontend Compatibility**: ✅ Works with all frontend URLs
 
-## Recommended Action
+### ✅ Vercel Backend (Backup)
+- **URL**: `https://apply-bureau-backend.vercel.app`
+- **Status**: ✅ Available as backup
+- **CORS Headers**: Ultra-permissive for development
 
-**Use Vercel backend immediately** while waiting for DigitalOcean deployment:
+## Production Configuration
 
-### Frontend Configuration
+### Frontend URLs (All Supported)
 ```javascript
-// Use this in your frontend configuration
-const API_BASE_URL = 'https://apply-bureau-backend.vercel.app';
-
-// Or for environment-based configuration
-const API_BASE_URL = process.env.NODE_ENV === 'production' 
-  ? 'https://apply-bureau-backend.vercel.app'  // Use Vercel for now
-  : 'https://apply-bureau-backend.vercel.app';  // Use Vercel for dev too
+const ALLOWED_FRONTEND_URLS = [
+  'https://www.applybureau.com',      // Primary production
+  'https://applybureau.com',          // Secondary production  
+  'https://apply-bureau.vercel.app',  // Development/staging
+  'http://localhost:3000',            // Local development
+  'http://localhost:5173',            // Vite dev server
+  'http://localhost:5174'             // Alternative Vite port
+];
 ```
 
-### Test Results
+### Backend Configuration
+```javascript
+// Primary backend (recommended)
+const API_BASE_URL = 'https://jellyfish-app-t4m35.ondigitalocean.app';
+
+// Environment-based configuration
+const API_BASE_URL = process.env.NODE_ENV === 'production' 
+  ? 'https://jellyfish-app-t4m35.ondigitalocean.app'  // DigitalOcean for production
+  : 'http://localhost:3000';                          // Local for development
+```
+
+## Test Results (All Working ✅)
 - ✅ Health check: Working
 - ✅ OPTIONS preflight: Working  
 - ✅ Login requests: Working
-- ✅ Contact form: Working
+- ✅ Applications endpoint: Working
+- ✅ Dashboard access: Working
 - ✅ All CORS headers present
 
-## Admin Credentials
-- **Email**: `admin@applybureau.com`
+## Login Credentials
+- **Email**: `israelloko65@gmail.com`
+- **Password**: `SimplePass123!`
+
+## Admin Credentials  
+- **Email**: `applybureau@gmail.com`
 - **Password**: `Admin123@#`
 
-## Next Steps
-1. ✅ Update frontend to use Vercel backend URL
-2. ⏳ Wait for DigitalOcean deployment to update
-3. 🔄 Switch back to DigitalOcean when ready (optional)
+## API Endpoints
+- **Login**: `POST /api/auth/login`
+- **Dashboard**: `GET /api/client/dashboard`
+- **Applications**: `GET /api/applications`
+- **Stats**: `GET /api/applications/stats`
+- **Health**: `GET /api/health`
 
-Both backends use the same database and have identical functionality.
+## Frontend Access URLs
+- **Production Login**: `https://www.applybureau.com/login`
+- **Production Dashboard**: `https://www.applybureau.com/dashboard`
+- **Development**: `https://apply-bureau.vercel.app/login`
+
+Both backends use the same Supabase database and have identical functionality.

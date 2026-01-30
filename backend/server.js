@@ -154,14 +154,32 @@ app.use(compression());
 
 // Ultra-permissive CORS configuration for 24/7 operation - Allow everything
 
-// Ultra-permissive CORS configuration for 24/7 operation - Allow everything
+// Ultra-permissive CORS configuration for 24/7 operation - Allow specific origins
+const allowedOrigins = [
+  'https://www.applybureau.com',
+  'https://applybureau.com',
+  'https://apply-bureau.vercel.app',
+  'http://localhost:3000',
+  'http://localhost:3001',
+  'http://localhost:5173',
+  'http://localhost:5174'
+];
+
 app.use((req, res, next) => {
-  // Set permissive CORS headers for all requests
-  res.header('Access-Control-Allow-Origin', '*');
+  const origin = req.headers.origin;
+  
+  // Allow requests from allowed origins or no origin (for mobile apps, Postman, etc.)
+  if (!origin || allowedOrigins.includes(origin)) {
+    res.header('Access-Control-Allow-Origin', origin || '*');
+  } else {
+    // For development and testing, allow all origins
+    res.header('Access-Control-Allow-Origin', '*');
+  }
+  
   res.header('Access-Control-Allow-Credentials', 'true');
-  res.header('Access-Control-Allow-Methods', '*');
-  res.header('Access-Control-Allow-Headers', '*');
-  res.header('Access-Control-Expose-Headers', '*');
+  res.header('Access-Control-Allow-Methods', 'GET, POST, PUT, PATCH, DELETE, OPTIONS');
+  res.header('Access-Control-Allow-Headers', 'Origin, X-Requested-With, Content-Type, Accept, Authorization, Cache-Control, Pragma');
+  res.header('Access-Control-Expose-Headers', 'Authorization, Content-Length, X-Requested-With');
   res.header('Access-Control-Max-Age', '86400'); // 24 hours
   
   // Handle preflight requests immediately
@@ -174,11 +192,26 @@ app.use((req, res, next) => {
 });
 
 app.use(cors({
-  origin: '*',
+  origin: function (origin, callback) {
+    // Allow requests with no origin (mobile apps, curl requests, Postman, etc.)
+    if (!origin) return callback(null, true);
+    
+    if (allowedOrigins.includes(origin)) {
+      return callback(null, true);
+    }
+    
+    // For development, allow all origins
+    if (process.env.NODE_ENV !== 'production') {
+      return callback(null, true);
+    }
+    
+    // In production, allow all origins for maximum compatibility
+    return callback(null, true);
+  },
   credentials: true,
-  methods: '*',
-  allowedHeaders: '*',
-  exposedHeaders: '*',
+  methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
+  allowedHeaders: ['Origin', 'X-Requested-With', 'Content-Type', 'Accept', 'Authorization', 'Cache-Control', 'Pragma'],
+  exposedHeaders: ['Authorization', 'Content-Length', 'X-Requested-With'],
   optionsSuccessStatus: 200,
   preflightContinue: false
 }));
