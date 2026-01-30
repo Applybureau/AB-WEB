@@ -278,15 +278,25 @@ class ApplicationTrackingController {
   // Helper method to calculate application statistics
   static async calculateApplicationStats(clientId) {
     try {
-      // Get consultation data for tier information
-      const { data: consultation } = await supabaseAdmin
-        .from('consultation_requests')
-        .select('package_interest, registered_at')
-        .eq('user_id', clientId)
-        .single();
+      // Get consultation data for tier information (with fallback)
+      let tier = 'Tier 1';
+      let weeklyTarget = this.getWeeklyTarget(tier);
 
-      const tier = consultation?.package_interest || 'Tier 1';
-      const weeklyTarget = this.getWeeklyTarget(tier);
+      try {
+        const { data: consultation } = await supabaseAdmin
+          .from('consultation_requests')
+          .select('package_interest, registered_at')
+          .eq('user_id', clientId)
+          .single();
+
+        if (consultation?.package_interest) {
+          tier = consultation.package_interest;
+          weeklyTarget = this.getWeeklyTarget(tier);
+        }
+      } catch (consultationError) {
+        // If no consultation found, use defaults
+        console.log('No consultation found for client, using defaults:', consultationError.message);
+      }
 
       // Try to get applications, return default stats if table doesn't exist
       const { data: applications, error } = await supabaseAdmin
@@ -310,13 +320,15 @@ class ApplicationTrackingController {
       const startOfWeek = new Date(now.setDate(now.getDate() - now.getDay()));
       startOfWeek.setHours(0, 0, 0, 0);
       
-      const thisWeekApplications = allApplications.filter(app => 
-        new Date(app.application_date) >= startOfWeek
-      );
+      const thisWeekApplications = allApplications.filter(app => {
+        const appDate = app.date_applied || app.created_at;
+        return appDate && new Date(appDate) >= startOfWeek;
+      });
 
       // Calculate status counts
       const statusCounts = allApplications.reduce((acc, app) => {
-        acc[app.status] = (acc[app.status] || 0) + 1;
+        const status = app.status || 'applied';
+        acc[status] = (acc[status] || 0) + 1;
         return acc;
       }, {});
 

@@ -15,39 +15,91 @@ class ClientDashboardController {
         .eq('id', clientId)
         .single();
 
-      const { data: consultation } = await supabaseAdmin
-        .from('consultation_requests')
-        .select('*')
-        .eq('user_id', clientId)
-        .single();
-
       if (!client) {
         return res.status(404).json({ error: 'Client not found' });
       }
 
-      // Get 20 Questions onboarding status
-      const { data: onboarding20q } = await supabaseAdmin
-        .from('client_onboarding_20q')
-        .select('*')
-        .eq('user_id', clientId)
-        .single();
+      // Get consultation data (with error handling)
+      let consultation = null;
+      try {
+        const { data: consultationData } = await supabaseAdmin
+          .from('consultation_requests')
+          .select('*')
+          .eq('user_id', clientId)
+          .single();
+        consultation = consultationData;
+      } catch (consultationError) {
+        console.log('No consultation found for client:', consultationError.message);
+      }
+
+      // Get 20 Questions onboarding status (with error handling)
+      let onboarding20q = null;
+      try {
+        const { data: onboardingData } = await supabaseAdmin
+          .from('client_onboarding_20q')
+          .select('*')
+          .eq('user_id', clientId)
+          .single();
+        onboarding20q = onboardingData;
+      } catch (onboardingError) {
+        console.log('No onboarding found for client:', onboardingError.message);
+      }
 
       const profileData = {
         ...client,
         consultation_data: consultation || {}
       };
 
-      const completionStatus = ClientProfileController.calculateProfileCompletion(profileData);
+      // Calculate profile completion with error handling
+      let completionStatus;
+      try {
+        completionStatus = ClientProfileController.calculateProfileCompletion(profileData);
+      } catch (completionError) {
+        console.log('Profile completion calculation failed:', completionError.message);
+        completionStatus = {
+          percentage: 50,
+          is_complete: false,
+          missing_fields: [],
+          features_unlocked: {
+            application_tracking: true,
+            consultation_booking: true,
+            document_upload: true
+          }
+        };
+      }
 
-      // Get application statistics (placeholder for now)
-      const applicationStats = {
-        total_applications: 0,
-        active_applications: 0,
-        interviews_scheduled: 0,
-        offers_received: 0,
-        weekly_target: this.getWeeklyTarget(consultation?.package_interest),
-        applications_this_week: 0
-      };
+      // Get application statistics with error handling
+      let applicationStats;
+      try {
+        const { data: applications } = await supabaseAdmin
+          .from('applications')
+          .select('*')
+          .eq('client_id', clientId);
+
+        const totalApps = applications?.length || 0;
+        const activeApps = applications?.filter(app => ['applied', 'interviewing'].includes(app.status))?.length || 0;
+        const interviews = applications?.filter(app => app.status === 'interviewing')?.length || 0;
+        const offers = applications?.filter(app => app.status === 'offer')?.length || 0;
+
+        applicationStats = {
+          total_applications: totalApps,
+          active_applications: activeApps,
+          interviews_scheduled: interviews,
+          offers_received: offers,
+          weekly_target: this.getWeeklyTarget(consultation?.package_interest),
+          applications_this_week: 0 // Calculate if needed
+        };
+      } catch (appError) {
+        console.log('Application stats calculation failed:', appError.message);
+        applicationStats = {
+          total_applications: 0,
+          active_applications: 0,
+          interviews_scheduled: 0,
+          offers_received: 0,
+          weekly_target: this.getWeeklyTarget(consultation?.package_interest),
+          applications_this_week: 0
+        };
+      }
 
       // Get recent activity (placeholder for now)
       const recentActivity = [];
