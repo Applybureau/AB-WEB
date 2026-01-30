@@ -41,10 +41,24 @@ class ClientDashboardController {
         consultation_data: consultation || {}
       };
 
-      // Calculate profile completion with error handling
+      // Calculate profile completion with error handling (simplified version)
       let completionStatus;
       try {
-        completionStatus = ClientProfileController.calculateProfileCompletion(profileData);
+        // Simplified profile completion calculation without consultation dependency
+        const basicFields = ['id', 'email', 'full_name'];
+        const completedFields = basicFields.filter(field => client[field] && client[field].toString().trim() !== '');
+        const percentage = Math.round((completedFields.length / basicFields.length) * 100);
+        
+        completionStatus = {
+          percentage: percentage,
+          is_complete: percentage >= 80,
+          missing_fields: basicFields.filter(field => !client[field] || client[field].toString().trim() === ''),
+          features_unlocked: {
+            application_tracking: true,
+            consultation_booking: true,
+            document_upload: true
+          }
+        };
       } catch (completionError) {
         console.log('Profile completion calculation failed:', completionError.message);
         completionStatus = {
