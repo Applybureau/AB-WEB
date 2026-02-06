@@ -111,7 +111,7 @@ async function createSimpleOnboarding() {
     console.log('✅ Onboarding: Active');
     console.log('📧 Email: israelloko65@gmail.com');
     console.log('🔑 Password: SimplePass123!');
-    console.log('🌐 Frontend: https://apply-bureau.vercel.app/login');
+    console.log('🌐 Frontend: https://www.applybureau.com/login');
 
     return { success: true };
 

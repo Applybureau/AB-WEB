@@ -11,7 +11,7 @@
    - Updated server.js with proper CORS headers
 
 2. **Updated Environment Variables**
-   - Changed `FRONTEND_URL` from `https://apply-bureau.vercel.app` to `https://www.applybureau.com`
+   - Changed `FRONTEND_URL` from `https://www.applybureau.com` to `https://www.applybureau.com`
    - Updated documentation files
 
 3. **Deployed Changes**
@@ -30,7 +30,7 @@
 |-----|--------|---------|
 | `https://www.applybureau.com` | ✅ Primary | Production frontend |
 | `https://applybureau.com` | ✅ Secondary | Production (no www) |
-| `https://apply-bureau.vercel.app` | ✅ Working | Development/staging |
+| `https://www.applybureau.com` | ✅ Working | Development/staging |
 | `http://localhost:3000` | ✅ Working | Local development |
 | `http://localhost:5173` | ✅ Working | Vite dev server |
 

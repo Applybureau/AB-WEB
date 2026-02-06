@@ -16,7 +16,7 @@ async function testApplicationEmailFix() {
       application_status: 'interview',
       message: 'Great news! Your application has progressed to the interview stage. The hiring manager was impressed with your background.',
       next_steps: 'Please prepare for a technical interview scheduled for next week. We will send you the details shortly.',
-      dashboard_url: 'https://apply-bureau.vercel.app/dashboard',
+      dashboard_url: 'https://www.applybureau.com/dashboard',
       reply_to: 'consultant@applybureau.com',
       current_year: new Date().getFullYear()
     });

@@ -164,7 +164,7 @@ async function directSchemaFix() {
     console.log('\n📋 CURRENT STATUS:');
     console.log('   📧 Login Email: israelloko65@gmail.com');
     console.log('   🔑 Password: SimplePass123!');
-    console.log('   🌐 Login URL: https://apply-bureau.vercel.app/login');
+    console.log('   🌐 Login URL: https://www.applybureau.com/login');
     
     console.log('\n✅ WHAT WORKS:');
     console.log('   ✅ User authentication');

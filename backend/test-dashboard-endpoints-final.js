@@ -169,8 +169,8 @@ async function testDashboardEndpoints() {
     console.log(`${discoveryResponse.ok ? '✅' : '❌'} Discovery: ${discoveryResponse.ok ? 'Working' : 'Failed'}`);
 
     console.log('\n🌐 FRONTEND ACCESS:');
-    console.log('   Login URL: https://apply-bureau.vercel.app/login');
-    console.log('   Dashboard URL: https://apply-bureau.vercel.app/dashboard');
+    console.log('   Login URL: https://www.applybureau.com/login');
+    console.log('   Dashboard URL: https://www.applybureau.com/dashboard');
     
     console.log('\n🔗 API ENDPOINTS:');
     console.log(`   Login: POST ${BASE_URL}/api/auth/login`);

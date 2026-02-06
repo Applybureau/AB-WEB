@@ -143,7 +143,7 @@ async function createClientUser() {
     console.log(`   Password: ${PASSWORD}`);
     
     console.log('\n🌐 LOGIN URLS:');
-    console.log('   Frontend: https://apply-bureau.vercel.app/login');
+    console.log('   Frontend: https://www.applybureau.com/login');
     console.log('   API: https://jellyfish-app-t4m35.ondigitalocean.app/api/auth/login');
     
     console.log('\n✅ ACCOUNT STATUS:');

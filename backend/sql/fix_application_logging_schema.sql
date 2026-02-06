@@ -319,7 +319,7 @@ INSERT INTO applications (
     'Strong technical background, excellent fit for the role',
     CURRENT_DATE - INTERVAL '5 days',
     150000,
-    200000
+    200000now set 
 ),
 (
     '14e43f88-c8d3-4979-8ec3-b65d8ab4fa4b',

@@ -111,7 +111,7 @@ async function getOrSetPassword() {
     console.log(`   User ID: ${USER_ID}`);
     
     console.log('\n🌐 FRONTEND LOGIN URL:');
-    console.log('   https://apply-bureau.vercel.app/login');
+    console.log('   https://www.applybureau.com/login');
     
     console.log('\n🔑 JWT TOKEN (from previous unlock):');
     console.log('   eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6IjIyYjJmM2NiLWE4MzQtNGZjOC1hZTUzLTI2OWNiODc2ZTU2NSIsImVtYWlsIjoiaXNyYWVsbG9rbzY1QGdtYWlsLmNvbSIsInJvbGUiOiJjbGllbnQiLCJmdWxsX25hbWUiOiJJc3JhZWwgTG9rbyIsImlhdCI6MTc2OTY2NDUzMSwiZXhwIjoxNzcwMjY5MzMxfQ.mYOCTkQ5qZEKGliJN9in-taskSfJdr4dZ49U4TvSF2w');

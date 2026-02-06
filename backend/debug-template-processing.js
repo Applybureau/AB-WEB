@@ -14,7 +14,7 @@ async function debugTemplateProcessing() {
       application_status: 'interview',
       message: 'Great news! Your application has progressed to the interview stage.',
       next_steps: 'Please prepare for a technical interview scheduled for next week.',
-      dashboard_url: 'https://apply-bureau.vercel.app/dashboard',
+      dashboard_url: 'https://www.applybureau.com/dashboard',
       current_year: 2026,
       subject: 'Interview Scheduled - Application Update'
     };

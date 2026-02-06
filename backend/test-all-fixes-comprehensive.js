@@ -180,7 +180,7 @@ async function testAllFixes() {
         client_name: 'Test Client',
         admin_message: 'This is a test reschedule request email.',
         reason: 'Testing new email template',
-        reschedule_link: 'https://apply-bureau.vercel.app/reschedule',
+        reschedule_link: 'https://www.applybureau.com/reschedule',
         current_year: new Date().getFullYear()
       });
       addTestResult('Consultation Reschedule Email', !!rescheduleResult.id);

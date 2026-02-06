@@ -77,7 +77,7 @@
 - **Meeting Date**: Tuesday, March 12, 2024
 - **Meeting Time**: 5:00 PM (EST)
 - **Meeting Link**: https://meet.google.com/abc-def-ghi
-- **Dashboard URL**: https://apply-bureau.vercel.app/dashboard
+- **Dashboard URL**: https://www.applybureau.com/dashboard
 
 ### 🎨 Design Compliance Verified:
 

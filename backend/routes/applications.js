@@ -209,7 +209,7 @@ router.get('/weekly', authenticateToken, isProfileUnlocked, async (req, res) => 
   }
 });
 
-// POST /api/applications - Create new application (admin only)
+// POST /api/applications - Create new application (admin only) - FIXED VERSION
 router.post('/', authenticateToken, requireAdmin, async (req, res) => {
   try {
     const {
@@ -243,37 +243,75 @@ router.post('/', authenticateToken, requireAdmin, async (req, res) => {
       });
     }
 
-    // Skip client validation - let the foreign key constraint handle it
-    // The applications table has a foreign key to auth.users(id)
+    // Create application with both client_id and user_id for compatibility
+    const applicationData = {
+      client_id: client_id, // Primary field for new schema
+      user_id: client_id,   // Compatibility field for old schema
+      type: 'job_application',
+      title: `${finalCompany} - ${finalRole}`,
+      description: job_description || `Application for ${finalRole} position at ${finalCompany}`,
+      status: 'applied',
+      company: finalCompany,
+      company_name: finalCompany, // Compatibility field
+      job_title: finalRole,
+      role: finalRole, // Compatibility field
+      job_url: job_link,
+      job_link: job_link, // Compatibility field
+      offer_salary: salary_range,
+      salary_range: salary_range, // Compatibility field
+      location: location,
+      job_type: job_type,
+      application_method: application_method,
+      application_strategy: application_strategy,
+      admin_notes: admin_notes || notes || `Application created by admin for ${finalCompany} - ${finalRole}`,
+      notes: notes,
+      created_at: new Date().toISOString(),
+      updated_at: new Date().toISOString()
+    };
 
-    // Create application with minimal required fields
     const { data: application, error } = await supabaseAdmin
       .from('applications')
-      .insert({
-        client_id: client_id, // Use client_id as primary field
-        type: 'job_application', // Use job_application instead of consultation
-        title: `${finalCompany} - ${finalRole}`,
-        description: job_description || `Application for ${finalRole} position at ${finalCompany}`,
-        status: 'applied', // Use 'applied' instead of 'pending'
-        company: finalCompany, // Use 'company' not 'company_name'
-        job_title: finalRole,
-        job_url: job_link,
-        offer_salary: salary_range, // Use 'offer_salary' not 'salary_range'
-        // location, // Skip if column doesn't exist
-        // job_type, // Skip if column doesn't exist
-        // application_method, // Skip if column doesn't exist
-        admin_notes: admin_notes || notes || `Application created by admin for ${finalCompany} - ${finalRole}`,
-        created_at: new Date().toISOString()
-      })
+      .insert(applicationData)
       .select()
       .single();
 
     if (error) {
       console.error('Error creating application:', error);
-      return res.status(500).json({ 
-        error: 'Failed to create application',
-        details: error.message 
-      });
+      
+      // If the error is due to missing columns, try with minimal data
+      if (error.code === '42703') {
+        console.log('Retrying with minimal application data...');
+        
+        const minimalData = {
+          client_id: client_id,
+          user_id: client_id,
+          title: `${finalCompany} - ${finalRole}`,
+          description: job_description || `Application for ${finalRole} position at ${finalCompany}`,
+          status: 'applied',
+          admin_notes: admin_notes || notes || `Application created by admin`,
+          created_at: new Date().toISOString()
+        };
+
+        const { data: retryApp, error: retryError } = await supabaseAdmin
+          .from('applications')
+          .insert(minimalData)
+          .select()
+          .single();
+
+        if (retryError) {
+          return res.status(500).json({ 
+            error: 'Failed to create application',
+            details: retryError.message 
+          });
+        }
+
+        application = retryApp;
+      } else {
+        return res.status(500).json({ 
+          error: 'Failed to create application',
+          details: error.message 
+        });
+      }
     }
 
     console.log('Application created by admin:', {

@@ -237,8 +237,8 @@ async function finalDashboardFix() {
     console.log('   Password: SimplePass123!');
     
     console.log('\n🌐 ACCESS URLS:');
-    console.log('   Frontend: https://apply-bureau.vercel.app/login');
-    console.log('   Dashboard: https://apply-bureau.vercel.app/dashboard');
+    console.log('   Frontend: https://www.applybureau.com/login');
+    console.log('   Dashboard: https://www.applybureau.com/dashboard');
     
     console.log('\n✅ CURRENT STATUS:');
     console.log('   ✅ Login: Working');

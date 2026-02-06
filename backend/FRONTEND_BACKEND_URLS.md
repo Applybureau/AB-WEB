@@ -5,7 +5,7 @@
 ### ✅ Production Frontend
 - **Primary URL**: `https://www.applybureau.com`
 - **Secondary URL**: `https://applybureau.com`
-- **Development URL**: `https://apply-bureau.vercel.app`
+- **Development URL**: `https://www.applybureau.com`
 - **Status**: ✅ Production ready
 
 ### ✅ DigitalOcean Backend (Primary)
@@ -30,7 +30,7 @@
 const ALLOWED_FRONTEND_URLS = [
   'https://www.applybureau.com',      // Primary production
   'https://applybureau.com',          // Secondary production  
-  'https://apply-bureau.vercel.app',  // Development/staging
+  'https://www.applybureau.com',  // Development/staging
   'http://localhost:3000',            // Local development
   'http://localhost:5173',            // Vite dev server
   'http://localhost:5174'             // Alternative Vite port
@@ -74,6 +74,6 @@ const API_BASE_URL = process.env.NODE_ENV === 'production'
 ## Frontend Access URLs
 - **Production Login**: `https://www.applybureau.com/login`
 - **Production Dashboard**: `https://www.applybureau.com/dashboard`
-- **Development**: `https://apply-bureau.vercel.app/login`
+- **Development**: `https://www.applybureau.com/login`
 
 Both backends use the same Supabase database and have identical functionality.

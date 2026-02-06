@@ -184,7 +184,7 @@ async function applyCorrectedSchema() {
     console.log('   🔑 Password: SimplePass123!');
     
     console.log('\n🌐 TESTING URLS:');
-    console.log('   Frontend: https://apply-bureau.vercel.app/login');
+    console.log('   Frontend: https://www.applybureau.com/login');
     console.log('   API Login: https://jellyfish-app-t4m35.ondigitalocean.app/api/auth/login');
     console.log('   Applications: https://jellyfish-app-t4m35.ondigitalocean.app/api/applications');
     

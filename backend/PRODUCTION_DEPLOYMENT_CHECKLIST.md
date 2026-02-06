@@ -118,7 +118,7 @@ SUPABASE_URL=https://uhivvmpljffhbodrklip.supabase.co
 SUPABASE_SERVICE_KEY=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...
 RESEND_API_KEY=re_DkzYXYAB_DN7Td7bHkh6FFYbT9sLvHib8
 JWT_SECRET=e3d4d47b-759c-4cbc-998a-d3a0c9667f94
-FRONTEND_URL=https://apply-bureau.vercel.app
+FRONTEND_URL=https://www.applybureau.com
 PORT=3000
 ```
 
@@ -178,7 +178,7 @@ If issues are detected:
 - **Admin Email**: admin@applybureautest.com
 - **Support Email**: support@applybureau.com
 - **Backend URL**: https://apply-bureau-backend.vercel.app
-- **Frontend URL**: https://apply-bureau.vercel.app
+- **Frontend URL**: https://www.applybureau.com
 
 ---
 

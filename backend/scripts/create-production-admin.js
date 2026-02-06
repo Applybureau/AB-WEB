@@ -246,7 +246,7 @@ class ProductionAdminSetup {
       this.log('\n🔐 LOGIN CREDENTIALS:');
       this.log(`Email: ${ADMIN_ACCOUNT.email}`);
       this.log(`Password: ${ADMIN_ACCOUNT.password}`);
-      this.log(`Login URL: ${process.env.FRONTEND_URL || 'https://apply-bureau.vercel.app'}/admin/login`);
+      this.log(`Login URL: ${process.env.FRONTEND_URL || 'https://www.applybureau.com'}/admin/login`);
       
     } else {
       this.log('❌ ADMIN SETUP FAILED');

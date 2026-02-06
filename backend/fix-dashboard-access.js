@@ -244,8 +244,8 @@ async function fixDashboardAccess() {
     console.log('   Password: SimplePass123!');
     
     console.log('\n🌐 DASHBOARD ACCESS:');
-    console.log('   Frontend: https://apply-bureau.vercel.app/login');
-    console.log('   Dashboard: https://apply-bureau.vercel.app/dashboard');
+    console.log('   Frontend: https://www.applybureau.com/login');
+    console.log('   Dashboard: https://www.applybureau.com/dashboard');
     
     console.log('\n✅ FIXES APPLIED:');
     console.log('   ✅ Client record exists in clients table');

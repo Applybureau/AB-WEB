@@ -38,15 +38,15 @@ const sampleData = {
   transaction_id: 'txn_123456789',
   
   // URLs
-  dashboard_url: 'https://apply-bureau.vercel.app/dashboard',
-  login_url: 'https://apply-bureau.vercel.app/login',
-  registration_url: 'https://apply-bureau.vercel.app/register?token=sample-token',
-  registration_link: 'https://apply-bureau.vercel.app/register?token=sample-token',
-  admin_dashboard_url: 'https://apply-bureau.vercel.app/admin',
-  admin_login_url: 'https://apply-bureau.vercel.app/admin/login',
-  reschedule_link: 'https://apply-bureau.vercel.app/reschedule/consultation-456',
-  message_url: 'https://apply-bureau.vercel.app/messages/msg-789',
-  unsubscribe_url: 'https://apply-bureau.vercel.app/unsubscribe',
+  dashboard_url: 'https://www.applybureau.com/dashboard',
+  login_url: 'https://www.applybureau.com/login',
+  registration_url: 'https://www.applybureau.com/register?token=sample-token',
+  registration_link: 'https://www.applybureau.com/register?token=sample-token',
+  admin_dashboard_url: 'https://www.applybureau.com/admin',
+  admin_login_url: 'https://www.applybureau.com/admin/login',
+  reschedule_link: 'https://www.applybureau.com/reschedule/consultation-456',
+  message_url: 'https://www.applybureau.com/messages/msg-789',
+  unsubscribe_url: 'https://www.applybureau.com/unsubscribe',
   
   // Contact data
   name: 'Michael Davis',
@@ -73,8 +73,8 @@ const sampleData = {
   // Admin action data
   admin_status: 'Active',
   action_reason: 'Routine security review',
-  suspend_url: 'https://apply-bureau.vercel.app/admin/suspend/admin-123',
-  delete_url: 'https://apply-bureau.vercel.app/admin/delete/admin-123',
+  suspend_url: 'https://www.applybureau.com/admin/suspend/admin-123',
+  delete_url: 'https://www.applybureau.com/admin/delete/admin-123',
   
   // Additional data
   token_expiry: '24 hours',
@@ -255,7 +255,7 @@ async function testSpecificScenarios() {
       data: {
         ...sampleData,
         package_tier: 'Premium Package ($299)',
-        dashboard_url: 'https://apply-bureau.vercel.app/client/dashboard'
+        dashboard_url: 'https://www.applybureau.com/client/dashboard'
       }
     },
     {
