@@ -1,111 +1,67 @@
 <!DOCTYPE html>
-<html lang="en" xmlns="http://www.w3.org/1999/xhtml" xmlns:v="urn:schemas-microsoft-com:vml" xmlns:o="urn:schemas-microsoft-com:office:office">
+<html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <meta http-equiv="X-UA-Compatible" content="IE=edge">
-    <meta name="x-apple-disable-message-reformatting">
-    <meta name="format-detection" content="telephone=no,address=no,email=no,date=no,url=no">
+    <title>We've received your message — Apply Bureau</title>
+
     <meta name="color-scheme" content="light">
     <meta name="supported-color-schemes" content="light">
-    <title>We've received your message — Apply Bureau</title>
-    <!--[if mso]>
-    <noscript>
-        <xml>
-            <o:OfficeDocumentSettings>
-                <o:PixelsPerInch>96</o:PixelsPerInch>
-            </o:OfficeDocumentSettings>
-        </xml>
-    </noscript>
-    <![endif]-->
     <style>
-        /* Force light mode and prevent dark mode */
+        /* Force light mode */
         :root {
             color-scheme: light only;
-            supported-color-schemes: light;
         }
-        
-        /* Prevent color inversion in dark mode */
         @media (prefers-color-scheme: dark) {
-            body, table, td, p, a, span, div {
-                color: #1f2937 !important;
+            body, table, td, p, a, span, div, h1, h2, h3, h4, h5, h6 {
+                color: #000000 !important;
                 background-color: #ffffff !important;
             }
-            .email-container {
-                background-color: #ffffff !important;
-            }
-            .email-wrapper {
-                background-color: #f9fafb !important;
-            }
-            .header-bg {
-                background-color: #ffffff !important;
-            }
-            .footer-bg {
-                background-color: #f9fafb !important;
-            }
         }
-        
-        /* Reset styles */
-        body, table, td, a {
-            -webkit-text-size-adjust: 100%;
-            -ms-text-size-adjust: 100%;
-        }
-        table, td {
-            mso-table-lspace: 0pt;
-            mso-table-rspace: 0pt;
-        }
-        img {
-            -ms-interpolation-mode: bicubic;
-            border: 0;
-            height: auto;
-            line-height: 100%;
-            outline: none;
-            text-decoration: none;
-        }
-        
         /* Mobile responsive */
         @media only screen and (max-width: 600px) {
-            .email-container {
+            table[width="600"] {
                 width: 100% !important;
-                margin: 0 !important;
             }
-            .mobile-padding {
+            td[style*="padding: 40px"] {
                 padding: 20px !important;
-            }
-            .mobile-header-padding {
-                padding: 20px 20px 15px !important;
-            }
-            .mobile-footer-padding {
-                padding: 20px !important;
-            }
-            .mobile-hide {
-                display: none !important;
-            }
-            .mobile-text-center {
-                text-align: center !important;
             }
         }
     </style>
 </head>
-<body style="margin: 0; padding: 0; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif; background-color: #f9fafb; color: #1f2937; mso-line-height-rule: exactly;" class="email-wrapper">
-    <table role="presentation" cellspacing="0" cellpadding="0" border="0" width="100%" style="margin: 0; padding: 0; background-color: #f9fafb;" class="email-wrapper">
+<body style="margin: 0; padding: 0; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif; background-color: #f9fafb; color: #1f2937;">
+    <table role="presentation" style="width: 100%; border-collapse: collapse; background-color: #f9fafb;">
         <tr>
-            <td align="center" style="padding: 20px 10px;">
-                <table role="presentation" cellspacing="0" cellpadding="0" border="0" width="600" style="max-width: 600px; width: 100%; background-color: #ffffff; border-radius: 8px; box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);" class="email-container">
-                    <!-- Header -->
+            <td align="center" style="padding: 40px 20px;">
+                <table role="presentation" style="max-width: 600px; width: 100%; border-collapse: collapse; background-color: #ffffff; border-radius: 8px; box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);">
                     <tr>
-                        <td align="center" style="padding: 24px 30px 20px; border-bottom: 1px solid #e5e7eb; background-color: #ffffff;" class="mobile-header-padding header-bg">
-                            <h1 style="margin: 0; font-size: 22px; font-weight: 600; color: #0D9488; line-height: 1.2;">Apply Bureau</h1>
+                        <td style="padding: 40px 40px 30px; text-align: center; border-bottom: 1px solid #e5e7eb;">
+                            <h1 style="margin: 0; font-size: 24px; font-weight: 600; color: #0D9488;">Apply Bureau</h1>
                         </td>
                     </tr>
-                    
-                    <!-- Content -->
-
-                    
-                    <!-- Footer -->
                     <tr>
-                        <td align="center" style="padding: 20px 30px; border-top: 1px solid #e5e7eb; background-color: #f9fafb;" class="mobile-footer-padding footer-bg">
-                            <p style="margin: 0; font-size: 13px; color: #6b7280; line-height: 1.4;">
+                        <td style="padding: 40px;">
+                            <p style="margin: 0 0 20px; font-size: 16px; line-height: 1.6; color: #1f2937;">
+                                Hi {{client_name}},
+                            </p>
+                            <p style="margin: 0 0 20px; font-size: 16px; line-height: 1.6; color: #1f2937;">
+                                Thanks for reaching out to Apply Bureau.
+                            </p>
+                            <p style="margin: 0 0 20px; font-size: 16px; line-height: 1.6; color: #1f2937;">
+                                We've received your message and someone from our team will follow up shortly.
+                            </p>
+                            <p style="margin: 0 0 20px; font-size: 16px; line-height: 1.6; color: #1f2937;">
+                                No action is needed on your end.
+                            </p>
+                            <p style="margin: 30px 0 0; font-size: 16px; line-height: 1.6; color: #1f2937;">
+                                Best regards,<br>
+                                <strong>Apply Bureau Client Operations Team</strong>
+                            </p>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td style="padding: 30px 40px; text-align: center; border-top: 1px solid #e5e7eb; background-color: #f9fafb;">
+                            <p style="margin: 0; font-size: 14px; color: #6b7280;">
                                 © {{current_year}} Apply Bureau. All rights reserved.
                             </p>
                         </td>
