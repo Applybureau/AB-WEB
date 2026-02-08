@@ -9,13 +9,13 @@
         body { font-family: Arial, sans-serif; line-height: 1.6; color: #333; margin: 0; padding: 20px; background-color: #ffffff; }
         .container { max-width: 600px; margin: 0 auto; background: white; padding: 30px; border-radius: 10px; box-shadow: 0 0 10px rgba(0,0,0,0.1); }
         .header { text-align: center; margin-bottom: 30px; }
-        .logo { font-size: 24px; font-weight: bold; color: #000000; margin-bottom: 10px; }
-        .title { color: #000000; font-size: 20px; margin-bottom: 20px; }
+        .logo { font-size: 24px; font-weight: bold; color: #1a1a1a; margin-bottom: 10px; }
+        .title { color: #1a1a1a; font-size: 20px; margin-bottom: 20px; }
         .section { margin-bottom: 25px; }
-        .section h3 { color: #000000; border-bottom: 2px solid #3498db; padding-bottom: 5px; }
+        .section h3 { color: #1a1a1a; border-bottom: 2px solid #3498db; padding-bottom: 5px; }
         .info-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; margin: 15px 0; }
         .info-item { background: #f8f9fa; padding: 10px; border-radius: 5px; }
-        .info-label { font-weight: bold; color: #000000; }
+        .info-label { font-weight: bold; color: #1a1a1a; }
         .time-slots { background: #e8f5e8; padding: 15px; border-radius: 8px; margin: 15px 0; }
         .time-slot { background: white; padding: 10px; margin: 8px 0; border-radius: 5px; border-left: 4px solid #27ae60; }
         .urgent { background: #fff3cd; border: 1px solid #ffeaa7; padding: 15px; border-radius: 8px; margin: 15px 0; }
@@ -23,10 +23,10 @@
         .footer { text-align: center; margin-top: 30px; padding-top: 20px; border-top: 1px solid #eee; color: #666; }
     </style>
 </head>
-<body>
+<body style="margin: 0; padding: 0; font-family: 'Inter', 'Helvetica Neue', Helvetica, Arial, sans-serif; background-color: #f5f5f5; color: #1a1a1a;">
     <div class="container">
         <div class="header">
-            <div class="logo">Apply Bureau</div>
+            <img src="https://res.cloudinary.com/dbehg8jsv/image/upload/v1769345413/AB_LOGO_EDITED-removebg-preview_zrz8ai.png" alt="Apply Bureau" width="220" height="auto" style="display: block; margin: 0 auto 20px; border: 0; max-width: 100%;">
             <div class="title">🚨 New Consultation Request</div>
         </div>
 
@@ -99,7 +99,7 @@
                 <div class="info-label">Resume Status:</div>
                 {{resume_uploaded}}
                 {{#if pdf_url}}
-                <br><a href="{{pdf_url}}" target="_blank" style="color: #000000;">📄 View Resume</a>
+                <br><a href="{{pdf_url}}" target="_blank" style="color: #1a1a1a;">📄 View Resume</a>
                 {{/if}}
             </div>
         </div>
