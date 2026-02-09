@@ -223,7 +223,6 @@ router.post('/', authenticateToken, requireAdmin, async (req, res) => {
       salary_range,
       location,
       job_type = 'full-time',
-      application_method,
       application_strategy,
       admin_notes,
       notes
@@ -243,28 +242,33 @@ router.post('/', authenticateToken, requireAdmin, async (req, res) => {
       });
     }
 
-    // Create application with both client_id and user_id for compatibility
+    // Verify client exists
+    const { data: client, error: clientError } = await supabaseAdmin
+      .from('clients')
+      .select('id, full_name, email')
+      .eq('id', client_id)
+      .single();
+
+    if (clientError || !client) {
+      return res.status(404).json({ error: 'Client not found' });
+    }
+
+    // Create application with correct schema
     const applicationData = {
-      client_id: client_id, // Primary field for new schema
-      user_id: client_id,   // Compatibility field for old schema
-      type: 'job_application',
-      title: `${finalCompany} - ${finalRole}`,
-      description: job_description || `Application for ${finalRole} position at ${finalCompany}`,
-      status: 'applied',
-      company: finalCompany,
-      company_name: finalCompany, // Compatibility field
+      client_id: client_id,
+      applied_by_admin: true, // Boolean field
       job_title: finalRole,
-      role: finalRole, // Compatibility field
+      company: finalCompany,
+      title: `${finalCompany} - ${finalRole}`, // Required field
+      description: job_description || `Application for ${finalRole} position at ${finalCompany}`,
       job_url: job_link,
-      job_link: job_link, // Compatibility field
-      offer_salary: salary_range,
-      salary_range: salary_range, // Compatibility field
-      location: location,
-      job_type: job_type,
-      application_method: application_method,
+      offer_salary_min: salary_range ? parseInt(salary_range.split('-')[0].replace(/\D/g, '')) : null,
+      offer_salary_max: salary_range ? parseInt(salary_range.split('-')[1]?.replace(/\D/g, '')) : null,
+      type: job_type,
       application_strategy: application_strategy,
       admin_notes: admin_notes || notes || `Application created by admin for ${finalCompany} - ${finalRole}`,
-      notes: notes,
+      status: 'applied',
+      date_applied: new Date().toISOString(),
       created_at: new Date().toISOString(),
       updated_at: new Date().toISOString()
     };
@@ -277,41 +281,10 @@ router.post('/', authenticateToken, requireAdmin, async (req, res) => {
 
     if (error) {
       console.error('Error creating application:', error);
-      
-      // If the error is due to missing columns, try with minimal data
-      if (error.code === '42703') {
-        console.log('Retrying with minimal application data...');
-        
-        const minimalData = {
-          client_id: client_id,
-          user_id: client_id,
-          title: `${finalCompany} - ${finalRole}`,
-          description: job_description || `Application for ${finalRole} position at ${finalCompany}`,
-          status: 'applied',
-          admin_notes: admin_notes || notes || `Application created by admin`,
-          created_at: new Date().toISOString()
-        };
-
-        const { data: retryApp, error: retryError } = await supabaseAdmin
-          .from('applications')
-          .insert(minimalData)
-          .select()
-          .single();
-
-        if (retryError) {
-          return res.status(500).json({ 
-            error: 'Failed to create application',
-            details: retryError.message 
-          });
-        }
-
-        application = retryApp;
-      } else {
-        return res.status(500).json({ 
-          error: 'Failed to create application',
-          details: error.message 
-        });
-      }
+      return res.status(500).json({ 
+        error: 'Failed to create application',
+        details: error.message 
+      });
     }
 
     console.log('Application created by admin:', {
@@ -321,6 +294,22 @@ router.post('/', authenticateToken, requireAdmin, async (req, res) => {
       company: finalCompany,
       role: finalRole
     });
+
+    // Send email notification to client
+    try {
+      await sendEmail(client.email, 'application_update', {
+        client_name: client.full_name,
+        company_name: finalCompany,
+        position_title: finalRole,
+        application_status: 'applied',
+        message: `We've submitted your application for the ${finalRole} position at ${finalCompany}.`,
+        next_steps: 'We will monitor the application and keep you updated on any progress.'
+      });
+      console.log('Application creation email sent to:', client.email);
+    } catch (emailError) {
+      console.error('Failed to send application creation email:', emailError);
+      // Don't fail the request if email fails
+    }
 
     res.status(201).json({
       message: 'Application created successfully',
