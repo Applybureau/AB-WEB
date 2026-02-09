@@ -18,7 +18,35 @@
 
 ## Base URL
 - **Production**: `https://jellyfish-app-t4m35.ondigitalocean.app`
-- **Local**: `http://localhost:3000`
+
+---
+
+## Application Management Workflow
+
+### How Applications Work
+
+**Admin-Managed Process**:
+1. Admin selects a client from the admin dashboard
+2. Admin creates an application on behalf of the client
+3. System automatically sends email notification to the client
+4. Client receives email and can view the application in their dashboard
+5. Admin updates application status as it progresses
+6. Client receives email notifications for status changes
+
+**Client Access**:
+- Clients have **READ-ONLY** access to applications
+- Clients can VIEW all applications created for them
+- Clients CANNOT create or edit applications themselves
+- All application management is done by admins
+
+**Admin Access**:
+- Admins can create applications for any client
+- Admins can update application status
+- Admins can send custom update emails to clients
+- Admins can view all applications across all clients
+
+---
+
 
 ## Authentication System
 
@@ -238,8 +266,10 @@ Authorization: Bearer <token>
 }
 ```
 
-### Get Client Applications
+### Get Client Applications (Read-Only)
 **Endpoint**: `GET /api/client/applications`
+
+**Note**: Clients can only VIEW applications. Applications are created by admins on behalf of clients.
 
 **Query Parameters**:
 - `status` - Filter by status
@@ -264,33 +294,47 @@ Authorization: Bearer <token>
 }
 ```
 
-### Create Application
-**Endpoint**: `POST /api/client/applications`
+### Admin Creates Application for Client
+**Endpoint**: `POST /api/admin/applications` or `POST /api/applications` (Admin Only)
+
+**Headers**:
+```
+Authorization: Bearer <admin_token>
+```
 
 **Request Body**:
 ```json
 {
+  "client_id": "client-uuid",
   "company_name": "TechCorp Inc.",
-  "position_title": "Senior Software Engineer",
-  "job_url": "https://techcorp.com/careers/123",
+  "job_title": "Senior Software Engineer",
+  "job_description": "Full stack development role...",
+  "job_link": "https://techcorp.com/careers/123",
   "location": "San Francisco, CA",
   "salary_range": "$150k - $200k",
-  "application_method": "online|referral|recruiter",
-  "notes": "Applied through company website"
+  "job_type": "full-time",
+  "application_method": "online",
+  "application_strategy": "Applied through company website with tailored resume",
+  "admin_notes": "Strong match for client's background"
 }
 ```
 
-### Update Application Status
-**Endpoint**: `PATCH /api/client/applications/:id`
-
-**Request Body**:
+**Response**:
 ```json
 {
-  "status": "interview",
-  "notes": "First round interview scheduled",
-  "interview_date": "2026-02-15T10:00:00Z"
+  "message": "Application created successfully",
+  "application": {
+    "id": "app-uuid",
+    "client_id": "client-uuid",
+    "company_name": "TechCorp Inc.",
+    "job_title": "Senior Software Engineer",
+    "status": "applied",
+    "created_at": "2026-02-08T10:00:00Z"
+  }
 }
 ```
+
+**Note**: When an admin creates an application, an email notification is automatically sent to the client.
 
 ---
 

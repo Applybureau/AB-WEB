@@ -234,6 +234,7 @@ class AdminController {
   }
 
   // POST /api/admin/applications - Create application for client
+  // POST /api/admin/applications - Create application for client
   static async createApplication(req, res) {
     try {
       const {
@@ -245,7 +246,6 @@ class AdminController {
         salary_range,
         location,
         job_type = 'full-time',
-        application_method,
         application_strategy,
         admin_notes
       } = req.body;
@@ -263,31 +263,36 @@ class AdminController {
         return res.status(404).json({ error: 'Client not found' });
       }
 
-      // Create application
+      // Create application with correct schema
       const { data: application, error } = await supabaseAdmin
         .from('applications')
         .insert({
           client_id,
-          applied_by_admin_id: adminId,
+          applied_by_admin: true, // Boolean field indicating admin created this
           job_title,
           company,
-          job_description,
+          title: `${company} - ${job_title}`, // Required field
+          description: job_description || `Application for ${job_title} position at ${company}`,
           job_url,
-          salary_range,
-          location,
-          job_type,
-          application_method,
+          offer_salary_min: salary_range ? parseInt(salary_range.split('-')[0].replace(/\D/g, '')) : null,
+          offer_salary_max: salary_range ? parseInt(salary_range.split('-')[1]?.replace(/\D/g, '')) : null,
+          type: job_type,
           application_strategy,
           admin_notes,
           status: 'applied',
-          date_applied: new Date().toISOString()
+          date_applied: new Date().toISOString(),
+          created_at: new Date().toISOString(),
+          updated_at: new Date().toISOString()
         })
         .select()
         .single();
 
       if (error) {
         logger.error('Error creating application', error, { client_id, adminId });
-        return res.status(500).json({ error: 'Failed to create application' });
+        return res.status(500).json({ 
+          error: 'Failed to create application',
+          details: error.message 
+        });
       }
 
       logger.info('Application created by admin', {
@@ -297,6 +302,23 @@ class AdminController {
         company,
         jobTitle: job_title
       });
+
+      // Send email notification to client
+      try {
+        const { sendEmail } = require('../utils/email');
+        await sendEmail(client.email, 'application_update', {
+          client_name: client.full_name,
+          company_name: company,
+          position_title: job_title,
+          application_status: 'applied',
+          message: `We've submitted your application for the ${job_title} position at ${company}.`,
+          next_steps: 'We will monitor the application and keep you updated on any progress.'
+        });
+        logger.info('Application creation email sent', { clientEmail: client.email });
+      } catch (emailError) {
+        logger.error('Failed to send application creation email', emailError);
+        // Don't fail the request if email fails
+      }
 
       res.status(201).json({
         message: 'Application created successfully',
