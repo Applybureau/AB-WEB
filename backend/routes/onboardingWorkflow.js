@@ -287,6 +287,8 @@ router.patch('/admin/clients/:client_id/unlock', authenticateToken, async (req, 
     res.json({
       success: true,
       message: profile_unlocked ? 'Profile unlocked successfully' : 'Profile lock status updated',
+      email_sent: profile_unlocked, // Email only sent when unlocking
+      profile_unlocked: updatedClient.profile_unlocked,
       client: {
         id: updatedClient.id,
         profile_unlocked: updatedClient.profile_unlocked,
@@ -297,7 +299,8 @@ router.patch('/admin/clients/:client_id/unlock', authenticateToken, async (req, 
     console.error('Profile unlock error:', error);
     res.status(500).json({ 
       success: false,
-      error: 'Failed to update profile unlock status',
+      error: 'Failed to unlock profile',
+      email_sent: false,
       code: 'INTERNAL_ERROR'
     });
   }

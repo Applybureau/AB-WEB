@@ -563,10 +563,14 @@ router.post('/payment-confirmation', async (req, res) => {
       console.error('⚠️ Failed to create notification:', notificationError);
     }
 
-    // Step 6: Return success response
+    // Step 6: Return success response with email_sent flag
     res.json({
       success: true,
-      message: 'Payment confirmed and registration invite sent successfully',
+      message: 'Payment confirmed and invitation sent',
+      email_sent: true, // Frontend checks this flag
+      registration_url: registrationUrl,
+      client_email,
+      client_id: existingUser?.id || null,
       data: {
         consultation_id,
         client_email,
@@ -580,15 +584,15 @@ router.post('/payment-confirmation', async (req, res) => {
         admin_status: 'onboarding',
         registration_token: token,
         token_expires_at: tokenExpiry.toISOString(),
-        registration_url: registrationUrl,
-        email_sent: true
+        registration_url: registrationUrl
       }
     });
   } catch (error) {
     console.error('❌ Confirm payment error:', error);
     res.status(500).json({ 
       success: false,
-      error: 'Failed to confirm payment and send invite',
+      error: 'Failed to process payment confirmation',
+      email_sent: false,
       details: error.message 
     });
   }
