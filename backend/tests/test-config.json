@@ -1,0 +1,21 @@
+{
+  "baseUrl": "http://localhost:3000",
+  "timeout": 30000,
+  "retries": 3,
+  "testUsers": {
+    "admin": {
+      "email": "admin@example.com",
+      "password": "AdminPassword123!"
+    },
+    "client": {
+      "email": "test@example.com",
+      "password": "TestPassword123!"
+    }
+  },
+  "testData": {
+    "validEmail": "test@example.com",
+    "invalidEmail": "invalid-email",
+    "strongPassword": "StrongPassword123!",
+    "weakPassword": "123456"
+  }
+}

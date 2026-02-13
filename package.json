@@ -1,0 +1,29 @@
+{
+  "name": "apply-bureau-monorepo",
+  "version": "1.0.0",
+  "description": "Apply Bureau Full Stack Application",
+  "private": true,
+  "scripts": {
+    "start": "cd backend && npm start",
+    "build": "cd backend && npm install",
+    "install-backend": "cd backend && npm install",
+    "dev": "cd backend && npm run dev",
+    "test": "cd backend && npm test",
+    "deploy": "cd backend && npm run deploy-production"
+  },
+  "workspaces": [
+    "backend"
+  ],
+  "engines": {
+    "node": ">=20.0.0",
+    "npm": ">=9.0.0"
+  },
+  "keywords": [
+    "apply-bureau",
+    "backend",
+    "frontend",
+    "monorepo"
+  ],
+  "author": "Apply Bureau",
+  "license": "MIT"
+}

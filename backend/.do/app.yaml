@@ -1,0 +1,44 @@
+name: apply-bureau-backend
+services:
+- name: backend
+  source_dir: /backend
+  github:
+    repo: Applybureau/AB-WEB
+    branch: main
+  build_command: npm install
+  run_command: npm start
+  environment_slug: node-js
+  instance_count: 1
+  instance_size_slug: basic-s
+  routes:
+  - path: /
+  health_check:
+    http_path: /health
+    initial_delay_seconds: 180
+    period_seconds: 30
+    timeout_seconds: 20
+    success_threshold: 1
+    failure_threshold: 3
+  envs:
+  - key: NODE_ENV
+    value: production
+  - key: PORT
+    value: "8080"
+  - key: SUPABASE_URL
+    value: ${SUPABASE_URL}
+  - key: SUPABASE_ANON_KEY
+    value: ${SUPABASE_ANON_KEY}
+  - key: SUPABASE_SERVICE_KEY
+    value: ${SUPABASE_SERVICE_KEY}
+  - key: RESEND_API_KEY
+    value: ${RESEND_API_KEY}
+  - key: JWT_SECRET
+    value: ${JWT_SECRET}
+  - key: FRONTEND_URL
+    value: ${FRONTEND_URL}
+  - key: BACKEND_URL
+    value: ${BACKEND_URL}
+  - key: NPM_CONFIG_UNSAFE_PERM
+    value: "false"
+  - key: ENABLE_WEBSOCKET
+    value: "false"
