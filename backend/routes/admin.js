@@ -21,6 +21,8 @@ router.post('/clients/:id/unlock', async (req, res) => {
     const { sendEmail } = require('../utils/email');
     const { NotificationHelpers } = require('../utils/notifications');
 
+    console.log(`🔓 Unlock request for client ID: ${id}`);
+
     // Get client details
     const { data: client, error: clientError } = await supabaseAdmin
       .from('registered_users')
@@ -30,14 +32,19 @@ router.post('/clients/:id/unlock', async (req, res) => {
       .single();
 
     if (clientError || !client) {
+      console.error('❌ Client not found:', clientError?.message);
       return res.status(404).json({ 
         success: false,
         error: 'Client not found',
-        email_sent: false
+        email_sent: false,
+        details: 'Client does not exist in registered_users table or is not a client role'
       });
     }
 
+    console.log(`📋 Client found: ${client.email}, Currently unlocked: ${client.profile_unlocked}`);
+
     if (client.profile_unlocked) {
+      console.log('⚠️ Profile already unlocked');
       return res.status(400).json({ 
         success: false,
         error: 'Profile is already unlocked',
@@ -59,17 +66,21 @@ router.post('/clients/:id/unlock', async (req, res) => {
       .single();
 
     if (updateError) {
-      console.error('Error unlocking profile:', updateError);
+      console.error('❌ Error unlocking profile:', updateError);
       return res.status(500).json({ 
         success: false,
         error: 'Failed to unlock profile',
-        email_sent: false
+        email_sent: false,
+        details: updateError.message
       });
     }
+
+    console.log('✅ Profile unlocked in database');
 
     // Send email notification to client
     let emailSent = false;
     try {
+      console.log(`📧 Sending unlock email to: ${client.email}`);
       await sendEmail(client.email, 'onboarding_approved', {
         client_name: client.full_name,
         admin_name: req.user.full_name || 'Apply Bureau Team',
@@ -78,7 +89,7 @@ router.post('/clients/:id/unlock', async (req, res) => {
         current_year: new Date().getFullYear()
       });
       emailSent = true;
-      console.log('✅ Profile unlock email sent to:', client.email);
+      console.log('✅ Profile unlock email sent successfully to:', client.email);
     } catch (emailError) {
       console.error('⚠️ Failed to send profile unlock email:', emailError);
     }
@@ -89,6 +100,7 @@ router.post('/clients/:id/unlock', async (req, res) => {
         client: updatedClient,
         admin_user: req.user
       });
+      console.log('✅ Notification created');
     } catch (notificationError) {
       console.error('⚠️ Failed to create notification:', notificationError);
     }
@@ -97,14 +109,110 @@ router.post('/clients/:id/unlock', async (req, res) => {
       success: true,
       message: 'Profile unlocked successfully',
       email_sent: emailSent,
-      profile_unlocked: true
+      profile_unlocked: true,
+      client_email: client.email
     });
   } catch (error) {
-    console.error('Profile unlock error:', error);
+    console.error('❌ Profile unlock error:', error);
     res.status(500).json({ 
       success: false,
       error: 'Failed to unlock profile',
-      email_sent: false
+      email_sent: false,
+      details: error.message
+    });
+  }
+});
+
+// POST /api/admin/clients/:id/resend-verification - Resend email verification
+router.post('/clients/:id/resend-verification', async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { supabaseAdmin } = require('../utils/supabase');
+    const { sendEmail } = require('../utils/email');
+    const jwt = require('jsonwebtoken');
+
+    console.log(`📧 Resend verification request for client ID: ${id}`);
+
+    // Get client details
+    const { data: client, error: clientError } = await supabaseAdmin
+      .from('registered_users')
+      .select('id, full_name, email, email_verified')
+      .eq('id', id)
+      .eq('role', 'client')
+      .single();
+
+    if (clientError || !client) {
+      console.error('❌ Client not found:', clientError?.message);
+      return res.status(404).json({ 
+        success: false,
+        error: 'Client not found',
+        email_sent: false,
+        details: 'Client does not exist in registered_users table or is not a client role'
+      });
+    }
+
+    console.log(`📋 Client found: ${client.email}, Email verified: ${client.email_verified}`);
+
+    if (client.email_verified) {
+      console.log('⚠️ Email already verified');
+      return res.status(400).json({ 
+        success: false,
+        error: 'Email is already verified',
+        email_sent: false
+      });
+    }
+
+    // Generate verification token
+    const verificationToken = jwt.sign(
+      { 
+        userId: client.id, 
+        email: client.email, 
+        type: 'email_verification' 
+      },
+      process.env.JWT_SECRET,
+      { expiresIn: '7d' }
+    );
+
+    const verificationUrl = `${process.env.FRONTEND_URL}/verify-email?token=${verificationToken}`;
+
+    console.log(`🔗 Verification URL generated`);
+
+    // Send verification email
+    let emailSent = false;
+    try {
+      console.log(`📧 Sending verification email to: ${client.email}`);
+      await sendEmail(client.email, 'signup_invite', {
+        client_name: client.full_name,
+        registration_link: verificationUrl,
+        verification_link: verificationUrl,
+        admin_name: req.user.full_name || 'Apply Bureau Team',
+        current_year: new Date().getFullYear()
+      });
+      emailSent = true;
+      console.log('✅ Verification email sent successfully to:', client.email);
+    } catch (emailError) {
+      console.error('❌ Failed to send verification email:', emailError);
+      return res.status(500).json({ 
+        success: false,
+        error: 'Failed to send verification email',
+        email_sent: false,
+        details: emailError.message
+      });
+    }
+
+    res.json({
+      success: true,
+      message: 'Verification email sent successfully',
+      email_sent: emailSent,
+      sent_to: client.email
+    });
+  } catch (error) {
+    console.error('❌ Resend verification error:', error);
+    res.status(500).json({ 
+      success: false,
+      error: 'Failed to send verification email',
+      email_sent: false,
+      details: error.message
     });
   }
 });

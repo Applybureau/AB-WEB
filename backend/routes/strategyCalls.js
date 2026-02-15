@@ -221,18 +221,22 @@ router.post('/admin/:id/confirm', authenticateToken, requireAdmin, async (req, r
     const confirmedTime = new Date(`${selectedSlot.date}T${selectedSlot.time}:00`);
 
     // Update strategy call with confirmation
+    const updateData = {
+      admin_status: 'confirmed',
+      status: 'confirmed',
+      confirmed_time: confirmedTime.toISOString(),
+      meeting_link: meeting_link || null,
+      admin_notes: admin_notes || null,
+      admin_action_at: new Date().toISOString(),
+      updated_at: new Date().toISOString()
+    };
+
+    // Skip admin_action_by due to FK constraint pointing to wrong table
+    // The admin_action_at timestamp is sufficient for tracking
+
     const { data: updatedCall, error: updateError } = await supabaseAdmin
       .from('strategy_calls')
-      .update({
-        admin_status: 'confirmed',
-        status: 'confirmed',
-        confirmed_time: confirmedTime.toISOString(),
-        meeting_link: meeting_link || null,
-        admin_notes: admin_notes || null,
-        admin_action_by: req.user.id,
-        admin_action_at: new Date().toISOString(),
-        updated_at: new Date().toISOString()
-      })
+      .update(updateData)
       .eq('id', id)
       .select()
       .single();

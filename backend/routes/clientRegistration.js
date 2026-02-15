@@ -233,6 +233,7 @@ router.post('/register', async (req, res) => {
     }, process.env.JWT_SECRET);
 
     // Create client record in clients table (for foreign key constraints)
+    // IMPORTANT: Also save password to clients table for login compatibility
     try {
       const { error: clientError } = await supabaseAdmin
         .from('clients')
@@ -240,6 +241,7 @@ router.post('/register', async (req, res) => {
           id: updatedUser.id,
           email: updatedUser.email,
           full_name: updatedUser.full_name,
+          password: hashedPassword, // Save password for login compatibility
           role: 'client',
           created_at: new Date().toISOString(),
           updated_at: new Date().toISOString()

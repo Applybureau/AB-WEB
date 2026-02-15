@@ -752,5 +752,4 @@ const dashboardData = await dashboardResponse.json();
 
 **Created**: February 9, 2026  
 **Status**: Production Ready  
-**Base URL**: https://jellyfish-app-t4m35.ondigitalocean.app
-
+**Base URL**: https://jellyfish-app-t4m35.ondigitalocean.ap

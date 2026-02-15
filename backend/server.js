@@ -91,6 +91,7 @@ const strategyCallsRoutes = require('./routes/strategyCalls');
 const clientDashboardRoutes = require('./routes/clientDashboardNew'); // Updated to new implementation
 const clientUploadsRoutes = require('./routes/clientUploads');
 const adminOnboardingTriggersRoutes = require('./routes/adminOnboardingTriggers');
+const clientActionsRoutes = require('./routes/clientActions'); // Client actions (strategy call confirm, unlock, password reset)
 
 // Concierge Routes
 const publicConsultationsRoutes = require('./routes/publicConsultations');
@@ -340,6 +341,7 @@ app.use('/api/strategy-calls', strategyCallsRoutes); // Strategy call booking sy
 app.use('/api/client/dashboard', clientDashboardRoutes); // Client dashboard with status tracking
 app.use('/api/client/uploads', clientUploadsRoutes); // File upload system (resume, LinkedIn, portfolio)
 app.use('/api/admin/onboarding-triggers', adminOnboardingTriggersRoutes); // Admin onboarding confirmation triggers
+app.use('/api/client-actions', clientActionsRoutes); // Client actions (strategy call confirm, unlock, password reset)
 
 // Complete Client Dashboard System
 const clientDashboardCompleteRoutes = require('./routes/clientDashboardComplete');

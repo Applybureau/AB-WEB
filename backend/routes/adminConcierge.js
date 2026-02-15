@@ -526,9 +526,11 @@ router.post('/payment-confirmation', async (req, res) => {
     // Step 4: Send welcome email with registration link
     const registrationUrl = buildUrl(`/register?token=${token}`);
     
+    let emailSent = false;
     try {
       await sendEmail(client_email, 'payment_confirmed_welcome_concierge', {
         client_name,
+        tier_name: package_tier || 'Standard Package', // Template uses tier_name
         payment_amount,
         payment_date: payment_date || new Date().toISOString().split('T')[0],
         package_tier: package_tier || 'Standard Package',
@@ -536,13 +538,14 @@ router.post('/payment-confirmation', async (req, res) => {
         selected_services: selected_services.length > 0 ? selected_services.map(s => s.name || s).join(', ') : 'Full service package',
         payment_method,
         payment_reference: payment_reference || 'Manual confirmation',
-        registration_url,
-        registration_link: registrationUrl, // Add both for template compatibility
+        registration_url: registrationUrl,
+        registration_link: registrationUrl, // Template uses registration_link
         token_expiry: tokenExpiry.toLocaleDateString(),
         admin_name: req.user?.full_name || 'Apply Bureau Team',
         next_steps: 'Click the registration link to create your account and begin your onboarding process.',
         current_year: new Date().getFullYear()
       });
+      emailSent = true;
       console.log('✅ Registration email sent to:', client_email);
     } catch (emailError) {
       console.error('❌ Failed to send welcome email:', emailError);
@@ -567,7 +570,7 @@ router.post('/payment-confirmation', async (req, res) => {
     res.json({
       success: true,
       message: 'Payment confirmed and invitation sent',
-      email_sent: true, // Frontend checks this flag
+      email_sent: emailSent, // Frontend checks this flag - true if email sent successfully
       registration_url: registrationUrl,
       client_email,
       client_id: existingUser?.id || null,
